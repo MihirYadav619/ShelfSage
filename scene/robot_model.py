@@ -24,6 +24,9 @@ PREFIX = "panda_"
 
 TCP_OFFSET = 0.1034
 ARM_HOME = [0.0, 0.0, 0.0, -1.57079, 0.0, 1.57079, -0.7853]   # Menagerie "home"
+# travel pose: arm folded back over the chassis, nothing sticks out past the chassis front
+# (home reaches 0.84 m ahead of the base and hits the shelf when parking there)
+ARM_STOW = [0.0, -1.7, 0.0, -2.844, 0.0, 3.6, 0.785]
 FINGER_OPEN = 0.04
 GRIPPER_OPEN_CTRL = 255.0
 
@@ -135,6 +138,7 @@ def robot_meta(cfg, start):
         "arm_actuators": [f"{PREFIX}actuator{i}" for i in range(1, 8)],
         "gripper_actuator": f"{PREFIX}actuator8",
         "arm_home": ARM_HOME,
+        "arm_stow": ARM_STOW,
         "tcp_site": f"{PREFIX}tcp",
         "lidar_site": "lidar",
         "wrist_camera": f"{PREFIX}wrist_cam",

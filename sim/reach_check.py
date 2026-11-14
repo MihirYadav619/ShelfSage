@@ -68,7 +68,7 @@ def targets():
 
 def solve(model, data, pos, z_axis, y_axis, seeds=30, rng=np.random.default_rng(0)):
     lo, hi = model.jnt_range[:7, 0], model.jnt_range[:7, 1]
-    sid = model.site("tcp").id
+    sid = model.site("p_tcp").id
 
     def resid(q):
         data.qpos[:7] = q

@@ -247,6 +247,15 @@
       1.57079,
       -0.7853
     ],
+    "arm_stow": [
+      0.0,
+      -1.7,
+      0.0,
+      -2.844,
+      0.0,
+      3.6,
+      0.785
+    ],
     "tcp_site": "panda_tcp",
     "lidar_site": "lidar",
     "wrist_camera": "panda_wrist_cam",

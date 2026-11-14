@@ -288,6 +288,7 @@ Update this section as work proceeds.
 
 Notes for later phases:
 - With the camera 10 cm above a book, the book fills the image; Phase 5 needs a "look" pose about 40-50 cm above the table to see all books.
+- Travel pose: `robot.stow()` folds the arm over the chassis before driving; `home` sticks out 0.84 m and hit the shelf when parking there. At a table, unfold to `home` first (elbow up) before reaching down.
 - Camera near plane: `<visual><map znear="0.001">` (1.7 cm). The default clipped everything nearer than 16.6 cm, so close-up books were cut open.
 - The hand is mounted rotated 45 deg (Menagerie), so the wrist image is rotated; the detector / PCA yaw must handle any rotation.
 - Flat books (14 cm wide) do not fit the Panda gripper (8 cm max opening) top-down, so the table grasp stays an attach (weld) grasp unless books are re-designed.
@@ -334,6 +335,7 @@ ShelfSage/
 │   ├── view_scene.py          # opens the library scene
 │   ├── robot.py               # cmd_vel, odometry, LiDAR, RGB-D, go_to, arm/gripper (Phase 3)
 │   ├── reach_check.py         # picks the chassis height (Phase 3)
+│   ├── demo_phase3.py         # watch the robot in the viewer (Phase 3)
 │   └── test_robot.py          # Phase 3 done-when test
 ├── skills/
 │   ├── __init__.py

@@ -89,6 +89,10 @@ class Robot:
 
         self._renderer = None
         self.trace = None          # set to [] to record (true_pose, est_pose) every control step
+        self.viewer = None         # set to a passive viewer to watch in real time (see demo)
+        self.speed = 1.0           # real-time factor when a viewer is attached
+        self.on_sync = None        # optional callback before each viewer sync (e.g. draw rays)
+        self._sync = None
         if reset:
             self.reset()
 
@@ -130,6 +134,26 @@ class Robot:
             meas += self.rng.normal(0, 1, 3) * self.odom_sigma
             self.odom[:2] += rot2(self.odom[2]) @ meas[:2] * dt
             self.odom[2] += meas[2] * dt
+            if self.viewer is not None:
+                self._viewer_sync()
+
+    def _viewer_sync(self, fps=60.0):
+        import time
+        now = time.perf_counter()
+        if self._sync is None:
+            self._sync = (now, self.d.time, self.d.time)
+        wall0, sim0, next_t = self._sync
+        if self.d.time < next_t:
+            return
+        if not self.viewer.is_running():
+            raise KeyboardInterrupt("viewer closed")
+        if self.on_sync is not None:
+            self.on_sync()
+        self.viewer.sync()
+        lag = wall0 + (self.d.time - sim0) / self.speed - time.perf_counter()
+        if lag > 0:
+            time.sleep(lag)
+        self._sync = (wall0, sim0, next_t + self.speed / fps)
 
     def wait(self, seconds):
         self.step(int(round(seconds / self.m.opt.timestep)))
@@ -207,6 +231,10 @@ class Robot:
 
     def home(self, duration=2.0):
         return self.move_arm(self.meta["arm_home"], duration)
+
+    def stow(self, duration=2.5):
+        """Fold the arm back over the chassis before driving (nothing past the chassis front)."""
+        return self.move_arm(self.meta["arm_stow"], duration)
 
     def open_gripper(self, wait=0.6):
         self.d.ctrl[self.grip_act] = 255.0
