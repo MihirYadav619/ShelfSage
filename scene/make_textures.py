@@ -77,7 +77,7 @@ def make_sign(name, text="ShelfSage", ink=(24, 24, 28), tilt=-6, seed=11):
     MuJoCo ignores PNG transparency here, so the background is opaque plaster that matches
     plaster.png (same base colour and grain) and the sign blends into the wall.
 
-    Font: Sedgwick Ave (SIL Open Font License, see assets/fonts/OFL.txt).
+    Font: Sedgwick Ave (SIL Open Font License, see assets/fonts/OFL-SedgwickAve.txt).
     """
     from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
@@ -125,6 +125,34 @@ def make_sign(name, text="ShelfSage", ink=(24, 24, 28), tilt=-6, seed=11):
     n = norm(gaussian_filter(r.random((H, W)), 8.0)) - 0.5
     plaster = np.array(PLASTER_BASE)[None, None, :] + 0.04 * n[..., None]
     save(name, plaster * (1 - a) + (np.array(ink) / 255)[None, None, :] * a)
+
+
+SPINE_FONT = Path(__file__).resolve().parent.parent / "assets" / "fonts" / "BebasNeue-Regular.ttf"
+SPINE_PX_PER_M = 5000      # 5 px per mm
+
+
+def make_spine(name, title, color, length=0.22, thickness=0.04):
+    """Spine label: title in Bebas Neue (SIL OFL, assets/fonts/OFL-BebasNeue.txt) on the cover
+    colour, with two thin bands near head and tail. Image x runs along the spine (book length),
+    image y across it (book thickness), so the text reads along the spine."""
+    from PIL import Image, ImageDraw, ImageFont
+
+    W, H = int(length * SPINE_PX_PER_M), int(thickness * SPINE_PX_PER_M)
+    base = np.array(color) * 0.85
+    lum = 0.2126 * color[0] + 0.7152 * color[1] + 0.0722 * color[2]
+    ink = (20, 20, 22) if lum > 0.55 else (245, 242, 232)
+    img = Image.new("RGB", (W, H), tuple(int(c * 255) for c in base))
+    d = ImageDraw.Draw(img)
+    for x in (int(0.07 * W), int(0.93 * W)):             # decorative bands
+        d.rectangle([x - 6, 0, x + 6, H], fill=ink)
+    size = int(H * 0.62)
+    font = ImageFont.truetype(str(SPINE_FONT), size)
+    while d.textlength(title.upper(), font=font) > 0.74 * W and size > 20:
+        size -= 4
+        font = ImageFont.truetype(str(SPINE_FONT), size)
+    d.text((W / 2, H / 2), title.upper(), font=font, fill=ink, anchor="mm")
+    OUT.mkdir(exist_ok=True)
+    img.save(OUT / name)
 
 
 def main():

@@ -9,8 +9,10 @@ Base joints use `ref`, so qpos of base_x / base_y / base_yaw is the world pose o
 (x, y, yaw). The base is driven with velocity actuators (cmd_vel style, world frame);
 sim/robot.py converts robot-frame commands.
 
-Reach check (sim/reach_check.py): table grasps and both shelf rows are reachable for an arm
-mount height of 0.40 m or more; 0.45 m is used.
+Reach check (sim/reach_check.py): with the gripper pointing straight ahead the Panda cannot reach
+0.27-0.38 m above its mount; a 0.65 m mount keeps the table grasp (0.78-0.88 m) and both shelf
+rows (0.61, 1.11 m) outside that band.
+
 """
 import math
 from pathlib import Path

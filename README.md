@@ -161,12 +161,14 @@ Everything is defined in [`scene/layout.json`](scene/layout.json) and generated 
 - Room 8 m x 8 m (x -4..4, y -5..3, `room.center` = (0, -1)), wall height 2.5 m; the south side was extended 2 m to leave free floor for the robot. South wall collides but is hidden (geom group 4) so the cameras can see in
 - "ShelfSage" graffiti tag on the north wall above the shelf (`sign` in the layout; texture from `make_textures.py` using the Sedgwick Ave font, SIL OFL, in `assets/fonts/`)
 - Window on the east wall at x = 3.97 (used for commands like "nearest to the window")
-- 6 tables (A to F), top at z = 0.75 m, holding up to 3 flat books each
-- 1 bookshelf at (0, 2.7): 2 rows (A, B) x 4 columns, compartments A1-A4 (surface z = 0.5 m) and B1-B4 (z = 0.9 m), top at 1.3 m
+- 6 tables (A to F), top at z = 0.75 m; each has 3 **edge spots** on the robot side (south), where the robot puts books it brings from the shelf
+- 1 bookshelf at (0, 2.7): 2 rows (A, B) x 4 columns, compartments A1-A4 (surface z = 0.5 m) and B1-B4 (z = 1.0 m), top at 1.4 m (row B moved up from 0.9 m to stay out of the arm's dead band, see Phase 3)
 - 13 books (id, title, colour, location): 11 on tables, 2 standing in the shelf (Physics in A1, Statistics in B2)
+- **Book design ("customised library books")**: every book is 22 x 15 x 4 cm, with 1 cm high, 2 cm wide bumper strips (ribs) across both covers at head and tail. Lying flat, a book rests on its ribs, leaving a 1 cm gap underneath for the lower fingertip (the Panda fingertip is 7.6 mm thick); standing in the shelf, neighbours touch only at the ribs, leaving gaps for the fingers. The title is printed on the spine (texture, Bebas Neue font, SIL OFL)
+- On a table a book lies flat with its **spine towards the robot side**, either at an edge spot (default) or anywhere on the table (`"pos": [dx, dy]` in the layout, e.g. Calculus, Control Systems, Databases). In the shelf it stands with the spine facing the room, 2 cm behind the shelf front
 - Robot start pose (0, -3.2, yaw 90 deg = facing the tables); the robot itself is described in Phase 3 below
 - The whole scene uses radians (`<compiler angle="radian">`), like the Panda
-- Books are free bodies (`freejoint`) with one invisible box collision proxy (geom group 3) plus non-colliding visual covers, spine and pages; tables and shelf are fixed
+- Books are free bodies (`freejoint`): collision = body box (geom group 3, hidden) + 4 rib boxes; visual = covers, spine, pages, ribs, spine label. Tables and shelf are fixed
 - Procedural textures (`scene/make_textures.py`), cameras `overview` and `cutaway`
 
 Commands (project root, venv active):
@@ -281,18 +283,19 @@ Update this section as work proceeds.
 
 ### Phase 3: Robot assembly (done)
 
-- [x] `scene/robot_model.py`: chassis 0.6 x 0.5 m, top (arm mount) at 0.45 m, arm 10 cm behind the front edge; base joints `base_x/base_y/base_yaw` (their qpos *is* the world pose, via `ref`) with velocity actuators `base_vx/vy/wz`; Menagerie Panda attached with MjSpec (prefix `panda_`), gravity compensation on, `panda_tcp` site and `panda_wrist_cam` (640x480, fovy 58) on the hand; `home` keyframe; LiDAR site at the front, 0.20 m high. Robot settings live in `layout.json` -> `robot`.
-- [x] `sim/reach_check.py`: numerical IK over mount heights 0.20-0.55 m. Below 0.40 m shelf row A (and its pre-place pose) is not reachable; 0.40 m and up reaches every table and shelf target, also 5 cm further away. 0.45 m chosen.
+- [x] `scene/robot_model.py`: chassis 0.6 x 0.5 m, top (arm mount) at **0.65 m** (was 0.45 m, see reach check), arm 10 cm behind the front edge; base joints `base_x/base_y/base_yaw` (their qpos *is* the world pose, via `ref`) with velocity actuators `base_vx/vy/wz`; Menagerie Panda attached with MjSpec (prefix `panda_`), gravity compensation on, `panda_tcp` site and `panda_wrist_cam` (640x480, fovy 58) on the hand; `home` keyframe; LiDAR site at the front, 0.20 m high. Robot settings live in `layout.json` -> `robot`.
+- [x] `sim/reach_check.py`: numerical IK for every Phase 5 pose (table edge grasp + lift, press-and-drag of the farthest book, shelf A/B grasp + carry) over forward distances 0.20-0.90 m from the arm mount. **Finding:** with the gripper pointing straight ahead the Panda cannot reach 0.27-0.38 m above its mount at any distance (joint 4 / joint 6 limits). At 0.45 m that dead band (0.72-0.83 m) swallowed the table grasp, so the mount went to **0.65 m** (band 0.92-1.03 m) and shelf row B to 1.00 m. Every task is now reachable from about 0.25 to 0.85 m ahead of the mount.
 - [x] `sim/robot.py`: `send_cmd_vel`, noisy `odometry` (2 % scale error + white noise), `lidar_scan` (270 deg, 541 rays, 8 m, 1 cm noise), `get_rgbd` + `camera_intrinsics`, `get_pose` (odom / true; MCL in Phase 6), `true_pose` (evaluation only), `go_to` (P-controller, speed and acceleration limits), `move_arm`, `home`, gripper, `robot_contacts`.
 - [x] `control/occupancy.py`: occupancy grid of static boxes at a height band (the known map for Phase 6).
-- [x] `sim/test_robot.py`: **all 10 checks pass.** Drive to Table B: 0.4 cm / 0.0 deg error, no overshoot, no collisions; TCP reaches 10 cm above the middle book (error < 1 mm); LiDAR scan 100 % within 4 cm of the map; wrist depth sees the book top at 15.6 cm and the table at 18.5 cm (expected 15.5 / 18.5); books stable. A combined image is written to `sim/output/phase3/results.png`. Odometry over an 11 m loop drifts about 9 cm and 5 deg, which is what MCL must fix. Images in `sim/output/phase3/` (git-ignored).
+- [x] `sim/test_robot.py`: **all 10 checks pass.** Drive to Table B: 0.4 cm / 0.0 deg error, no overshoot, no collisions; TCP reaches 10 cm above the middle book (error < 1 mm); LiDAR scan 100 % within 4 cm of the map; wrist depth sees the book cover at 15.5 cm and the top ribs at 14.5 cm (as expected); books stable. A combined image is written to `sim/output/phase3/results.png`. Odometry over an 11 m loop drifts about 9 cm and 5 deg, which is what MCL must fix. Images in `sim/output/phase3/` (git-ignored).
 
 Notes for later phases:
 - With the camera 10 cm above a book, the book fills the image; Phase 5 needs a "look" pose about 40-50 cm above the table to see all books.
 - Travel pose: `robot.stow()` folds the arm over the chassis before driving; `home` sticks out 0.84 m and hit the shelf when parking there. At a table, unfold to `home` first (elbow up) before reaching down.
 - Camera near plane: `<visual><map znear="0.001">` (1.7 cm). The default clipped everything nearer than 16.6 cm, so close-up books were cut open.
 - The hand is mounted rotated 45 deg (Menagerie), so the wrist image is rotated; the detector / PCA yaw must handle any rotation.
-- Flat books (14 cm wide) do not fit the Panda gripper (8 cm max opening) top-down, so the table grasp stays an attach (weld) grasp unless books are re-designed.
+- **Grasp design (decided):** books are picked by their thickness, not top-down (15 cm is wider than the 8 cm gripper). Table: gripper horizontal, fingers close vertically, the lower fingertip slides into the 1 cm rib gap; this only works near the table edge, because the hand is 20 cm wide along the closing axis and would hit the table further in. A book that is not at the edge is first **dragged to the edge** (closed fingertips press on its top near the spine, gripper tilted 30 deg; reachable up to ~0.7 m into the table). Shelf: gripper horizontal, fingers close sideways around the standing book. The book is rotated 90 deg with the wrist between lying and standing. Friction: high on the finger pads, low book-on-table, so dragging works. The weld (attach) grasp stays as a fallback.
+- **Parking distances:** ~0.30 m between chassis and table / shelf, so grasp points are ~0.45 m ahead of the arm mount (middle of the reachable range); drive closer (~0.05 m) only to drag a far book.
 
 ### Phase 4: Arm control (next)
 
@@ -320,7 +323,7 @@ Notes for later phases:
 ShelfSage/
 ├── assets/
 │   ├── mujoco_menagerie/      # cloned, git-ignored
-│   └── fonts/                 # Sedgwick Ave (SIL OFL) for the wall tag
+│   └── fonts/                 # Sedgwick Ave (wall tag) + Bebas Neue (book spines), SIL OFL
 ├── scene/
 │   ├── layout.json            # single source of truth for the library
 │   ├── generate_scene.py      # layout -> library.xml + library_meta.json

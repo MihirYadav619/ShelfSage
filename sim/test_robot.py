@@ -30,11 +30,12 @@ from sim.robot import Robot, rot2  # noqa: E402
 
 OUT = ROOT / "sim/output/phase3"
 META = json.loads((ROOT / "scene/library_meta.json").read_text())
-CLEARANCE = 0.08   # gap between chassis front and table edge when parked
+CLEARANCE = 0.30   # gap between chassis front and table edge when parked: puts edge books ~0.45 m
+                   # ahead of the arm mount, mid-range for the 0.65 m mount (sim/reach_check.py)
 
 
 def table_parking(name):
-    """Facing the table from the south (+y), centred on the table, chassis 8 cm from the edge."""
+    """Facing the table from the south (+y), centred on the table, chassis CLEARANCE from the edge."""
     t = META["tables"][name]
     hx = META["robot"]["chassis_half"][0]
     return t["pos"][0], t["pos"][1] - t["half_size"][1] - CLEARANCE - hx, math.pi / 2
@@ -104,7 +105,8 @@ def main():
                ("no collisions while driving", not res.collisions)]
 
     book = data.body("book_dl").xpos.copy()
-    book_top = META["tables"]["B"]["top_z"] + 0.03
+    bd = META["book_dims"]
+    book_top = META["tables"]["B"]["top_z"] + bd["rib_height"] + bd["thickness"]
     target = np.array([book[0], book[1], book_top + 0.10])
     q, ik_err = ik_down(robot, target, robot.meta["arm_home"])
     robot.move_arm(q, duration=3.0)
@@ -134,10 +136,11 @@ def main():
     print(f"[4] wrist RGB-D saved ({w}x{h}); depth at image centre {centre * 100:.1f} cm, "
           f"range {lo_d * 100:.1f}-{hi_d * 100:.1f} cm")
     cam_z = robot.d.cam_xpos[model.camera(robot.meta["wrist_camera"]).id][2]
-    exp_book, exp_table = cam_z - book_top, cam_z - META["tables"]["B"]["top_z"]
-    print(f"    expected: book top {exp_book * 100:.1f} cm, table {exp_table * 100:.1f} cm")
-    checks.append(("wrist depth sees the book top and the table at the right distance (+-5 mm)",
-                   abs(lo_d - exp_book) < 0.005 and abs(hi_d - exp_table) < 0.005))
+    exp_book = cam_z - book_top                      # cover under the camera
+    exp_rib = exp_book - bd["rib_height"]            # top ribs: the nearest thing in view
+    print(f"    expected: book cover {exp_book * 100:.1f} cm (image centre), ribs {exp_rib * 100:.1f} cm (nearest)")
+    checks.append(("wrist depth: book cover at the image centre and ribs nearest, both +-5 mm",
+                   abs(centre - exp_book) < 0.005 and abs(lo_d - exp_rib) < 0.005))
 
     # ---------------------------------------------------------------- 2. LiDAR vs map
     lz = robot.d.site_xpos[robot.lidar_site][2]

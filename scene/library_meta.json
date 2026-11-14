@@ -30,6 +30,23 @@
       "half_size": [
         0.6,
         0.4
+      ],
+      "edge_spots": [
+        [
+          -2.85,
+          -1.82,
+          0.781
+        ],
+        [
+          -2.5,
+          -1.82,
+          0.781
+        ],
+        [
+          -2.15,
+          -1.82,
+          0.781
+        ]
       ]
     },
     "B": {
@@ -41,6 +58,23 @@
       "half_size": [
         0.6,
         0.4
+      ],
+      "edge_spots": [
+        [
+          -0.35,
+          -1.82,
+          0.781
+        ],
+        [
+          0.0,
+          -1.82,
+          0.781
+        ],
+        [
+          0.35,
+          -1.82,
+          0.781
+        ]
       ]
     },
     "C": {
@@ -52,6 +86,23 @@
       "half_size": [
         0.6,
         0.4
+      ],
+      "edge_spots": [
+        [
+          2.15,
+          -1.82,
+          0.781
+        ],
+        [
+          2.5,
+          -1.82,
+          0.781
+        ],
+        [
+          2.85,
+          -1.82,
+          0.781
+        ]
       ]
     },
     "D": {
@@ -63,6 +114,23 @@
       "half_size": [
         0.6,
         0.4
+      ],
+      "edge_spots": [
+        [
+          -2.85,
+          0.18,
+          0.781
+        ],
+        [
+          -2.5,
+          0.18,
+          0.781
+        ],
+        [
+          -2.15,
+          0.18,
+          0.781
+        ]
       ]
     },
     "E": {
@@ -74,6 +142,23 @@
       "half_size": [
         0.6,
         0.4
+      ],
+      "edge_spots": [
+        [
+          -0.35,
+          0.18,
+          0.781
+        ],
+        [
+          0.0,
+          0.18,
+          0.781
+        ],
+        [
+          0.35,
+          0.18,
+          0.781
+        ]
       ]
     },
     "F": {
@@ -85,6 +170,23 @@
       "half_size": [
         0.6,
         0.4
+      ],
+      "edge_spots": [
+        [
+          2.15,
+          0.18,
+          0.781
+        ],
+        [
+          2.5,
+          0.18,
+          0.781
+        ],
+        [
+          2.85,
+          0.18,
+          0.781
+        ]
       ]
     }
   },
@@ -117,22 +219,22 @@
       "B1": [
         -0.6000000000000001,
         2.7,
-        0.9
+        1.0
       ],
       "B2": [
         -0.19999999999999996,
         2.7,
-        0.9
+        1.0
       ],
       "B3": [
         0.19999999999999996,
         2.7,
-        0.9
+        1.0
       ],
       "B4": [
         0.6000000000000001,
         2.7,
-        0.9
+        1.0
       ]
     }
   },
@@ -140,68 +242,142 @@
     "linalg": {
       "title": "Linear Algebra",
       "location": "table:A",
-      "body": "book_linalg"
+      "body": "book_linalg",
+      "color": [
+        0.8,
+        0.2,
+        0.2
+      ]
     },
     "calculus": {
       "title": "Calculus",
       "location": "table:A",
-      "body": "book_calculus"
+      "body": "book_calculus",
+      "color": [
+        0.9,
+        0.6,
+        0.15
+      ]
     },
     "ml": {
       "title": "Machine Learning",
       "location": "table:B",
-      "body": "book_ml"
+      "body": "book_ml",
+      "color": [
+        0.15,
+        0.3,
+        0.85
+      ]
     },
     "dl": {
       "title": "Deep Learning",
       "location": "table:B",
-      "body": "book_dl"
+      "body": "book_dl",
+      "color": [
+        0.1,
+        0.55,
+        0.75
+      ]
     },
     "robotics": {
       "title": "Robotics",
       "location": "table:B",
-      "body": "book_robotics"
+      "body": "book_robotics",
+      "color": [
+        0.2,
+        0.65,
+        0.3
+      ]
     },
     "control": {
       "title": "Control Systems",
       "location": "table:C",
-      "body": "book_control"
+      "body": "book_control",
+      "color": [
+        0.55,
+        0.25,
+        0.7
+      ]
     },
     "signals": {
       "title": "Signals and Systems",
       "location": "table:C",
-      "body": "book_signals"
+      "body": "book_signals",
+      "color": [
+        0.85,
+        0.35,
+        0.6
+      ]
     },
     "python": {
       "title": "Python Programming",
       "location": "table:D",
-      "body": "book_python"
+      "body": "book_python",
+      "color": [
+        0.95,
+        0.85,
+        0.2
+      ]
     },
     "algo": {
       "title": "Algorithms",
       "location": "table:E",
-      "body": "book_algo"
+      "body": "book_algo",
+      "color": [
+        0.25,
+        0.25,
+        0.3
+      ]
     },
     "db": {
       "title": "Databases",
       "location": "table:E",
-      "body": "book_db"
+      "body": "book_db",
+      "color": [
+        0.5,
+        0.5,
+        0.55
+      ]
     },
     "thermo": {
       "title": "Thermodynamics",
       "location": "table:F",
-      "body": "book_thermo"
+      "body": "book_thermo",
+      "color": [
+        0.7,
+        0.3,
+        0.1
+      ]
     },
     "physics": {
       "title": "Physics",
       "location": "shelf:A1",
-      "body": "book_physics"
+      "body": "book_physics",
+      "color": [
+        0.3,
+        0.5,
+        0.9
+      ]
     },
     "stats": {
       "title": "Statistics",
       "location": "shelf:B2",
-      "body": "book_stats"
+      "body": "book_stats",
+      "color": [
+        0.9,
+        0.45,
+        0.25
+      ]
     }
+  },
+  "book_dims": {
+    "length": 0.22,
+    "width": 0.15,
+    "thickness": 0.04,
+    "rib_height": 0.01,
+    "rib_width": 0.02,
+    "mass": 0.33999999999999997,
+    "frame": "x length, y width (spine at -y), z thickness"
   },
   "robot": {
     "start": [
@@ -264,7 +440,7 @@
       0.25
     ],
     "ground_clearance": 0.05,
-    "mount_height": 0.45,
+    "mount_height": 0.65,
     "mount_x": 0.2,
     "mass": 30.0,
     "lidar": {

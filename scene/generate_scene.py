@@ -25,15 +25,22 @@ META_PATH = HERE / "library_meta.json"
 TEXTURE_DIR = HERE / "textures"
 
 # Half-extents (metres)
-BOOK_FLAT = (0.10, 0.07, 0.015)    # lying flat on a table (spine at the -x end)
-BOOK_STAND = (0.025, 0.09, 0.12)   # standing in a shelf slot (spine faces -y, the room)
-BOOK_MASS = 0.3
+# One book size for every book, lying or standing ("customised" library books).
+# Book frame: x = length (head -> tail), y = width (spine at -y), z = thickness.
+BOOK_L, BOOK_W, BOOK_T = 0.22, 0.15, 0.04
+RIB_H, RIB_W = 0.01, 0.02          # bumper strips at head and tail on both covers: lying flat,
+                                   # the book rests on them and leaves a 1 cm gap for a fingertip
+BOOK_MASS, RIB_MASS = 0.3, 0.01
+SPINE_INSET = 0.005                # flat at a table edge: spine 5 mm inside the edge
+SHELF_INSET = 0.02                 # standing in the shelf: spine 2 cm behind the shelf front
+QUAT_FLAT = (1, 0, 0, 0)
+QUAT_STAND = (0.7071068, 0, 0.7071068, 0)   # length -> down (head on top), thickness -> +x
 
 TABLE_TOP_Z = 0.75
 TABLE_TOP_THICK = 0.03
 BOARD_T = 0.02
 EPS = 0.001
-FLAT_X_OFFSETS = [-0.35, 0.0, 0.35]  # up to 3 books per table
+EDGE_X_OFFSETS = [-0.35, 0.0, 0.35]  # 3 edge spots per table (robot side), the default
 
 PAGES = (0.95, 0.93, 0.85, 1)
 WHITE = (0.95, 0.95, 0.93, 1)
@@ -139,7 +146,10 @@ def build_tables(layout):
                                 material="wood_mat", collide=False))
         lines.append("</body>")
         out.append("\n".join(lines))
-        meta[name] = {"pos": [x, y], "top_z": TABLE_TOP_Z, "half_size": [hx, hy]}
+        flat_z = TABLE_TOP_Z + RIB_H + BOOK_T / 2 + EPS
+        edge_y = y - hy + BOOK_W / 2 + SPINE_INSET
+        meta[name] = {"pos": [x, y], "top_z": TABLE_TOP_Z, "half_size": [hx, hy],
+                      "edge_spots": [[x + dx, edge_y, flat_z] for dx in EDGE_X_OFFSETS]}
     return out, meta
 
 
@@ -178,49 +188,67 @@ def build_shelf(s):
 
 
 # ---------------------------------------------------------------------------- books
-def book_visuals(name, half, color, a_t, a_s, a_p, sign):
-    """Non-colliding visual parts: two covers, a spine, and a block of pages.
+def book_geoms(name, color):
+    """Geoms of one book in the book frame (x length, y width with the spine at -y, z thickness).
 
-    a_t = thickness axis, a_s = spine axis, a_p = the remaining axis, sign = which end is the spine.
+    Collision: one box for the body + 4 rib boxes (the ribs touch the table / neighbours).
+    Visual: covers, spine, page block, ribs, and a textured spine label (material spine_<id>_mat).
     """
-    h = list(half)
-    c, st = 0.003, 0.005
+    hl, hw, ht = BOOK_L / 2, BOOK_W / 2, BOOK_T / 2
     cover = tuple(color) + (1,)
-
-    def part(tag, center, hh, rgba):
-        pos, size = [0.0] * 3, [0.0] * 3
-        for ax, v in center.items():
-            pos[ax] = v
-        for ax, v in hh.items():
-            size[ax] = v
-        return "  " + box(f"{name}_{tag}", pos, size, rgba, collide=False, massless=True)
-
-    out = []
-    for s, tag in ((-1, "cover_n"), (1, "cover_p")):
-        out.append(part(tag, {a_t: s * (h[a_t] - c / 2)}, {a_t: c / 2, a_s: h[a_s], a_p: h[a_p]}, cover))
-    out.append(part("spine", {a_s: sign * (h[a_s] - st / 2)},
-                    {a_s: st / 2, a_t: h[a_t], a_p: h[a_p]}, cover))
-    out.append(part("pages", {a_s: sign * (0.003 - st) / 2},
-                    {a_s: (2 * h[a_s] - st - 0.003) / 2, a_t: h[a_t] - c, a_p: h[a_p] - 0.002}, PAGES))
-    return out
+    rib = tuple(c * 0.85 for c in color) + (1,)   # a shade darker than the cover
+    g = [f'<geom name="{name}_geom" type="box" size="{vec((hl, hw, ht))}" mass="{BOOK_MASS}" '
+         f'rgba="{vec(cover)}" group="{COLLISION_GROUP}"/>']
+    for sx, tx in ((-1, "head"), (1, "tail")):
+        for sz, tz in ((1, "top"), (-1, "bottom")):
+            g.append(f'<geom name="{name}_rib_{tx}_{tz}" type="box" '
+                     f'pos="{vec((sx * (hl - RIB_W / 2), 0, sz * (ht + RIB_H / 2)))}" '
+                     f'size="{vec((RIB_W / 2, hw, RIB_H / 2))}" mass="{RIB_MASS}" rgba="{vec(rib)}"/>')
+    c, st = 0.0015, 0.0025
+    g += [box(f"{name}_cover_{t}", (0, 0, sz * (ht - c)), (hl, hw, c), cover, collide=False, massless=True)
+          for sz, t in ((1, "top"), (-1, "bottom"))]
+    g.append(box(f"{name}_spine", (0, -(hw - st), 0), (hl, st, ht), cover, collide=False, massless=True))
+    g.append(box(f"{name}_pages", (0, 0.0015, 0), (hl - 0.003, hw - 0.0035, ht - 0.003), PAGES,
+                 collide=False, massless=True))
+    # spine label: 1 mm box just outside the spine (planes are only allowed on static bodies);
+    # MuJoCo maps the 2D texture onto its -y face with texture x along the book length
+    g.append(f'<geom name="{name}_label" type="box" pos="{vec((0, -hw - 0.0006, 0))}" '
+             f'size="{vec((hl - 0.004, 0.0005, ht - 0.002))}" material="spine_{name[5:]}_mat" '
+             f'contype="0" conaffinity="0" mass="0"/>')
+    return g
 
 
 def build_books(layout, tables_meta, slots):
-    used_on_table, used_slots = {}, set()
+    """Place the books. Table books lie flat with the spine towards the robot side (-y):
+    at a free edge spot (default) or anywhere on the table with "pos": [dx, dy] (book centre
+    relative to the table centre). Shelf books stand in a slot, spine facing the room."""
+    used_spots, used_slots, footprints = {}, set(), {}
+    hl, hw = BOOK_L / 2, BOOK_W / 2
     xml, meta = [], {}
     for b in layout["books"]:
         kind, where = b["location"].split(":")
         if kind == "table":
             if where not in tables_meta:
                 raise ValueError(f"Book {b['id']}: unknown table {where}")
-            idx = used_on_table.get(where, 0)
-            if idx >= len(FLAT_X_OFFSETS):
-                raise ValueError(f"Table {where} holds at most {len(FLAT_X_OFFSETS)} books")
-            used_on_table[where] = idx + 1
-            tx, ty = tables_meta[where]["pos"]
-            half = BOOK_FLAT
-            pos = (tx + FLAT_X_OFFSETS[idx], ty, TABLE_TOP_Z + half[2] + EPS)
-            axes = (2, 0, 1, -1)       # thickness z, spine along x at the -x end
+            t = tables_meta[where]
+            (tx, ty), (thx, thy) = t["pos"], t["half_size"]
+            if "pos" in b:
+                dx, dy = b["pos"]
+                if abs(dx) > thx - hl or abs(dy) > thy - hw:
+                    raise ValueError(f"Book {b['id']}: pos {b['pos']} is off table {where}")
+                pos = (tx + dx, ty + dy, t["edge_spots"][0][2])
+            else:
+                taken = used_spots.setdefault(where, set())
+                free = [i for i in range(len(EDGE_X_OFFSETS)) if i not in taken]
+                if not free:
+                    raise ValueError(f"Table {where}: all edge spots are taken")
+                taken.add(free[0])
+                pos = tuple(t["edge_spots"][free[0]])
+            for ox, oy in footprints.get(where, []):
+                if abs(pos[0] - ox) < 2 * hl + 0.02 and abs(pos[1] - oy) < 2 * hw + 0.02:
+                    raise ValueError(f"Book {b['id']} overlaps another book on table {where}")
+            footprints.setdefault(where, []).append((pos[0], pos[1]))
+            quat = QUAT_FLAT
         elif kind == "shelf":
             if where not in slots:
                 raise ValueError(f"Book {b['id']}: unknown shelf slot {where}")
@@ -228,24 +256,33 @@ def build_books(layout, tables_meta, slots):
                 raise ValueError(f"Shelf slot {where} is used twice")
             used_slots.add(where)
             sx, sy, sz = slots[where]
-            half = BOOK_STAND
-            pos = (sx, sy, sz + half[2] + EPS)
-            axes = (0, 1, 2, -1)       # thickness x, spine at the -y end (faces the room)
+            front = sy - layout["shelf"]["depth"] / 2
+            pos = (sx, front + SHELF_INSET + hw, sz + hl + EPS)
+            quat = QUAT_STAND
         else:
             raise ValueError(f"Book {b['id']}: bad location {b['location']}")
         name = f"book_{b['id']}"
-        parts = [
-            f'<body name="{name}" pos="{vec(pos)}">',
-            f'  <freejoint name="{name}_joint"/>',
-            # invisible collision proxy: one simple box keeps contacts stable and fast
-            f'  <geom name="{name}_geom" type="box" size="{vec(half)}" mass="{BOOK_MASS}" '
-            f'rgba="{vec(tuple(b["color"]) + (1,))}" group="{COLLISION_GROUP}"/>',
-        ]
-        parts += book_visuals(name, half, b["color"], *axes)
+        parts = [f'<body name="{name}" pos="{vec(pos)}" quat="{vec(quat)}">',
+                 f'  <freejoint name="{name}_joint"/>']
+        parts += ["  " + g for g in book_geoms(name, b["color"])]
         parts.append("</body>")
         xml.append("\n".join(parts))
-        meta[b["id"]] = {"title": b["title"], "location": b["location"], "body": name}
+        meta[b["id"]] = {"title": b["title"], "location": b["location"], "body": name,
+                         "color": b["color"]}
     return xml, meta
+
+
+def book_assets(layout):
+    """Spine label textures + materials (regenerated every run, they are cheap)."""
+    import make_textures
+    out = []
+    for b in layout["books"]:
+        f = f"spine_{b['id']}.png"
+        make_textures.make_spine(f, b["title"], b["color"], BOOK_L, BOOK_T)
+        out.append(f'<texture name="spine_{b["id"]}_tex" type="2d" file="{f}"/>')
+        out.append(f'<material name="spine_{b["id"]}_mat" texture="spine_{b["id"]}_tex" '
+                   f'specular="0.2" shininess="0.3"/>')
+    return out
 
 
 # -------------------------------------------------------------------------- generate
@@ -268,6 +305,7 @@ def generate():
     table_xml, tables_meta = build_tables(layout)
     shelf_geoms, slots = build_shelf(layout["shelf"])
     book_xml, books_meta = build_books(layout, tables_meta, slots)
+    spine_assets = "\n    ".join(book_assets(layout))
     win = layout["window"]
 
     body = []
@@ -315,6 +353,7 @@ def generate():
     <material name="plaster_mat" texture="plaster_tex" texuniform="true" texrepeat="0.5 0.5" specular="0.05" shininess="0.05"/>
     <texture name="sign_tex" type="2d" file="sign_shelfsage.png"/>
     <material name="sign_mat" texture="sign_tex" specular="0.05" shininess="0.05"/>
+    {spine_assets}
   </asset>
   <worldbody>
 {lamps}
@@ -345,6 +384,9 @@ def generate():
         "tables": tables_meta,
         "shelf": {"pos": layout["shelf"]["pos"], "slots": slots},
         "books": books_meta,
+        "book_dims": {"length": BOOK_L, "width": BOOK_W, "thickness": BOOK_T,
+                      "rib_height": RIB_H, "rib_width": RIB_W, "mass": BOOK_MASS + 4 * RIB_MASS,
+                      "frame": "x length, y width (spine at -y), z thickness"},
         "robot": robot_model.robot_meta(robot_cfg, start),
     }
     META_PATH.write_text(json.dumps(meta, indent=2))

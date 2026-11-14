@@ -117,7 +117,8 @@ def main():
             say("unfold the arm (home, elbow up)")
             robot.home(2.0)
             book = data.body("book_dl").xpos.copy()
-            top = META["tables"]["B"]["top_z"] + 0.03
+            bd = META["book_dims"]
+            top = META["tables"]["B"]["top_z"] + bd["rib_height"] + bd["thickness"]
             say("arm over the Deep Learning book (10 cm)")
             robot.move_arm(ik(robot, np.array([book[0], book[1], top + 0.10]), [0, 0, -1]), 2.5)
             say("dip to 2 cm, open and close the gripper, lift")
@@ -131,16 +132,24 @@ def main():
             say("driving through the aisle to the shelf")
             sh = META["shelf"]
             hx = META["robot"]["chassis_half"][0]
-            shelf_park = (sh["pos"][0] + 0.2, sh["pos"][1] - 0.35 / 2 - 0.08 - hx, math.pi / 2)
+            # park ~30 cm from the shelf: the shelf grasp point is then ~0.45 m ahead of the arm
+            # mount, in the middle of the reachable range (sim/reach_check.py)
+            front = sh["pos"][1] - 0.35 / 2
+            shelf_park = (sh["pos"][0] + 0.2, front - 0.30 - hx, math.pi / 2)
             for wp in [(1.25, -2.6, math.pi / 2), (1.25, 1.7, math.pi / 2), shelf_park]:
                 robot.go_to(*wp, tol_xy=0.02, tol_yaw=0.02)
 
             slot = np.array(sh["slots"]["B3"])
-            say("reaching 15 cm in front of empty slot B3")
+            bd = META["book_dims"]
             fwd = np.array([0.0, 1.0, 0.0])   # into the shelf
-            target = slot + np.array([0, -0.15, 0.12])
-            robot.move_arm(ik(robot, target, fwd, y_axis=np.array([1.0, 0, 0])), 3.0)
-            robot.wait(1.0)
+            # where a book's grasp point would be: 2 cm + 2.5 cm behind the shelf front, mid-height
+            grasp = np.array([slot[0], front + 0.045, slot[2] + bd["length"] / 2 + 0.03])
+            say("pre-place: 15 cm in front of empty slot B3")
+            robot.move_arm(ik(robot, grasp - [0, 0.15, 0], fwd, y_axis=np.array([1.0, 0, 0])), 3.0)
+            say("move in to where a book would be held, then back out")
+            robot.move_arm(ik(robot, grasp, fwd, y_axis=np.array([1.0, 0, 0])), 2.0)
+            robot.wait(0.5)
+            robot.move_arm(ik(robot, grasp - [0, 0.15, 0], fwd, y_axis=np.array([1.0, 0, 0])), 2.0)
             say("stow the arm")
             robot.stow()
 
