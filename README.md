@@ -176,6 +176,7 @@ python scene\generate_scene.py             # regenerate library.xml + library_me
 python scene\generate_scene.py --check     # also simulate 10 s and check books stay put
 python scene\generate_scene.py --preview   # also render scene\preview_*.png
 python sim\view_scene.py                   # open the scene in the viewer
+python sim\demo_phase3.py                  # watch the robot drive, reach the table and the shelf
 ```
 
 ---
