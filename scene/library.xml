@@ -632,7 +632,7 @@
       <geom name="book_thermo_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_thermo_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_thermo_mat"/>
     </body>
-    <body name="book_physics" pos="-0.705 2.605 0.611" quat="0.707107 0 0.707107 0">
+    <body name="book_physics" pos="-0.769 2.57 0.611" quat="0.707107 0 0.707107 0">
       <joint name="book_physics_joint" type="free"/>
       <geom name="book_physics_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.3 0.5 0.9 1" mass="0.3"/>
       <geom name="book_physics_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.255 0.425 0.765 1" mass="0.01"/>
@@ -645,7 +645,7 @@
       <geom name="book_physics_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_physics_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_physics_mat"/>
     </body>
-    <body name="book_stats" pos="-0.305 2.605 1.111" quat="0.707107 0 0.707107 0">
+    <body name="book_stats" pos="-0.363 2.57 1.111" quat="0.707107 0 0.707107 0">
       <joint name="book_stats_joint" type="free"/>
       <geom name="book_stats_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.9 0.45 0.25 1" mass="0.3"/>
       <geom name="book_stats_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.765 0.3825 0.2125 1" mass="0.01"/>
@@ -658,7 +658,7 @@
       <geom name="book_stats_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_stats_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_stats_mat"/>
     </body>
-    <body name="book_os" pos="-3.305 2.605 0.611" quat="0.707107 0 0.707107 0">
+    <body name="book_os" pos="-3.369 2.57 0.611" quat="0.707107 0 0.707107 0">
       <joint name="book_os_joint" type="free"/>
       <geom name="book_os_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.8 0.54 0.36 1" mass="0.3"/>
       <geom name="book_os_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.68 0.459 0.306 1" mass="0.01"/>
@@ -671,7 +671,7 @@
       <geom name="book_os_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_os_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_os_mat"/>
     </body>
-    <body name="book_networks" pos="-3.235 2.605 0.611" quat="0.707107 0 0.707107 0">
+    <body name="book_networks" pos="-3.299 2.57 0.611" quat="0.707107 0 0.707107 0">
       <joint name="book_networks_joint" type="free"/>
       <geom name="book_networks_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.2 0.8 0.63 1" mass="0.3"/>
       <geom name="book_networks_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.17 0.68 0.5355 1" mass="0.01"/>
@@ -684,7 +684,7 @@
       <geom name="book_networks_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_networks_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_networks_mat"/>
     </body>
-    <body name="book_compilers" pos="-2.905 2.605 0.611" quat="0.707107 0 0.707107 0">
+    <body name="book_compilers" pos="-2.963 2.57 0.611" quat="0.707107 0 0.707107 0">
       <joint name="book_compilers_joint" type="free"/>
       <geom name="book_compilers_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.8 0.44 0.8 1" mass="0.3"/>
       <geom name="book_compilers_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.68 0.374 0.68 1" mass="0.01"/>
@@ -697,7 +697,7 @@
       <geom name="book_compilers_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_compilers_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_compilers_mat"/>
     </body>
-    <body name="book_arch" pos="-2.105 2.605 0.611" quat="0.707107 0 0.707107 0">
+    <body name="book_arch" pos="-2.163 2.57 0.611" quat="0.707107 0 0.707107 0">
       <joint name="book_arch_joint" type="free"/>
       <geom name="book_arch_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.52 0.62 0.28 1" mass="0.3"/>
       <geom name="book_arch_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.442 0.527 0.238 1" mass="0.01"/>
@@ -710,7 +710,7 @@
       <geom name="book_arch_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_arch_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_arch_mat"/>
     </body>
-    <body name="book_discrete" pos="-2.035 2.605 0.611" quat="0.707107 0 0.707107 0">
+    <body name="book_discrete" pos="-2.093 2.57 0.611" quat="0.707107 0 0.707107 0">
       <joint name="book_discrete_joint" type="free"/>
       <geom name="book_discrete_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.15 0.35 0.62 1" mass="0.3"/>
       <geom name="book_discrete_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.1275 0.2975 0.527 1" mass="0.01"/>
@@ -723,7 +723,7 @@
       <geom name="book_discrete_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_discrete_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_discrete_mat"/>
     </body>
-    <body name="book_graphs" pos="-1.965 2.605 0.611" quat="0.707107 0 0.707107 0">
+    <body name="book_graphs" pos="-2.023 2.57 0.611" quat="0.707107 0 0.707107 0">
       <joint name="book_graphs_joint" type="free"/>
       <geom name="book_graphs_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.62 0.34 0.37 1" mass="0.3"/>
       <geom name="book_graphs_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.527 0.289 0.3145 1" mass="0.01"/>
@@ -736,7 +736,7 @@
       <geom name="book_graphs_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_graphs_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_graphs_mat"/>
     </body>
-    <body name="book_prob" pos="-3.305 2.605 1.111" quat="0.707107 0 0.707107 0">
+    <body name="book_prob" pos="-3.369 2.57 1.111" quat="0.707107 0 0.707107 0">
       <joint name="book_prob_joint" type="free"/>
       <geom name="book_prob_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.41 0.92 0.5 1" mass="0.3"/>
       <geom name="book_prob_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.3485 0.782 0.425 1" mass="0.01"/>
@@ -749,7 +749,7 @@
       <geom name="book_prob_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_prob_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_prob_mat"/>
     </body>
-    <body name="book_optim" pos="-3.235 2.605 1.111" quat="0.707107 0 0.707107 0">
+    <body name="book_optim" pos="-3.299 2.57 1.111" quat="0.707107 0 0.707107 0">
       <joint name="book_optim_joint" type="free"/>
       <geom name="book_optim_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.55 0.23 0.92 1" mass="0.3"/>
       <geom name="book_optim_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.4675 0.1955 0.782 1" mass="0.01"/>
@@ -762,7 +762,7 @@
       <geom name="book_optim_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_optim_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_optim_mat"/>
     </body>
-    <body name="book_numerics" pos="-2.505 2.605 1.111" quat="0.707107 0 0.707107 0">
+    <body name="book_numerics" pos="-2.563 2.57 1.111" quat="0.707107 0 0.707107 0">
       <joint name="book_numerics_joint" type="free"/>
       <geom name="book_numerics_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.92 0.82 0.51 1" mass="0.3"/>
       <geom name="book_numerics_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.782 0.697 0.4335 1" mass="0.01"/>
@@ -775,7 +775,7 @@
       <geom name="book_numerics_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_numerics_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_numerics_mat"/>
     </body>
-    <body name="book_dsa" pos="-2.435 2.605 1.111" quat="0.707107 0 0.707107 0">
+    <body name="book_dsa" pos="-2.493 2.57 1.111" quat="0.707107 0 0.707107 0">
       <joint name="book_dsa_joint" type="free"/>
       <geom name="book_dsa_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.36 0.78 0.8 1" mass="0.3"/>
       <geom name="book_dsa_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.306 0.663 0.68 1" mass="0.01"/>
@@ -788,7 +788,7 @@
       <geom name="book_dsa_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_dsa_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_dsa_mat"/>
     </body>
-    <body name="book_kinematics" pos="-0.635 2.605 0.611" quat="0.707107 0 0.707107 0">
+    <body name="book_kinematics" pos="-0.699 2.57 0.611" quat="0.707107 0 0.707107 0">
       <joint name="book_kinematics_joint" type="free"/>
       <geom name="book_kinematics_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.8 0.2 0.6 1" mass="0.3"/>
       <geom name="book_kinematics_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.68 0.17 0.51 1" mass="0.01"/>
@@ -801,7 +801,7 @@
       <geom name="book_kinematics_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_kinematics_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_kinematics_mat"/>
     </body>
-    <body name="book_dynamics" pos="-0.565 2.605 0.611" quat="0.707107 0 0.707107 0">
+    <body name="book_dynamics" pos="-0.629 2.57 0.611" quat="0.707107 0 0.707107 0">
       <joint name="book_dynamics_joint" type="free"/>
       <geom name="book_dynamics_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.57 0.8 0.44 1" mass="0.3"/>
       <geom name="book_dynamics_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.4845 0.68 0.374 1" mass="0.01"/>
@@ -814,7 +814,7 @@
       <geom name="book_dynamics_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_dynamics_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_dynamics_mat"/>
     </body>
-    <body name="book_mechatronics" pos="0.495 2.605 0.611" quat="0.707107 0 0.707107 0">
+    <body name="book_mechatronics" pos="0.437 2.57 0.611" quat="0.707107 0 0.707107 0">
       <joint name="book_mechatronics_joint" type="free"/>
       <geom name="book_mechatronics_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.28 0.31 0.62 1" mass="0.3"/>
       <geom name="book_mechatronics_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.238 0.2635 0.527 1" mass="0.01"/>
@@ -827,7 +827,7 @@
       <geom name="book_mechatronics_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_mechatronics_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_mechatronics_mat"/>
     </body>
-    <body name="book_embedded" pos="-0.235 2.605 1.111" quat="0.707107 0 0.707107 0">
+    <body name="book_embedded" pos="-0.293 2.57 1.111" quat="0.707107 0 0.707107 0">
       <joint name="book_embedded_joint" type="free"/>
       <geom name="book_embedded_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.62 0.25 0.15 1" mass="0.3"/>
       <geom name="book_embedded_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.527 0.2125 0.1275 1" mass="0.01"/>
@@ -840,7 +840,7 @@
       <geom name="book_embedded_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_embedded_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_embedded_mat"/>
     </body>
-    <body name="book_digital" pos="-0.165 2.605 1.111" quat="0.707107 0 0.707107 0">
+    <body name="book_digital" pos="-0.223 2.57 1.111" quat="0.707107 0 0.707107 0">
       <joint name="book_digital_joint" type="free"/>
       <geom name="book_digital_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.34 0.62 0.48 1" mass="0.3"/>
       <geom name="book_digital_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.289 0.527 0.408 1" mass="0.01"/>
@@ -853,7 +853,7 @@
       <geom name="book_digital_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_digital_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_digital_mat"/>
     </body>
-    <body name="book_power" pos="0.495 2.605 1.111" quat="0.707107 0 0.707107 0">
+    <body name="book_power" pos="0.437 2.57 1.111" quat="0.707107 0 0.707107 0">
       <joint name="book_power_joint" type="free"/>
       <geom name="book_power_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.82 0.41 0.92 1" mass="0.3"/>
       <geom name="book_power_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.697 0.3485 0.782 1" mass="0.01"/>
@@ -866,7 +866,7 @@
       <geom name="book_power_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_power_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_power_mat"/>
     </body>
-    <body name="book_cv" pos="1.895 2.605 0.611" quat="0.707107 0 0.707107 0">
+    <body name="book_cv" pos="1.831 2.57 0.611" quat="0.707107 0 0.707107 0">
       <joint name="book_cv_joint" type="free"/>
       <geom name="book_cv_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.86 0.92 0.23 1" mass="0.3"/>
       <geom name="book_cv_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.731 0.782 0.1955 1" mass="0.01"/>
@@ -879,7 +879,7 @@
       <geom name="book_cv_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_cv_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_cv_mat"/>
     </body>
-    <body name="book_nlp" pos="1.965 2.605 0.611" quat="0.707107 0 0.707107 0">
+    <body name="book_nlp" pos="1.901 2.57 0.611" quat="0.707107 0 0.707107 0">
       <joint name="book_nlp_joint" type="free"/>
       <geom name="book_nlp_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.51 0.76 0.92 1" mass="0.3"/>
       <geom name="book_nlp_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.4335 0.646 0.782 1" mass="0.01"/>
@@ -892,7 +892,7 @@
       <geom name="book_nlp_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_nlp_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_nlp_mat"/>
     </body>
-    <body name="book_rl" pos="2.035 2.605 0.611" quat="0.707107 0 0.707107 0">
+    <body name="book_rl" pos="1.971 2.57 0.611" quat="0.707107 0 0.707107 0">
       <joint name="book_rl_joint" type="free"/>
       <geom name="book_rl_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.8 0.36 0.5 1" mass="0.3"/>
       <geom name="book_rl_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.68 0.306 0.425 1" mass="0.01"/>
@@ -905,7 +905,7 @@
       <geom name="book_rl_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_rl_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_rl_mat"/>
     </body>
-    <body name="book_ai" pos="2.695 2.605 0.611" quat="0.707107 0 0.707107 0">
+    <body name="book_ai" pos="2.637 2.57 0.611" quat="0.707107 0 0.707107 0">
       <joint name="book_ai_joint" type="free"/>
       <geom name="book_ai_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.22 0.8 0.2 1" mass="0.3"/>
       <geom name="book_ai_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.187 0.68 0.17 1" mass="0.01"/>
@@ -918,7 +918,7 @@
       <geom name="book_ai_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_ai_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_ai_mat"/>
     </body>
-    <body name="book_infotheory" pos="1.895 2.605 1.111" quat="0.707107 0 0.707107 0">
+    <body name="book_infotheory" pos="1.831 2.57 1.111" quat="0.707107 0 0.707107 0">
       <joint name="book_infotheory_joint" type="free"/>
       <geom name="book_infotheory_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.53 0.44 0.8 1" mass="0.3"/>
       <geom name="book_infotheory_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.4505 0.374 0.68 1" mass="0.01"/>
@@ -931,7 +931,7 @@
       <geom name="book_infotheory_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_infotheory_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_infotheory_mat"/>
     </body>
-    <body name="book_crypto" pos="1.965 2.605 1.111" quat="0.707107 0 0.707107 0">
+    <body name="book_crypto" pos="1.901 2.57 1.111" quat="0.707107 0 0.707107 0">
       <joint name="book_crypto_joint" type="free"/>
       <geom name="book_crypto_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.62 0.47 0.28 1" mass="0.3"/>
       <geom name="book_crypto_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.527 0.3995 0.238 1" mass="0.01"/>
@@ -944,7 +944,7 @@
       <geom name="book_crypto_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_crypto_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_crypto_mat"/>
     </body>
-    <body name="book_quantum" pos="2.295 2.605 1.111" quat="0.707107 0 0.707107 0">
+    <body name="book_quantum" pos="2.237 2.57 1.111" quat="0.707107 0 0.707107 0">
       <joint name="book_quantum_joint" type="free"/>
       <geom name="book_quantum_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.15 0.62 0.55 1" mass="0.3"/>
       <geom name="book_quantum_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.1275 0.527 0.4675 1" mass="0.01"/>
@@ -957,7 +957,7 @@
       <geom name="book_quantum_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_quantum_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_quantum_mat"/>
     </body>
-    <body name="book_fluids" pos="3.095 2.605 1.111" quat="0.707107 0 0.707107 0">
+    <body name="book_fluids" pos="3.037 2.57 1.111" quat="0.707107 0 0.707107 0">
       <joint name="book_fluids_joint" type="free"/>
       <geom name="book_fluids_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.62 0.34 0.58 1" mass="0.3"/>
       <geom name="book_fluids_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.527 0.289 0.493 1" mass="0.01"/>
@@ -970,7 +970,7 @@
       <geom name="book_fluids_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_fluids_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_fluids_mat"/>
     </body>
-    <body name="book_heat" pos="3.165 2.605 1.111" quat="0.707107 0 0.707107 0">
+    <body name="book_heat" pos="3.107 2.57 1.111" quat="0.707107 0 0.707107 0">
       <joint name="book_heat_joint" type="free"/>
       <geom name="book_heat_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.71 0.92 0.41 1" mass="0.3"/>
       <geom name="book_heat_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.6035 0.782 0.3485 1" mass="0.01"/>
@@ -983,7 +983,7 @@
       <geom name="book_heat_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_heat_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_heat_mat"/>
     </body>
-    <body name="book_materials" pos="3.235 2.605 1.111" quat="0.707107 0 0.707107 0">
+    <body name="book_materials" pos="3.177 2.57 1.111" quat="0.707107 0 0.707107 0">
       <joint name="book_materials_joint" type="free"/>
       <geom name="book_materials_geom" size="0.11 0.075 0.02" type="box" group="3" priority="1" friction="0.4" rgba="0.23 0.43 0.92 1" mass="0.3"/>
       <geom name="book_materials_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" priority="1" friction="0.4" rgba="0.1955 0.3655 0.782 1" mass="0.01"/>
@@ -1209,6 +1209,6 @@
   </actuator>
 
   <keyframe>
-    <key name="home" qpos="-2.85 -2.355 0.781 1 0 0 0 -2.25 -1.95 0.781 1 0 0 0 -0.35 -2.355 0.781 1 0 0 0 0 -2.355 0.781 1 0 0 0 0.35 -2.355 0.781 1 0 0 0 2.2 -1.85 0.781 1 0 0 0 2.15 -2.355 0.781 1 0 0 0 -2.85 0.145 0.781 1 0 0 0 -0.35 0.145 0.781 1 0 0 0 0.3 0.5 0.781 1 0 0 0 2.15 0.145 0.781 1 0 0 0 -0.705 2.605 0.611 0.707107 0 0.707107 0 -0.305 2.605 1.111 0.707107 0 0.707107 0 -3.305 2.605 0.611 0.707107 0 0.707107 0 -3.235 2.605 0.611 0.707107 0 0.707107 0 -2.905 2.605 0.611 0.707107 0 0.707107 0 -2.105 2.605 0.611 0.707107 0 0.707107 0 -2.035 2.605 0.611 0.707107 0 0.707107 0 -1.965 2.605 0.611 0.707107 0 0.707107 0 -3.305 2.605 1.111 0.707107 0 0.707107 0 -3.235 2.605 1.111 0.707107 0 0.707107 0 -2.505 2.605 1.111 0.707107 0 0.707107 0 -2.435 2.605 1.111 0.707107 0 0.707107 0 -0.635 2.605 0.611 0.707107 0 0.707107 0 -0.565 2.605 0.611 0.707107 0 0.707107 0 0.495 2.605 0.611 0.707107 0 0.707107 0 -0.235 2.605 1.111 0.707107 0 0.707107 0 -0.165 2.605 1.111 0.707107 0 0.707107 0 0.495 2.605 1.111 0.707107 0 0.707107 0 1.895 2.605 0.611 0.707107 0 0.707107 0 1.965 2.605 0.611 0.707107 0 0.707107 0 2.035 2.605 0.611 0.707107 0 0.707107 0 2.695 2.605 0.611 0.707107 0 0.707107 0 1.895 2.605 1.111 0.707107 0 0.707107 0 1.965 2.605 1.111 0.707107 0 0.707107 0 2.295 2.605 1.111 0.707107 0 0.707107 0 3.095 2.605 1.111 0.707107 0 0.707107 0 3.165 2.605 1.111 0.707107 0 0.707107 0 3.235 2.605 1.111 0.707107 0 0.707107 0 0 -3.9 1.5708 0 0 0 -1.57079 0 1.57079 -0.7853 0.04 0.04" ctrl="0 0 0 0 0 0 -1.57079 0 1.57079 -0.7853 255"/>
+    <key name="home" qpos="-2.85 -2.355 0.781 1 0 0 0 -2.25 -1.95 0.781 1 0 0 0 -0.35 -2.355 0.781 1 0 0 0 0 -2.355 0.781 1 0 0 0 0.35 -2.355 0.781 1 0 0 0 2.2 -1.85 0.781 1 0 0 0 2.15 -2.355 0.781 1 0 0 0 -2.85 0.145 0.781 1 0 0 0 -0.35 0.145 0.781 1 0 0 0 0.3 0.5 0.781 1 0 0 0 2.15 0.145 0.781 1 0 0 0 -0.769 2.57 0.611 0.707107 0 0.707107 0 -0.363 2.57 1.111 0.707107 0 0.707107 0 -3.369 2.57 0.611 0.707107 0 0.707107 0 -3.299 2.57 0.611 0.707107 0 0.707107 0 -2.963 2.57 0.611 0.707107 0 0.707107 0 -2.163 2.57 0.611 0.707107 0 0.707107 0 -2.093 2.57 0.611 0.707107 0 0.707107 0 -2.023 2.57 0.611 0.707107 0 0.707107 0 -3.369 2.57 1.111 0.707107 0 0.707107 0 -3.299 2.57 1.111 0.707107 0 0.707107 0 -2.563 2.57 1.111 0.707107 0 0.707107 0 -2.493 2.57 1.111 0.707107 0 0.707107 0 -0.699 2.57 0.611 0.707107 0 0.707107 0 -0.629 2.57 0.611 0.707107 0 0.707107 0 0.437 2.57 0.611 0.707107 0 0.707107 0 -0.293 2.57 1.111 0.707107 0 0.707107 0 -0.223 2.57 1.111 0.707107 0 0.707107 0 0.437 2.57 1.111 0.707107 0 0.707107 0 1.831 2.57 0.611 0.707107 0 0.707107 0 1.901 2.57 0.611 0.707107 0 0.707107 0 1.971 2.57 0.611 0.707107 0 0.707107 0 2.637 2.57 0.611 0.707107 0 0.707107 0 1.831 2.57 1.111 0.707107 0 0.707107 0 1.901 2.57 1.111 0.707107 0 0.707107 0 2.237 2.57 1.111 0.707107 0 0.707107 0 3.037 2.57 1.111 0.707107 0 0.707107 0 3.107 2.57 1.111 0.707107 0 0.707107 0 3.177 2.57 1.111 0.707107 0 0.707107 0 0 -3.9 1.5708 0 0 0 -1.57079 0 1.57079 -0.7853 0.04 0.04" ctrl="0 0 0 0 0 0 -1.57079 0 1.57079 -0.7853 255"/>
   </keyframe>
 </mujoco>

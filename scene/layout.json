@@ -34,7 +34,7 @@
     "cols": 4,
     "row_surface_z": [0.5, 1.0],
     "top_z": 1.4,
-    "books_per_compartment": 4,
+    "books_per_compartment": 5,
     "book_pitch": 0.07
   },
   "shelves": {

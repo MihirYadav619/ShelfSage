@@ -40,9 +40,13 @@ TABLE_OVERHANG = 0.03             # flat at a table edge: spine 3 cm past the ed
                                    # the overhanging part; with the spine inside the edge the lower
                                    # finger (pad ~1 cm, convex hull 24 mm thick near the hand) hits the
                                    # table even in the 1 cm rib gap (Phase 4 test)
-GRIP_IN = {"table": 0.015, "shelf": 0.02}   # grasp point: this far in from the spine
-SHELF_INSET = 0.005                # standing in the shelf: spine 5 mm behind the shelf front (flush);
-                                   # deeper and the 20 cm wide hand hits the dividers when grasping
+GRIP_IN = {"table": 0.015, "shelf": 0.015}  # grasp point: this far in from the spine
+SHELF_OVERHANG = 0.03              # standing in the shelf: spine 3 cm past the shelf front, like the
+                                   # table edge. The fingers hold the part outside the shelf, so a book
+                                   # may stand right against a divider (inside, only the 1 cm rib gap
+                                   # is left there, too thin for a finger); deeper and the 20 cm wide
+                                   # hand also hits the dividers
+DIVIDER_HALF = 0.006               # compartment dividers are 12 mm thick
 QUAT_FLAT = (1, 0, 0, 0)
 QUAT_STAND = (0.7071068, 0, 0.7071068, 0)   # length -> down (head on top), thickness -> +x
 
@@ -193,8 +197,11 @@ def build_chair(name, x, y):
 def build_shelf(name, pos, s):
     """One bookcase. Compartments are named <shelf>-<row><col>, e.g. "S2-A3" (row A = bottom).
 
-    Each compartment holds up to `books_per_compartment` standing books, `book_pitch` apart
-    (ribs touch, leaving finger gaps between neighbours). Returns geoms and
+    Books stand packed from the left: the first one's ribs against the left divider (or side
+    panel, 1 mm spawn gap), the next ones `book_pitch` apart. With the 0.07 m pitch neighbouring
+    covers are 3 cm apart (ribs 1 cm apart); at 0.06 m (ribs touching, 2 cm between covers) the
+    finger's collision hull, 24 mm thick towards the hand, hit the neighbour's protruding spine.
+    Returns geoms and
     {compartment: {"surface": [x, y, z], "positions": [[x, y, z_centre], ...]}}.
     """
     cx, cy = pos
@@ -214,7 +221,10 @@ def build_shelf(name, pos, s):
     geoms.append(box(None, (cx, cy - D / 2 + 0.01, 0.06), (W / 2, 0.01, 0.06), material=m))   # plinth
 
     front = cy - D / 2
-    book_y = front + SHELF_INSET + BOOK_W / 2
+    book_y = front - SHELF_OVERHANG + BOOK_W / 2
+    half_x = BOOK_T / 2 + RIB_H                     # standing book incl. ribs, along the shelf
+    if pitch < 2 * half_x:
+        raise ValueError(f"book_pitch {pitch} < {2 * half_x} (book + ribs)")
     comps = {}
     for i, z_s in enumerate(surfaces):
         row = "ABCDEFGH"[i]
@@ -223,13 +233,18 @@ def build_shelf(name, pos, s):
         row_h = ceiling - z_s
         for c in range(1, cols):
             x_div = cx - W / 2 + c * W / cols
-            geoms.append(box(None, (x_div, cy, z_s + row_h / 2), (0.006, D / 2, row_h / 2), material=m))
+            geoms.append(box(None, (x_div, cy, z_s + row_h / 2), (DIVIDER_HALF, D / 2, row_h / 2),
+                             material=m))
         for c in range(1, cols + 1):
             x_c = cx - W / 2 + (c - 0.5) * W / cols
-            offsets = [(k - (n - 1) / 2) * pitch for k in range(n)]
+            left = cx - W / 2 + (c - 1) * W / cols + (DIVIDER_HALF if c > 1 else 0.0)
+            right = cx - W / 2 + c * W / cols - (DIVIDER_HALF if c < cols else 0.0)
+            xs = [left + EPS + half_x + k * pitch for k in range(n)]
+            if xs[-1] + half_x > right:
+                raise ValueError(f"{n} books at pitch {pitch} do not fit in {right - left:.3f} m")
             comps[f"{name}-{row}{c}"] = {
                 "surface": [x_c, cy, z_s],
-                "positions": [[x_c + o, book_y, z_s + BOOK_L / 2 + EPS] for o in offsets]}
+                "positions": [[x, book_y, z_s + BOOK_L / 2 + EPS] for x in xs]}
     return geoms, comps
 
 
