@@ -381,6 +381,7 @@ Notes:
 - Run commands from the project root with the venv active (prompt shows `(venv)`).
 - In PowerShell a stuck `>>` prompt means a multi-line command is not finished; press Ctrl+C to cancel.
 - When updating dependencies, `pip freeze > requirements.txt` in Windows PowerShell 5.1 writes UTF-16. Use `pip freeze | Out-File -Encoding utf8 requirements.txt` instead.
+- **Laptops with two GPUs (Intel + NVIDIA): make Python render on the NVIDIA GPU.** Windows runs Python on the integrated GPU by default; the viewer then runs at about 5 fps instead of about 100 fps (measured: 183 ms vs 10 ms per frame on an RTX 4060). Fix: *Settings -> System -> Display -> Graphics*, add `python.exe` from the base install (e.g. `%LOCALAPPDATA%ProgramsPythonPython311python.exe`) and `venvScriptspython.exe`, set both to *High performance*. Check with: `python -c "import mujoco; from OpenGL import GL; c=mujoco.GLContext(64,64); c.make_current(); print(GL.glGetString(GL.GL_RENDERER))"` (should print the NVIDIA GPU).
 
 ---
 
