@@ -171,24 +171,24 @@
     <geom name="baseboard_east" size="0.01 4 0.06" pos="3.99 -1 0.06" type="box" contype="0" conaffinity="0" rgba="0.35 0.24 0.15 1"/>
     <geom name="wall_w" size="0.05 4.05 1.25" pos="-4.05 -1 1.25" type="box" material="plaster_mat"/>
     <geom name="baseboard_west" size="0.01 4 0.06" pos="-3.99 -1 0.06" type="box" contype="0" conaffinity="0" rgba="0.35 0.24 0.15 1"/>
-    <geom name="zone_table_A_fill" size="0.66 0.48 0.0005" pos="-2.5 -2.38 0.0006" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 0.13"/>
-    <geom name="zone_table_A_tape_s" size="0.66 0.025 0.0005" pos="-2.5 -2.835 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
-    <geom name="zone_table_A_tape_n" size="0.66 0.025 0.0005" pos="-2.5 -1.925 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
-    <geom name="zone_table_A_tape_w" size="0.025 0.48 0.0005" pos="-3.135 -2.38 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
-    <geom name="zone_table_A_tape_e" size="0.025 0.48 0.0005" pos="-1.865 -2.38 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
-    <geom name="zone_table_A_label" size="0.45 0.11 0.0005" pos="-2.5 -2.66 0.0014" type="box" contype="0" conaffinity="0" material="zone_label_mat"/>
-    <geom name="zone_table_B_fill" size="0.66 0.48 0.0005" pos="0 -2.38 0.0006" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 0.13"/>
-    <geom name="zone_table_B_tape_s" size="0.66 0.025 0.0005" pos="0 -2.835 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
-    <geom name="zone_table_B_tape_n" size="0.66 0.025 0.0005" pos="0 -1.925 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
-    <geom name="zone_table_B_tape_w" size="0.025 0.48 0.0005" pos="-0.635 -2.38 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
-    <geom name="zone_table_B_tape_e" size="0.025 0.48 0.0005" pos="0.635 -2.38 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
-    <geom name="zone_table_B_label" size="0.45 0.11 0.0005" pos="0 -2.66 0.0014" type="box" contype="0" conaffinity="0" material="zone_label_mat"/>
-    <geom name="zone_table_C_fill" size="0.66 0.48 0.0005" pos="2.5 -2.38 0.0006" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 0.13"/>
-    <geom name="zone_table_C_tape_s" size="0.66 0.025 0.0005" pos="2.5 -2.835 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
-    <geom name="zone_table_C_tape_n" size="0.66 0.025 0.0005" pos="2.5 -1.925 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
-    <geom name="zone_table_C_tape_w" size="0.025 0.48 0.0005" pos="1.865 -2.38 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
-    <geom name="zone_table_C_tape_e" size="0.025 0.48 0.0005" pos="3.135 -2.38 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
-    <geom name="zone_table_C_label" size="0.45 0.11 0.0005" pos="2.5 -2.66 0.0014" type="box" contype="0" conaffinity="0" material="zone_label_mat"/>
+    <geom name="zone_table_A_fill" size="0.66 0.48 0.0005" pos="-2.5 -2.88 0.0006" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 0.13"/>
+    <geom name="zone_table_A_tape_s" size="0.66 0.025 0.0005" pos="-2.5 -3.335 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
+    <geom name="zone_table_A_tape_n" size="0.66 0.025 0.0005" pos="-2.5 -2.425 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
+    <geom name="zone_table_A_tape_w" size="0.025 0.48 0.0005" pos="-3.135 -2.88 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
+    <geom name="zone_table_A_tape_e" size="0.025 0.48 0.0005" pos="-1.865 -2.88 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
+    <geom name="zone_table_A_label" size="0.45 0.11 0.0005" pos="-2.5 -3.16 0.0014" type="box" contype="0" conaffinity="0" material="zone_label_mat"/>
+    <geom name="zone_table_B_fill" size="0.66 0.48 0.0005" pos="0 -2.88 0.0006" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 0.13"/>
+    <geom name="zone_table_B_tape_s" size="0.66 0.025 0.0005" pos="0 -3.335 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
+    <geom name="zone_table_B_tape_n" size="0.66 0.025 0.0005" pos="0 -2.425 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
+    <geom name="zone_table_B_tape_w" size="0.025 0.48 0.0005" pos="-0.635 -2.88 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
+    <geom name="zone_table_B_tape_e" size="0.025 0.48 0.0005" pos="0.635 -2.88 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
+    <geom name="zone_table_B_label" size="0.45 0.11 0.0005" pos="0 -3.16 0.0014" type="box" contype="0" conaffinity="0" material="zone_label_mat"/>
+    <geom name="zone_table_C_fill" size="0.66 0.48 0.0005" pos="2.5 -2.88 0.0006" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 0.13"/>
+    <geom name="zone_table_C_tape_s" size="0.66 0.025 0.0005" pos="2.5 -3.335 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
+    <geom name="zone_table_C_tape_n" size="0.66 0.025 0.0005" pos="2.5 -2.425 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
+    <geom name="zone_table_C_tape_w" size="0.025 0.48 0.0005" pos="1.865 -2.88 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
+    <geom name="zone_table_C_tape_e" size="0.025 0.48 0.0005" pos="3.135 -2.88 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
+    <geom name="zone_table_C_label" size="0.45 0.11 0.0005" pos="2.5 -3.16 0.0014" type="box" contype="0" conaffinity="0" material="zone_label_mat"/>
     <geom name="zone_table_D_fill" size="0.66 0.48 0.0005" pos="-2.5 -0.38 0.0006" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 0.13"/>
     <geom name="zone_table_D_tape_s" size="0.66 0.025 0.0005" pos="-2.5 -0.835 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
     <geom name="zone_table_D_tape_n" size="0.66 0.025 0.0005" pos="-2.5 0.075 0.0012" type="box" contype="0" conaffinity="0" rgba="0.78 0.08 0.08 1"/>
@@ -243,7 +243,7 @@
     <light name="lamp3" pos="0 2 2.4" cutoff="90" exponent="1" diffuse="0.38 0.36 0.33" specular="0.05 0.05 0.05"/>
     <light name="lamp4" pos="-2.2 -3.5 2.4" cutoff="90" exponent="1" diffuse="0.38 0.36 0.33" specular="0.05 0.05 0.05"/>
     <light name="lamp5" pos="2.2 -3.5 2.4" cutoff="90" exponent="1" diffuse="0.38 0.36 0.33" specular="0.05 0.05 0.05"/>
-    <body name="table_A" pos="-2.5 -1.5 0">
+    <body name="table_A" pos="-2.5 -2 0">
       <geom size="0.6 0.4 0.015" pos="0 0 0.735" type="box" material="wood_mat"/>
       <geom size="0.035 0.035 0.36" pos="-0.54 -0.34 0.36" type="box" material="wood_mat"/>
       <geom size="0.035 0.035 0.36" pos="-0.54 0.34 0.36" type="box" material="wood_mat"/>
@@ -251,7 +251,25 @@
       <geom size="0.035 0.035 0.36" pos="0.54 0.34 0.36" type="box" material="wood_mat"/>
       <geom size="0.54 0.34 0.04" pos="0 0 0.68" type="box" contype="0" conaffinity="0" material="wood_mat"/>
     </body>
-    <body name="table_B" pos="0 -1.5 0">
+    <body name="chair_A1" pos="-2.8 -1.47 0">
+      <geom size="0.21 0.21 0.015" pos="0 0 0.445" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="-0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="-0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.012 0.11" pos="0 0.18 0.78" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.01 0.025" pos="0 0.18 0.56" type="box" material="shelf_mat"/>
+    </body>
+    <body name="chair_A2" pos="-2.2 -1.47 0">
+      <geom size="0.21 0.21 0.015" pos="0 0 0.445" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="-0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="-0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.012 0.11" pos="0 0.18 0.78" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.01 0.025" pos="0 0.18 0.56" type="box" material="shelf_mat"/>
+    </body>
+    <body name="table_B" pos="0 -2 0">
       <geom size="0.6 0.4 0.015" pos="0 0 0.735" type="box" material="wood_mat"/>
       <geom size="0.035 0.035 0.36" pos="-0.54 -0.34 0.36" type="box" material="wood_mat"/>
       <geom size="0.035 0.035 0.36" pos="-0.54 0.34 0.36" type="box" material="wood_mat"/>
@@ -259,13 +277,49 @@
       <geom size="0.035 0.035 0.36" pos="0.54 0.34 0.36" type="box" material="wood_mat"/>
       <geom size="0.54 0.34 0.04" pos="0 0 0.68" type="box" contype="0" conaffinity="0" material="wood_mat"/>
     </body>
-    <body name="table_C" pos="2.5 -1.5 0">
+    <body name="chair_B1" pos="-0.3 -1.47 0">
+      <geom size="0.21 0.21 0.015" pos="0 0 0.445" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="-0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="-0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.012 0.11" pos="0 0.18 0.78" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.01 0.025" pos="0 0.18 0.56" type="box" material="shelf_mat"/>
+    </body>
+    <body name="chair_B2" pos="0.3 -1.47 0">
+      <geom size="0.21 0.21 0.015" pos="0 0 0.445" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="-0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="-0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.012 0.11" pos="0 0.18 0.78" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.01 0.025" pos="0 0.18 0.56" type="box" material="shelf_mat"/>
+    </body>
+    <body name="table_C" pos="2.5 -2 0">
       <geom size="0.6 0.4 0.015" pos="0 0 0.735" type="box" material="wood_mat"/>
       <geom size="0.035 0.035 0.36" pos="-0.54 -0.34 0.36" type="box" material="wood_mat"/>
       <geom size="0.035 0.035 0.36" pos="-0.54 0.34 0.36" type="box" material="wood_mat"/>
       <geom size="0.035 0.035 0.36" pos="0.54 -0.34 0.36" type="box" material="wood_mat"/>
       <geom size="0.035 0.035 0.36" pos="0.54 0.34 0.36" type="box" material="wood_mat"/>
       <geom size="0.54 0.34 0.04" pos="0 0 0.68" type="box" contype="0" conaffinity="0" material="wood_mat"/>
+    </body>
+    <body name="chair_C1" pos="2.2 -1.47 0">
+      <geom size="0.21 0.21 0.015" pos="0 0 0.445" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="-0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="-0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.012 0.11" pos="0 0.18 0.78" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.01 0.025" pos="0 0.18 0.56" type="box" material="shelf_mat"/>
+    </body>
+    <body name="chair_C2" pos="2.8 -1.47 0">
+      <geom size="0.21 0.21 0.015" pos="0 0 0.445" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="-0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="-0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.012 0.11" pos="0 0.18 0.78" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.01 0.025" pos="0 0.18 0.56" type="box" material="shelf_mat"/>
     </body>
     <body name="table_D" pos="-2.5 0.5 0">
       <geom size="0.6 0.4 0.015" pos="0 0 0.735" type="box" material="wood_mat"/>
@@ -275,6 +329,24 @@
       <geom size="0.035 0.035 0.36" pos="0.54 0.34 0.36" type="box" material="wood_mat"/>
       <geom size="0.54 0.34 0.04" pos="0 0 0.68" type="box" contype="0" conaffinity="0" material="wood_mat"/>
     </body>
+    <body name="chair_D1" pos="-2.8 1.03 0">
+      <geom size="0.21 0.21 0.015" pos="0 0 0.445" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="-0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="-0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.012 0.11" pos="0 0.18 0.78" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.01 0.025" pos="0 0.18 0.56" type="box" material="shelf_mat"/>
+    </body>
+    <body name="chair_D2" pos="-2.2 1.03 0">
+      <geom size="0.21 0.21 0.015" pos="0 0 0.445" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="-0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="-0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.012 0.11" pos="0 0.18 0.78" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.01 0.025" pos="0 0.18 0.56" type="box" material="shelf_mat"/>
+    </body>
     <body name="table_E" pos="0 0.5 0">
       <geom size="0.6 0.4 0.015" pos="0 0 0.735" type="box" material="wood_mat"/>
       <geom size="0.035 0.035 0.36" pos="-0.54 -0.34 0.36" type="box" material="wood_mat"/>
@@ -282,6 +354,24 @@
       <geom size="0.035 0.035 0.36" pos="0.54 -0.34 0.36" type="box" material="wood_mat"/>
       <geom size="0.035 0.035 0.36" pos="0.54 0.34 0.36" type="box" material="wood_mat"/>
       <geom size="0.54 0.34 0.04" pos="0 0 0.68" type="box" contype="0" conaffinity="0" material="wood_mat"/>
+    </body>
+    <body name="chair_E1" pos="-0.3 1.03 0">
+      <geom size="0.21 0.21 0.015" pos="0 0 0.445" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="-0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="-0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.012 0.11" pos="0 0.18 0.78" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.01 0.025" pos="0 0.18 0.56" type="box" material="shelf_mat"/>
+    </body>
+    <body name="chair_E2" pos="0.3 1.03 0">
+      <geom size="0.21 0.21 0.015" pos="0 0 0.445" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="-0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="-0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.012 0.11" pos="0 0.18 0.78" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.01 0.025" pos="0 0.18 0.56" type="box" material="shelf_mat"/>
     </body>
     <body name="table_F" pos="2.5 0.5 0">
       <geom size="0.6 0.4 0.015" pos="0 0 0.735" type="box" material="wood_mat"/>
@@ -291,7 +381,25 @@
       <geom size="0.035 0.035 0.36" pos="0.54 0.34 0.36" type="box" material="wood_mat"/>
       <geom size="0.54 0.34 0.04" pos="0 0 0.68" type="box" contype="0" conaffinity="0" material="wood_mat"/>
     </body>
-    <body name="book_linalg" pos="-2.85 -1.82 0.781">
+    <body name="chair_F1" pos="2.2 1.03 0">
+      <geom size="0.21 0.21 0.015" pos="0 0 0.445" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="-0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="-0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.012 0.11" pos="0 0.18 0.78" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.01 0.025" pos="0 0.18 0.56" type="box" material="shelf_mat"/>
+    </body>
+    <body name="chair_F2" pos="2.8 1.03 0">
+      <geom size="0.21 0.21 0.015" pos="0 0 0.445" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="-0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="-0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.215" pos="0.18 -0.18 0.215" type="box" material="shelf_mat"/>
+      <geom size="0.015 0.015 0.45" pos="0.18 0.18 0.45" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.012 0.11" pos="0 0.18 0.78" type="box" material="shelf_mat"/>
+      <geom size="0.18 0.01 0.025" pos="0 0.18 0.56" type="box" material="shelf_mat"/>
+    </body>
+    <body name="book_linalg" pos="-2.85 -2.32 0.781">
       <joint name="book_linalg_joint" type="free"/>
       <geom name="book_linalg_geom" size="0.11 0.075 0.02" type="box" group="3" rgba="0.8 0.2 0.2 1" mass="0.3"/>
       <geom name="book_linalg_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" rgba="0.68 0.17 0.17 1" mass="0.01"/>
@@ -304,7 +412,7 @@
       <geom name="book_linalg_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_linalg_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_linalg_mat"/>
     </body>
-    <body name="book_calculus" pos="-2.25 -1.45 0.781">
+    <body name="book_calculus" pos="-2.25 -1.95 0.781">
       <joint name="book_calculus_joint" type="free"/>
       <geom name="book_calculus_geom" size="0.11 0.075 0.02" type="box" group="3" rgba="0.9 0.6 0.15 1" mass="0.3"/>
       <geom name="book_calculus_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" rgba="0.765 0.51 0.1275 1" mass="0.01"/>
@@ -317,7 +425,7 @@
       <geom name="book_calculus_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_calculus_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_calculus_mat"/>
     </body>
-    <body name="book_ml" pos="-0.35 -1.82 0.781">
+    <body name="book_ml" pos="-0.35 -2.32 0.781">
       <joint name="book_ml_joint" type="free"/>
       <geom name="book_ml_geom" size="0.11 0.075 0.02" type="box" group="3" rgba="0.15 0.3 0.85 1" mass="0.3"/>
       <geom name="book_ml_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" rgba="0.1275 0.255 0.7225 1" mass="0.01"/>
@@ -330,7 +438,7 @@
       <geom name="book_ml_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_ml_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_ml_mat"/>
     </body>
-    <body name="book_dl" pos="0 -1.82 0.781">
+    <body name="book_dl" pos="0 -2.32 0.781">
       <joint name="book_dl_joint" type="free"/>
       <geom name="book_dl_geom" size="0.11 0.075 0.02" type="box" group="3" rgba="0.1 0.55 0.75 1" mass="0.3"/>
       <geom name="book_dl_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" rgba="0.085 0.4675 0.6375 1" mass="0.01"/>
@@ -343,7 +451,7 @@
       <geom name="book_dl_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_dl_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_dl_mat"/>
     </body>
-    <body name="book_robotics" pos="0.35 -1.82 0.781">
+    <body name="book_robotics" pos="0.35 -2.32 0.781">
       <joint name="book_robotics_joint" type="free"/>
       <geom name="book_robotics_geom" size="0.11 0.075 0.02" type="box" group="3" rgba="0.2 0.65 0.3 1" mass="0.3"/>
       <geom name="book_robotics_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" rgba="0.17 0.5525 0.255 1" mass="0.01"/>
@@ -356,7 +464,7 @@
       <geom name="book_robotics_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_robotics_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_robotics_mat"/>
     </body>
-    <body name="book_control" pos="2.2 -1.35 0.781">
+    <body name="book_control" pos="2.2 -1.85 0.781">
       <joint name="book_control_joint" type="free"/>
       <geom name="book_control_geom" size="0.11 0.075 0.02" type="box" group="3" rgba="0.55 0.25 0.7 1" mass="0.3"/>
       <geom name="book_control_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" rgba="0.4675 0.2125 0.595 1" mass="0.01"/>
@@ -369,7 +477,7 @@
       <geom name="book_control_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_control_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_control_mat"/>
     </body>
-    <body name="book_signals" pos="2.15 -1.82 0.781">
+    <body name="book_signals" pos="2.15 -2.32 0.781">
       <joint name="book_signals_joint" type="free"/>
       <geom name="book_signals_geom" size="0.11 0.075 0.02" type="box" group="3" rgba="0.85 0.35 0.6 1" mass="0.3"/>
       <geom name="book_signals_rib_head_top" size="0.01 0.075 0.005" pos="-0.1 0 0.025" type="box" rgba="0.7225 0.2975 0.51 1" mass="0.01"/>
@@ -460,9 +568,9 @@
       <geom name="book_stats_pages" size="0.107 0.0715 0.017" pos="0 0.0015 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.93 0.85 1" mass="0"/>
       <geom name="book_stats_label" size="0.106 0.0005 0.018" pos="0 -0.0756 0" type="box" contype="0" conaffinity="0" mass="0" material="spine_stats_mat"/>
     </body>
-    <body name="base" pos="0 -3.6 0" quat="0.707107 0 0 0.707107">
+    <body name="base" pos="0 -3.9 0" quat="0.707107 0 0 0.707107">
       <joint name="base_x" type="slide" axis="0 -1 0"/>
-      <joint name="base_y" type="slide" ref="-3.6" axis="1 0 0"/>
+      <joint name="base_y" type="slide" ref="-3.9" axis="1 0 0"/>
       <joint name="base_yaw" ref="1.5708"/>
       <geom name="chassis" size="0.3 0.25 0.3" pos="0 0 0.35" type="box" rgba="0.18 0.21 0.26 1" mass="30"/>
       <geom name="chassis_top" size="0.305 0.255 0.006" pos="0 0 0.646" type="box" contype="0" conaffinity="0" rgba="0.75 0.77 0.8 1" mass="0"/>
@@ -634,6 +742,6 @@
   </actuator>
 
   <keyframe>
-    <key name="home" qpos="-2.85 -1.82 0.781 1 0 0 0 -2.25 -1.45 0.781 1 0 0 0 -0.35 -1.82 0.781 1 0 0 0 0 -1.82 0.781 1 0 0 0 0.35 -1.82 0.781 1 0 0 0 2.2 -1.35 0.781 1 0 0 0 2.15 -1.82 0.781 1 0 0 0 -2.85 0.18 0.781 1 0 0 0 -0.35 0.18 0.781 1 0 0 0 0.3 0.5 0.781 1 0 0 0 2.15 0.18 0.781 1 0 0 0 -0.6 2.62 0.611 0.707107 0 0.707107 0 -0.2 2.62 1.111 0.707107 0 0.707107 0 0 -3.6 1.5708 0 0 0 -1.57079 0 1.57079 -0.7853 0.04 0.04" ctrl="0 0 0 0 0 0 -1.57079 0 1.57079 -0.7853 255"/>
+    <key name="home" qpos="-2.85 -2.32 0.781 1 0 0 0 -2.25 -1.95 0.781 1 0 0 0 -0.35 -2.32 0.781 1 0 0 0 0 -2.32 0.781 1 0 0 0 0.35 -2.32 0.781 1 0 0 0 2.2 -1.85 0.781 1 0 0 0 2.15 -2.32 0.781 1 0 0 0 -2.85 0.18 0.781 1 0 0 0 -0.35 0.18 0.781 1 0 0 0 0.3 0.5 0.781 1 0 0 0 2.15 0.18 0.781 1 0 0 0 -0.6 2.62 0.611 0.707107 0 0.707107 0 -0.2 2.62 1.111 0.707107 0 0.707107 0 0 -3.9 1.5708 0 0 0 -1.57079 0 1.57079 -0.7853 0.04 0.04" ctrl="0 0 0 0 0 0 -1.57079 0 1.57079 -0.7853 255"/>
   </keyframe>
 </mujoco>

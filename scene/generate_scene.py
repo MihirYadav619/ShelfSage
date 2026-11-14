@@ -150,7 +150,33 @@ def build_tables(layout):
         edge_y = y - hy + BOOK_W / 2 + SPINE_INSET
         meta[name] = {"pos": [x, y], "top_z": TABLE_TOP_Z, "half_size": [hx, hy],
                       "edge_spots": [[x + dx, edge_y, flat_z] for dx in EDGE_X_OFFSETS]}
+        # chairs on the reader side (north), pushed in a little; the robot side (south) stays free
+        ch = layout.get("chairs")
+        if ch:
+            cy = y + hy + CHAIR_SEAT / 2 - ch["tuck"]
+            chairs = [[x + dx, cy] for dx in ch["x_offsets"]]
+            meta[name]["chairs"] = chairs
+            out += [build_chair(f"chair_{name}{i + 1}", cx_, cy_) for i, (cx_, cy_) in enumerate(chairs)]
     return out, meta
+
+
+CHAIR_SEAT, CHAIR_SEAT_Z, CHAIR_BACK_TOP = 0.42, 0.46, 0.90
+
+
+def build_chair(name, x, y):
+    """Static wooden chair facing -y (towards its table); backrest on the +y side."""
+    s, h, t, leg = CHAIR_SEAT / 2, CHAIR_SEAT_Z, 0.03, 0.015
+    m = "shelf_mat"
+    lines = [f'<body name="{name}" pos="{x:.4f} {y:.4f} 0">',
+             "  " + box(None, (0, 0, h - t / 2), (s, s, t / 2), material=m)]
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            top = CHAIR_BACK_TOP if sy > 0 else h - t       # rear legs carry the backrest
+            lines.append("  " + box(None, (sx * (s - 0.03), sy * (s - 0.03), top / 2), (leg, leg, top / 2), material=m))
+    lines.append("  " + box(None, (0, s - 0.03, CHAIR_BACK_TOP - 0.12), (s - 0.03, 0.012, 0.11), material=m))
+    lines.append("  " + box(None, (0, s - 0.03, h + 0.10), (s - 0.03, 0.010, 0.025), material=m))
+    lines.append("</body>")
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------- shelf

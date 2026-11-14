@@ -172,8 +172,8 @@ def main():
     # ---------------------------------------------------------------- 3. odometry drift
     robot.close()
     robot = Robot(model, data, seed=0, pose_source="odom")
-    loop = [(2.5, -3.2, math.pi / 2), (2.5, -2.6, math.pi), (-2.5, -2.6, math.pi),
-            (-2.5, -3.2, 0.0), (0.0, -3.2, math.pi / 2)]
+    loop = [(2.5, -3.6, math.pi / 2), (2.5, -3.0, math.pi), (-2.5, -3.0, math.pi),
+            (-2.5, -3.6, 0.0), (0.0, -3.6, math.pi / 2)]
     robot.trace, length = [], 0.0
     prev = np.array(robot.true_pose()[:2])
     for wp in loop:
