@@ -1,0 +1,41 @@
+{
+  "room": {"size": [8.0, 6.0], "wall_height": 2.5},
+  "window": {"pos": [3.97, 0.0, 1.4], "half_size": [0.02, 1.0, 0.6]},
+  "robot_start": [0.0, -2.5, 0.0],
+  "hidden_walls": ["south"],
+
+  "table_half_size": [0.6, 0.4],
+  "tables": {
+    "A": {"pos": [-2.5, -1.5]},
+    "B": {"pos": [0.0, -1.5]},
+    "C": {"pos": [2.5, -1.5]},
+    "D": {"pos": [-2.5, 0.5]},
+    "E": {"pos": [0.0, 0.5]},
+    "F": {"pos": [2.5, 0.5]}
+  },
+
+  "shelf": {
+    "pos": [0.0, 2.7],
+    "width": 1.6,
+    "depth": 0.35,
+    "cols": 4,
+    "row_surface_z": [0.5, 0.9],
+    "top_z": 1.3
+  },
+
+  "books": [
+    {"id": "linalg",   "title": "Linear Algebra",       "color": [0.80, 0.20, 0.20], "location": "table:A"},
+    {"id": "calculus", "title": "Calculus",             "color": [0.90, 0.60, 0.15], "location": "table:A"},
+    {"id": "ml",       "title": "Machine Learning",     "color": [0.15, 0.30, 0.85], "location": "table:B"},
+    {"id": "dl",       "title": "Deep Learning",        "color": [0.10, 0.55, 0.75], "location": "table:B"},
+    {"id": "robotics", "title": "Robotics",             "color": [0.20, 0.65, 0.30], "location": "table:B"},
+    {"id": "control",  "title": "Control Systems",      "color": [0.55, 0.25, 0.70], "location": "table:C"},
+    {"id": "signals",  "title": "Signals and Systems",  "color": [0.85, 0.35, 0.60], "location": "table:C"},
+    {"id": "python",   "title": "Python Programming",   "color": [0.95, 0.85, 0.20], "location": "table:D"},
+    {"id": "algo",     "title": "Algorithms",           "color": [0.25, 0.25, 0.30], "location": "table:E"},
+    {"id": "db",       "title": "Databases",            "color": [0.50, 0.50, 0.55], "location": "table:E"},
+    {"id": "thermo",   "title": "Thermodynamics",       "color": [0.70, 0.30, 0.10], "location": "table:F"},
+    {"id": "physics",  "title": "Physics",              "color": [0.30, 0.50, 0.90], "location": "shelf:A1"},
+    {"id": "stats",    "title": "Statistics",           "color": [0.90, 0.45, 0.25], "location": "shelf:B2"}
+  ]
+}

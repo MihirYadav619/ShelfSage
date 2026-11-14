@@ -1,0 +1,211 @@
+<mujoco model="library">
+  <compiler texturedir="textures"/>
+  <option timestep="0.002"/>
+  <visual>
+    <global offwidth="1920" offheight="1080"/>
+    <quality shadowsize="4096" offsamples="8"/>
+    <headlight diffuse="0.30 0.30 0.30" ambient="0.30 0.30 0.30" specular="0 0 0"/>
+    <rgba haze="0.75 0.82 0.9 1"/>
+  </visual>
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.62 0.78 0.95" rgb2="0.20 0.25 0.35" width="512" height="512"/>
+    <texture name="floor_tex" type="2d" file="floor_wood.png"/>
+    <texture name="wood_tex" type="2d" file="wood.png"/>
+    <texture name="shelf_tex" type="2d" file="shelf_wood.png"/>
+    <texture name="plaster_tex" type="2d" file="plaster.png"/>
+    <material name="floor_mat" texture="floor_tex" texuniform="true" texrepeat="0.5 0.5" specular="0.35" shininess="0.35" reflectance="0.10"/>
+    <material name="wood_mat" texture="wood_tex" texuniform="true" texrepeat="1 1" specular="0.25" shininess="0.30"/>
+    <material name="shelf_mat" texture="shelf_tex" texuniform="true" texrepeat="1 1" specular="0.25" shininess="0.30"/>
+    <material name="plaster_mat" texture="plaster_tex" texuniform="true" texrepeat="0.5 0.5" specular="0.05" shininess="0.05"/>
+  </asset>
+  <worldbody>
+    <light name="lamp0" pos="-2.2 -0.8 2.4" dir="0 0 -1" diffuse="0.38 0.36 0.33" specular="0.05 0.05 0.05" cutoff="90" exponent="1" castshadow="true"/>
+    <light name="lamp1" pos="2.2 -0.8 2.4" dir="0 0 -1" diffuse="0.38 0.36 0.33" specular="0.05 0.05 0.05" cutoff="90" exponent="1" castshadow="true"/>
+    <light name="lamp2" pos="0.0 0.8 2.4" dir="0 0 -1" diffuse="0.38 0.36 0.33" specular="0.05 0.05 0.05" cutoff="90" exponent="1" castshadow="true"/>
+    <light name="lamp3" pos="0.0 2.0 2.4" dir="0 0 -1" diffuse="0.38 0.36 0.33" specular="0.05 0.05 0.05" cutoff="90" exponent="1" castshadow="true"/>
+    <camera name="overview" pos="0 -2.8 2.3" xyaxes="1 0 0 0 0.425 0.905" fovy="80"/>
+    <camera name="cutaway" pos="0 -7.5 4.8" xyaxes="1 0 0 0 0.471 0.883" fovy="45"/>
+    <geom name="floor" type="plane" size="4.0 3.0 0.05" material="floor_mat"/>
+    <geom name="wall_n" type="box" pos="0.0000 3.0500 1.2500" size="4.0500 0.0500 1.2500" material="plaster_mat"/>
+    <geom name="baseboard_north" type="box" pos="0.0000 2.9900 0.0600" size="4.0000 0.0100 0.0600" rgba="0.3500 0.2400 0.1500 1.0000" contype="0" conaffinity="0"/>
+    <geom name="wall_s" type="box" pos="0.0000 -3.0500 1.2500" size="4.0500 0.0500 1.2500" material="plaster_mat" group="4"/>
+    <geom name="baseboard_south" type="box" pos="0.0000 -2.9900 0.0600" size="4.0000 0.0100 0.0600" rgba="0.3500 0.2400 0.1500 1.0000" contype="0" conaffinity="0" group="4"/>
+    <geom name="wall_e" type="box" pos="4.0500 0.0000 1.2500" size="0.0500 3.0500 1.2500" material="plaster_mat"/>
+    <geom name="baseboard_east" type="box" pos="3.9900 0.0000 0.0600" size="0.0100 3.0000 0.0600" rgba="0.3500 0.2400 0.1500 1.0000" contype="0" conaffinity="0"/>
+    <geom name="wall_w" type="box" pos="-4.0500 0.0000 1.2500" size="0.0500 3.0500 1.2500" material="plaster_mat"/>
+    <geom name="baseboard_west" type="box" pos="-3.9900 0.0000 0.0600" size="0.0100 3.0000 0.0600" rgba="0.3500 0.2400 0.1500 1.0000" contype="0" conaffinity="0"/>
+    <geom name="window_glass" type="box" pos="3.9700 0.0000 1.4000" size="0.0200 1.0000 0.6000" rgba="0.7000 0.8500 1.0000 0.2500" contype="0" conaffinity="0"/>
+    <geom type="box" pos="3.9700 0.0000 0.8000" size="0.0350 1.0500 0.0250" rgba="0.9500 0.9500 0.9300 1.0000" contype="0" conaffinity="0"/>
+    <geom type="box" pos="3.9700 -1.0000 1.4000" size="0.0350 0.0250 0.6500" rgba="0.9500 0.9500 0.9300 1.0000" contype="0" conaffinity="0"/>
+    <geom type="box" pos="3.9700 0.0000 2.0000" size="0.0350 1.0500 0.0250" rgba="0.9500 0.9500 0.9300 1.0000" contype="0" conaffinity="0"/>
+    <geom type="box" pos="3.9700 1.0000 1.4000" size="0.0350 0.0250 0.6500" rgba="0.9500 0.9500 0.9300 1.0000" contype="0" conaffinity="0"/>
+    <geom type="box" pos="3.9700 0.0000 1.4000" size="0.0300 0.0150 0.6000" rgba="0.9500 0.9500 0.9300 1.0000" contype="0" conaffinity="0"/>
+    <geom type="box" pos="3.9700 0.0000 1.4000" size="0.0300 1.0000 0.0150" rgba="0.9500 0.9500 0.9300 1.0000" contype="0" conaffinity="0"/>
+    <geom type="box" pos="3.9200 0.0000 0.7500" size="0.0800 1.0800 0.0150" rgba="0.9500 0.9500 0.9300 1.0000" contype="0" conaffinity="0"/>
+    <body name="table_A" pos="-2.5000 -1.5000 0">
+      <geom type="box" pos="0.0000 0.0000 0.7350" size="0.6000 0.4000 0.0150" material="wood_mat"/>
+      <geom type="box" pos="-0.5400 -0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="-0.5400 0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="0.5400 -0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="0.5400 0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="0.0000 0.0000 0.6800" size="0.5400 0.3400 0.0400" material="wood_mat" contype="0" conaffinity="0"/>
+    </body>
+    <body name="table_B" pos="0.0000 -1.5000 0">
+      <geom type="box" pos="0.0000 0.0000 0.7350" size="0.6000 0.4000 0.0150" material="wood_mat"/>
+      <geom type="box" pos="-0.5400 -0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="-0.5400 0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="0.5400 -0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="0.5400 0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="0.0000 0.0000 0.6800" size="0.5400 0.3400 0.0400" material="wood_mat" contype="0" conaffinity="0"/>
+    </body>
+    <body name="table_C" pos="2.5000 -1.5000 0">
+      <geom type="box" pos="0.0000 0.0000 0.7350" size="0.6000 0.4000 0.0150" material="wood_mat"/>
+      <geom type="box" pos="-0.5400 -0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="-0.5400 0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="0.5400 -0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="0.5400 0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="0.0000 0.0000 0.6800" size="0.5400 0.3400 0.0400" material="wood_mat" contype="0" conaffinity="0"/>
+    </body>
+    <body name="table_D" pos="-2.5000 0.5000 0">
+      <geom type="box" pos="0.0000 0.0000 0.7350" size="0.6000 0.4000 0.0150" material="wood_mat"/>
+      <geom type="box" pos="-0.5400 -0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="-0.5400 0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="0.5400 -0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="0.5400 0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="0.0000 0.0000 0.6800" size="0.5400 0.3400 0.0400" material="wood_mat" contype="0" conaffinity="0"/>
+    </body>
+    <body name="table_E" pos="0.0000 0.5000 0">
+      <geom type="box" pos="0.0000 0.0000 0.7350" size="0.6000 0.4000 0.0150" material="wood_mat"/>
+      <geom type="box" pos="-0.5400 -0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="-0.5400 0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="0.5400 -0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="0.5400 0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="0.0000 0.0000 0.6800" size="0.5400 0.3400 0.0400" material="wood_mat" contype="0" conaffinity="0"/>
+    </body>
+    <body name="table_F" pos="2.5000 0.5000 0">
+      <geom type="box" pos="0.0000 0.0000 0.7350" size="0.6000 0.4000 0.0150" material="wood_mat"/>
+      <geom type="box" pos="-0.5400 -0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="-0.5400 0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="0.5400 -0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="0.5400 0.3400 0.3600" size="0.0350 0.0350 0.3600" material="wood_mat"/>
+      <geom type="box" pos="0.0000 0.0000 0.6800" size="0.5400 0.3400 0.0400" material="wood_mat" contype="0" conaffinity="0"/>
+    </body>
+    <geom type="box" pos="-0.8100 2.7000 0.6600" size="0.0100 0.1750 0.6600" material="shelf_mat"/>
+    <geom type="box" pos="0.8100 2.7000 0.6600" size="0.0100 0.1750 0.6600" material="shelf_mat"/>
+    <geom name="shelf_back" type="box" pos="0.0000 2.8800 0.6600" size="0.8200 0.0050 0.6600" material="shelf_mat"/>
+    <geom type="box" pos="0.0000 2.7000 1.3100" size="0.8200 0.1850 0.0100" material="shelf_mat"/>
+    <geom type="box" pos="0.0000 2.5350 0.0600" size="0.8000 0.0100 0.0600" material="shelf_mat"/>
+    <geom name="shelf_board_A" type="box" pos="0.0000 2.7000 0.4900" size="0.8000 0.1750 0.0100" material="shelf_mat"/>
+    <geom type="box" pos="-0.4000 2.7000 0.6900" size="0.0060 0.1750 0.1900" material="shelf_mat"/>
+    <geom type="box" pos="0.0000 2.7000 0.6900" size="0.0060 0.1750 0.1900" material="shelf_mat"/>
+    <geom type="box" pos="0.4000 2.7000 0.6900" size="0.0060 0.1750 0.1900" material="shelf_mat"/>
+    <geom name="shelf_board_B" type="box" pos="0.0000 2.7000 0.8900" size="0.8000 0.1750 0.0100" material="shelf_mat"/>
+    <geom type="box" pos="-0.4000 2.7000 1.1000" size="0.0060 0.1750 0.2000" material="shelf_mat"/>
+    <geom type="box" pos="0.0000 2.7000 1.1000" size="0.0060 0.1750 0.2000" material="shelf_mat"/>
+    <geom type="box" pos="0.4000 2.7000 1.1000" size="0.0060 0.1750 0.2000" material="shelf_mat"/>
+    <body name="book_linalg" pos="-2.8500 -1.5000 0.7660">
+      <freejoint name="book_linalg_joint"/>
+      <geom name="book_linalg_geom" type="box" size="0.1000 0.0700 0.0150" mass="0.3" rgba="0.8000 0.2000 0.2000 1.0000" group="3"/>
+      <geom name="book_linalg_cover_n" type="box" pos="0.0000 0.0000 -0.0135" size="0.1000 0.0700 0.0015" rgba="0.8000 0.2000 0.2000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_linalg_cover_p" type="box" pos="0.0000 0.0000 0.0135" size="0.1000 0.0700 0.0015" rgba="0.8000 0.2000 0.2000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_linalg_spine" type="box" pos="-0.0975 0.0000 0.0000" size="0.0025 0.0700 0.0150" rgba="0.8000 0.2000 0.2000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_linalg_pages" type="box" pos="0.0010 0.0000 0.0000" size="0.0960 0.0680 0.0120" rgba="0.9500 0.9300 0.8500 1.0000" contype="0" conaffinity="0" mass="0"/>
+    </body>
+    <body name="book_calculus" pos="-2.5000 -1.5000 0.7660">
+      <freejoint name="book_calculus_joint"/>
+      <geom name="book_calculus_geom" type="box" size="0.1000 0.0700 0.0150" mass="0.3" rgba="0.9000 0.6000 0.1500 1.0000" group="3"/>
+      <geom name="book_calculus_cover_n" type="box" pos="0.0000 0.0000 -0.0135" size="0.1000 0.0700 0.0015" rgba="0.9000 0.6000 0.1500 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_calculus_cover_p" type="box" pos="0.0000 0.0000 0.0135" size="0.1000 0.0700 0.0015" rgba="0.9000 0.6000 0.1500 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_calculus_spine" type="box" pos="-0.0975 0.0000 0.0000" size="0.0025 0.0700 0.0150" rgba="0.9000 0.6000 0.1500 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_calculus_pages" type="box" pos="0.0010 0.0000 0.0000" size="0.0960 0.0680 0.0120" rgba="0.9500 0.9300 0.8500 1.0000" contype="0" conaffinity="0" mass="0"/>
+    </body>
+    <body name="book_ml" pos="-0.3500 -1.5000 0.7660">
+      <freejoint name="book_ml_joint"/>
+      <geom name="book_ml_geom" type="box" size="0.1000 0.0700 0.0150" mass="0.3" rgba="0.1500 0.3000 0.8500 1.0000" group="3"/>
+      <geom name="book_ml_cover_n" type="box" pos="0.0000 0.0000 -0.0135" size="0.1000 0.0700 0.0015" rgba="0.1500 0.3000 0.8500 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_ml_cover_p" type="box" pos="0.0000 0.0000 0.0135" size="0.1000 0.0700 0.0015" rgba="0.1500 0.3000 0.8500 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_ml_spine" type="box" pos="-0.0975 0.0000 0.0000" size="0.0025 0.0700 0.0150" rgba="0.1500 0.3000 0.8500 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_ml_pages" type="box" pos="0.0010 0.0000 0.0000" size="0.0960 0.0680 0.0120" rgba="0.9500 0.9300 0.8500 1.0000" contype="0" conaffinity="0" mass="0"/>
+    </body>
+    <body name="book_dl" pos="0.0000 -1.5000 0.7660">
+      <freejoint name="book_dl_joint"/>
+      <geom name="book_dl_geom" type="box" size="0.1000 0.0700 0.0150" mass="0.3" rgba="0.1000 0.5500 0.7500 1.0000" group="3"/>
+      <geom name="book_dl_cover_n" type="box" pos="0.0000 0.0000 -0.0135" size="0.1000 0.0700 0.0015" rgba="0.1000 0.5500 0.7500 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_dl_cover_p" type="box" pos="0.0000 0.0000 0.0135" size="0.1000 0.0700 0.0015" rgba="0.1000 0.5500 0.7500 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_dl_spine" type="box" pos="-0.0975 0.0000 0.0000" size="0.0025 0.0700 0.0150" rgba="0.1000 0.5500 0.7500 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_dl_pages" type="box" pos="0.0010 0.0000 0.0000" size="0.0960 0.0680 0.0120" rgba="0.9500 0.9300 0.8500 1.0000" contype="0" conaffinity="0" mass="0"/>
+    </body>
+    <body name="book_robotics" pos="0.3500 -1.5000 0.7660">
+      <freejoint name="book_robotics_joint"/>
+      <geom name="book_robotics_geom" type="box" size="0.1000 0.0700 0.0150" mass="0.3" rgba="0.2000 0.6500 0.3000 1.0000" group="3"/>
+      <geom name="book_robotics_cover_n" type="box" pos="0.0000 0.0000 -0.0135" size="0.1000 0.0700 0.0015" rgba="0.2000 0.6500 0.3000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_robotics_cover_p" type="box" pos="0.0000 0.0000 0.0135" size="0.1000 0.0700 0.0015" rgba="0.2000 0.6500 0.3000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_robotics_spine" type="box" pos="-0.0975 0.0000 0.0000" size="0.0025 0.0700 0.0150" rgba="0.2000 0.6500 0.3000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_robotics_pages" type="box" pos="0.0010 0.0000 0.0000" size="0.0960 0.0680 0.0120" rgba="0.9500 0.9300 0.8500 1.0000" contype="0" conaffinity="0" mass="0"/>
+    </body>
+    <body name="book_control" pos="2.1500 -1.5000 0.7660">
+      <freejoint name="book_control_joint"/>
+      <geom name="book_control_geom" type="box" size="0.1000 0.0700 0.0150" mass="0.3" rgba="0.5500 0.2500 0.7000 1.0000" group="3"/>
+      <geom name="book_control_cover_n" type="box" pos="0.0000 0.0000 -0.0135" size="0.1000 0.0700 0.0015" rgba="0.5500 0.2500 0.7000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_control_cover_p" type="box" pos="0.0000 0.0000 0.0135" size="0.1000 0.0700 0.0015" rgba="0.5500 0.2500 0.7000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_control_spine" type="box" pos="-0.0975 0.0000 0.0000" size="0.0025 0.0700 0.0150" rgba="0.5500 0.2500 0.7000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_control_pages" type="box" pos="0.0010 0.0000 0.0000" size="0.0960 0.0680 0.0120" rgba="0.9500 0.9300 0.8500 1.0000" contype="0" conaffinity="0" mass="0"/>
+    </body>
+    <body name="book_signals" pos="2.5000 -1.5000 0.7660">
+      <freejoint name="book_signals_joint"/>
+      <geom name="book_signals_geom" type="box" size="0.1000 0.0700 0.0150" mass="0.3" rgba="0.8500 0.3500 0.6000 1.0000" group="3"/>
+      <geom name="book_signals_cover_n" type="box" pos="0.0000 0.0000 -0.0135" size="0.1000 0.0700 0.0015" rgba="0.8500 0.3500 0.6000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_signals_cover_p" type="box" pos="0.0000 0.0000 0.0135" size="0.1000 0.0700 0.0015" rgba="0.8500 0.3500 0.6000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_signals_spine" type="box" pos="-0.0975 0.0000 0.0000" size="0.0025 0.0700 0.0150" rgba="0.8500 0.3500 0.6000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_signals_pages" type="box" pos="0.0010 0.0000 0.0000" size="0.0960 0.0680 0.0120" rgba="0.9500 0.9300 0.8500 1.0000" contype="0" conaffinity="0" mass="0"/>
+    </body>
+    <body name="book_python" pos="-2.8500 0.5000 0.7660">
+      <freejoint name="book_python_joint"/>
+      <geom name="book_python_geom" type="box" size="0.1000 0.0700 0.0150" mass="0.3" rgba="0.9500 0.8500 0.2000 1.0000" group="3"/>
+      <geom name="book_python_cover_n" type="box" pos="0.0000 0.0000 -0.0135" size="0.1000 0.0700 0.0015" rgba="0.9500 0.8500 0.2000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_python_cover_p" type="box" pos="0.0000 0.0000 0.0135" size="0.1000 0.0700 0.0015" rgba="0.9500 0.8500 0.2000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_python_spine" type="box" pos="-0.0975 0.0000 0.0000" size="0.0025 0.0700 0.0150" rgba="0.9500 0.8500 0.2000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_python_pages" type="box" pos="0.0010 0.0000 0.0000" size="0.0960 0.0680 0.0120" rgba="0.9500 0.9300 0.8500 1.0000" contype="0" conaffinity="0" mass="0"/>
+    </body>
+    <body name="book_algo" pos="-0.3500 0.5000 0.7660">
+      <freejoint name="book_algo_joint"/>
+      <geom name="book_algo_geom" type="box" size="0.1000 0.0700 0.0150" mass="0.3" rgba="0.2500 0.2500 0.3000 1.0000" group="3"/>
+      <geom name="book_algo_cover_n" type="box" pos="0.0000 0.0000 -0.0135" size="0.1000 0.0700 0.0015" rgba="0.2500 0.2500 0.3000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_algo_cover_p" type="box" pos="0.0000 0.0000 0.0135" size="0.1000 0.0700 0.0015" rgba="0.2500 0.2500 0.3000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_algo_spine" type="box" pos="-0.0975 0.0000 0.0000" size="0.0025 0.0700 0.0150" rgba="0.2500 0.2500 0.3000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_algo_pages" type="box" pos="0.0010 0.0000 0.0000" size="0.0960 0.0680 0.0120" rgba="0.9500 0.9300 0.8500 1.0000" contype="0" conaffinity="0" mass="0"/>
+    </body>
+    <body name="book_db" pos="0.0000 0.5000 0.7660">
+      <freejoint name="book_db_joint"/>
+      <geom name="book_db_geom" type="box" size="0.1000 0.0700 0.0150" mass="0.3" rgba="0.5000 0.5000 0.5500 1.0000" group="3"/>
+      <geom name="book_db_cover_n" type="box" pos="0.0000 0.0000 -0.0135" size="0.1000 0.0700 0.0015" rgba="0.5000 0.5000 0.5500 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_db_cover_p" type="box" pos="0.0000 0.0000 0.0135" size="0.1000 0.0700 0.0015" rgba="0.5000 0.5000 0.5500 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_db_spine" type="box" pos="-0.0975 0.0000 0.0000" size="0.0025 0.0700 0.0150" rgba="0.5000 0.5000 0.5500 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_db_pages" type="box" pos="0.0010 0.0000 0.0000" size="0.0960 0.0680 0.0120" rgba="0.9500 0.9300 0.8500 1.0000" contype="0" conaffinity="0" mass="0"/>
+    </body>
+    <body name="book_thermo" pos="2.1500 0.5000 0.7660">
+      <freejoint name="book_thermo_joint"/>
+      <geom name="book_thermo_geom" type="box" size="0.1000 0.0700 0.0150" mass="0.3" rgba="0.7000 0.3000 0.1000 1.0000" group="3"/>
+      <geom name="book_thermo_cover_n" type="box" pos="0.0000 0.0000 -0.0135" size="0.1000 0.0700 0.0015" rgba="0.7000 0.3000 0.1000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_thermo_cover_p" type="box" pos="0.0000 0.0000 0.0135" size="0.1000 0.0700 0.0015" rgba="0.7000 0.3000 0.1000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_thermo_spine" type="box" pos="-0.0975 0.0000 0.0000" size="0.0025 0.0700 0.0150" rgba="0.7000 0.3000 0.1000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_thermo_pages" type="box" pos="0.0010 0.0000 0.0000" size="0.0960 0.0680 0.0120" rgba="0.9500 0.9300 0.8500 1.0000" contype="0" conaffinity="0" mass="0"/>
+    </body>
+    <body name="book_physics" pos="-0.6000 2.7000 0.6210">
+      <freejoint name="book_physics_joint"/>
+      <geom name="book_physics_geom" type="box" size="0.0250 0.0900 0.1200" mass="0.3" rgba="0.3000 0.5000 0.9000 1.0000" group="3"/>
+      <geom name="book_physics_cover_n" type="box" pos="-0.0235 0.0000 0.0000" size="0.0015 0.0900 0.1200" rgba="0.3000 0.5000 0.9000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_physics_cover_p" type="box" pos="0.0235 0.0000 0.0000" size="0.0015 0.0900 0.1200" rgba="0.3000 0.5000 0.9000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_physics_spine" type="box" pos="0.0000 -0.0875 0.0000" size="0.0250 0.0025 0.1200" rgba="0.3000 0.5000 0.9000 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_physics_pages" type="box" pos="0.0000 0.0010 0.0000" size="0.0220 0.0860 0.1180" rgba="0.9500 0.9300 0.8500 1.0000" contype="0" conaffinity="0" mass="0"/>
+    </body>
+    <body name="book_stats" pos="-0.2000 2.7000 1.0210">
+      <freejoint name="book_stats_joint"/>
+      <geom name="book_stats_geom" type="box" size="0.0250 0.0900 0.1200" mass="0.3" rgba="0.9000 0.4500 0.2500 1.0000" group="3"/>
+      <geom name="book_stats_cover_n" type="box" pos="-0.0235 0.0000 0.0000" size="0.0015 0.0900 0.1200" rgba="0.9000 0.4500 0.2500 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_stats_cover_p" type="box" pos="0.0235 0.0000 0.0000" size="0.0015 0.0900 0.1200" rgba="0.9000 0.4500 0.2500 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_stats_spine" type="box" pos="0.0000 -0.0875 0.0000" size="0.0250 0.0025 0.1200" rgba="0.9000 0.4500 0.2500 1.0000" contype="0" conaffinity="0" mass="0"/>
+      <geom name="book_stats_pages" type="box" pos="0.0000 0.0010 0.0000" size="0.0220 0.0860 0.1180" rgba="0.9500 0.9300 0.8500 1.0000" contype="0" conaffinity="0" mass="0"/>
+    </body>
+  </worldbody>
+</mujoco>

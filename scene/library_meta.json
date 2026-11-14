@@ -1,0 +1,202 @@
+{
+  "room_size": [
+    8.0,
+    6.0
+  ],
+  "robot_start": [
+    0.0,
+    -2.5,
+    0.0
+  ],
+  "window_pos": [
+    3.97,
+    0.0,
+    1.4
+  ],
+  "hidden_walls": [
+    "south"
+  ],
+  "tables": {
+    "A": {
+      "pos": [
+        -2.5,
+        -1.5
+      ],
+      "top_z": 0.75,
+      "half_size": [
+        0.6,
+        0.4
+      ]
+    },
+    "B": {
+      "pos": [
+        0.0,
+        -1.5
+      ],
+      "top_z": 0.75,
+      "half_size": [
+        0.6,
+        0.4
+      ]
+    },
+    "C": {
+      "pos": [
+        2.5,
+        -1.5
+      ],
+      "top_z": 0.75,
+      "half_size": [
+        0.6,
+        0.4
+      ]
+    },
+    "D": {
+      "pos": [
+        -2.5,
+        0.5
+      ],
+      "top_z": 0.75,
+      "half_size": [
+        0.6,
+        0.4
+      ]
+    },
+    "E": {
+      "pos": [
+        0.0,
+        0.5
+      ],
+      "top_z": 0.75,
+      "half_size": [
+        0.6,
+        0.4
+      ]
+    },
+    "F": {
+      "pos": [
+        2.5,
+        0.5
+      ],
+      "top_z": 0.75,
+      "half_size": [
+        0.6,
+        0.4
+      ]
+    }
+  },
+  "shelf": {
+    "pos": [
+      0.0,
+      2.7
+    ],
+    "slots": {
+      "A1": [
+        -0.6000000000000001,
+        2.7,
+        0.5
+      ],
+      "A2": [
+        -0.19999999999999996,
+        2.7,
+        0.5
+      ],
+      "A3": [
+        0.19999999999999996,
+        2.7,
+        0.5
+      ],
+      "A4": [
+        0.6000000000000001,
+        2.7,
+        0.5
+      ],
+      "B1": [
+        -0.6000000000000001,
+        2.7,
+        0.9
+      ],
+      "B2": [
+        -0.19999999999999996,
+        2.7,
+        0.9
+      ],
+      "B3": [
+        0.19999999999999996,
+        2.7,
+        0.9
+      ],
+      "B4": [
+        0.6000000000000001,
+        2.7,
+        0.9
+      ]
+    }
+  },
+  "books": {
+    "linalg": {
+      "title": "Linear Algebra",
+      "location": "table:A",
+      "body": "book_linalg"
+    },
+    "calculus": {
+      "title": "Calculus",
+      "location": "table:A",
+      "body": "book_calculus"
+    },
+    "ml": {
+      "title": "Machine Learning",
+      "location": "table:B",
+      "body": "book_ml"
+    },
+    "dl": {
+      "title": "Deep Learning",
+      "location": "table:B",
+      "body": "book_dl"
+    },
+    "robotics": {
+      "title": "Robotics",
+      "location": "table:B",
+      "body": "book_robotics"
+    },
+    "control": {
+      "title": "Control Systems",
+      "location": "table:C",
+      "body": "book_control"
+    },
+    "signals": {
+      "title": "Signals and Systems",
+      "location": "table:C",
+      "body": "book_signals"
+    },
+    "python": {
+      "title": "Python Programming",
+      "location": "table:D",
+      "body": "book_python"
+    },
+    "algo": {
+      "title": "Algorithms",
+      "location": "table:E",
+      "body": "book_algo"
+    },
+    "db": {
+      "title": "Databases",
+      "location": "table:E",
+      "body": "book_db"
+    },
+    "thermo": {
+      "title": "Thermodynamics",
+      "location": "table:F",
+      "body": "book_thermo"
+    },
+    "physics": {
+      "title": "Physics",
+      "location": "shelf:A1",
+      "body": "book_physics"
+    },
+    "stats": {
+      "title": "Statistics",
+      "location": "shelf:B2",
+      "body": "book_stats"
+    }
+  }
+}
