@@ -31,8 +31,13 @@ BOOK_L, BOOK_W, BOOK_T = 0.22, 0.15, 0.04
 RIB_H, RIB_W = 0.01, 0.02          # bumper strips at head and tail on both covers: lying flat,
                                    # the book rests on them and leaves a 1 cm gap for a fingertip
 BOOK_MASS, RIB_MASS = 0.3, 0.01
-SPINE_INSET = 0.005                # flat at a table edge: spine 5 mm inside the edge
-SHELF_INSET = 0.02                 # standing in the shelf: spine 2 cm behind the shelf front
+TABLE_OVERHANG = 0.03             # flat at a table edge: spine 3 cm past the edge. The gripper holds
+                                   # the overhanging part; with the spine inside the edge the lower
+                                   # finger (pad ~1 cm, convex hull 24 mm thick near the hand) hits the
+                                   # table even in the 1 cm rib gap (Phase 4 test)
+GRIP_IN = {"table": 0.015, "shelf": 0.02}   # grasp point: this far in from the spine
+SHELF_INSET = 0.005                # standing in the shelf: spine 5 mm behind the shelf front (flush);
+                                   # deeper and the 20 cm wide hand hits the dividers when grasping
 QUAT_FLAT = (1, 0, 0, 0)
 QUAT_STAND = (0.7071068, 0, 0.7071068, 0)   # length -> down (head on top), thickness -> +x
 
@@ -147,7 +152,7 @@ def build_tables(layout):
         lines.append("</body>")
         out.append("\n".join(lines))
         flat_z = TABLE_TOP_Z + RIB_H + BOOK_T / 2 + EPS
-        edge_y = y - hy + BOOK_W / 2 + SPINE_INSET
+        edge_y = y - hy + BOOK_W / 2 - TABLE_OVERHANG
         meta[name] = {"pos": [x, y], "top_z": TABLE_TOP_Z, "half_size": [hx, hy],
                       "edge_spots": [[x + dx, edge_y, flat_z] for dx in EDGE_X_OFFSETS]}
         # chairs on the reader side (north), pushed in a little; the robot side (south) stays free
@@ -327,13 +332,14 @@ def parking_and_zones(layout, tables_meta, shelves_meta):
 
     Tables: one pose per edge spot, facing the table (+y) from the robot side.
     Shelves: one pose per column of each shelf, facing the shelf.
-    The robot stands `park_clearance` away from the edge (grasp points then sit ~0.45 m ahead of
-    the arm mount, see sim/reach_check.py). Each zone covers the chassis at every pose of that
+    The robot stands `park_clearance` (0.50 m for tables and shelves) away from the edge. Closer
+    and the pre-grasp / pre-place poses (10-15 cm out) fold the arm into the chassis or put a joint
+    at its limit, so straight-line moves from there fail (Phase 4: works from 0.45 to 0.60 m). Each zone covers the chassis at every pose of that
     table / the shelf plus the gap to the furniture, where the arm works.
     """
     rc, zc = layout["robot"], layout["robot_zones"]
     hx, hy = rc["chassis_half"]
-    clr, m = rc["park_clearance"], zc["margin"]
+    clr, m = rc["park_clearance"]["table"], zc["margin"]
     yaw = 1.5707963
     zones = []
     for name, t in tables_meta.items():
@@ -344,6 +350,7 @@ def parking_and_zones(layout, tables_meta, shelves_meta):
         xs = [sp[0] for sp in t["edge_spots"]]
         zones.append({"name": f"table_{name}", "x": [min(min(xs) - hy, tx - thx) - m, max(max(xs) + hy, tx + thx) + m],
                       "y": [park_y - hx - m, edge]})
+    clr = rc["park_clearance"]["shelf"]
     design = layout["shelf_design"]
     for sname, sh in shelves_meta.items():
         front = sh["pos"][1] - design["depth"] / 2
@@ -494,6 +501,7 @@ def generate():
         "books": books_meta,
         "book_dims": {"length": BOOK_L, "width": BOOK_W, "thickness": BOOK_T,
                       "rib_height": RIB_H, "rib_width": RIB_W, "mass": BOOK_MASS + 4 * RIB_MASS,
+                      "table_overhang": TABLE_OVERHANG, "grip_in": GRIP_IN,
                       "frame": "x length, y width (spine at -y), z thickness"},
         "robot": robot_model.robot_meta(robot_cfg, start),
     }

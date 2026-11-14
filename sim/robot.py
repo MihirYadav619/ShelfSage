@@ -25,10 +25,16 @@ import math
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import sys
+
 import mujoco
 import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from control.ik import IKResult, Target, solve, solve_multi  # noqa: E402
+from control.kinematics import PandaKinematics  # noqa: E402
 META_PATH = ROOT / "scene/library_meta.json"
 
 CONTROL_DT = 0.02          # controller period (50 Hz)
@@ -42,6 +48,15 @@ def wrap(a):
 def rot2(yaw):
     c, s = math.cos(yaw), math.sin(yaw)
     return np.array([[c, -s], [s, c]])
+
+
+@dataclass
+class LinearMoveResult:
+    success: bool
+    max_deviation: float       # measured TCP distance from the straight line (m)
+    final_error: float         # measured TCP distance from the goal (m)
+    ik_failures: int           # waypoints the IK could not track exactly
+    aborted: bool = False      # stopped because the line left the reachable workspace
 
 
 @dataclass
@@ -75,6 +90,8 @@ class Robot:
         self.robot_bodies = {b for b in range(model.nbody) if model.body_rootid[b] == self.base_body}
         self.floor_geom = model.geom("floor").id
         self.v_max = [abs(model.actuator_ctrlrange[a][1]) for a in self.base_act]
+        self.kin = PandaKinematics((self.meta["mount_x"], 0.0, self.meta["mount_height"]))
+        self._scratch = mujoco.MjData(model)          # for collision checks of IK solutions
 
         # odometry noise: fixed scale error per axis (like wrong wheel radius) + white noise
         self.odom_scale = 1 + self.rng.normal(0, odom_scale_sigma, 3)
@@ -243,6 +260,108 @@ class Robot:
     def close_gripper(self, wait=0.6):
         self.d.ctrl[self.grip_act] = 0.0
         self.wait(wait)
+
+    # ------------------------------------------------------------------ arm: IK and Cartesian moves
+    def base_transform(self):
+        """World <- base, from the *estimated* pose (localisation error shows up in the arm)."""
+        x, y, yaw = self.get_pose()
+        T = np.eye(4)
+        T[:2, :2] = rot2(yaw)
+        T[:2, 3] = (x, y)
+        return T
+
+    def to_base(self, p=None, v=None):
+        """World point p / direction v -> base frame."""
+        T = self.base_transform()
+        if p is not None:
+            return T[:3, :3].T @ (np.asarray(p, float) - T[:3, 3])
+        return None if v is None else T[:3, :3].T @ np.asarray(v, float)
+
+    def make_target(self, pos, z_axis=None, y_axis=None, R=None):
+        """IK target in the base frame from world-frame position / axes."""
+        Rb = None if R is None else self.base_transform()[:3, :3].T @ np.asarray(R, float)
+        return Target(self.to_base(p=pos),
+                      None if z_axis is None else self.to_base(v=z_axis),
+                      None if y_axis is None else self.to_base(v=y_axis), Rb)
+
+    def fk_world(self, q=None):
+        """TCP pose in the world from our own FK (q defaults to the commanded arm targets)."""
+        q = self.d.ctrl[self.arm_act] if q is None else q
+        return self.base_transform() @ self.kin.fk(q)
+
+    def arm_collisions(self, q, allow=()):
+        """Contacts of the arm at configuration q (base and fingers as they are now). Contacts
+        with bodies named in `allow` (e.g. the book being grasped) are ignored."""
+        m, d = self.m, self._scratch
+        d.qpos[:] = self.d.qpos
+        d.qpos[self.arm_qadr] = q
+        mujoco.mj_fwdPosition(m, d)
+        allow_ids = {m.body(a).id for a in allow}
+        out = []
+        for c in d.contact[:d.ncon]:
+            b1, b2 = m.geom_bodyid[c.geom1], m.geom_bodyid[c.geom2]
+            r1, r2 = b1 in self.robot_bodies, b2 in self.robot_bodies
+            if not (r1 or r2) or self.floor_geom in (c.geom1, c.geom2) or {b1, b2} & allow_ids:
+                continue
+            out.append(f"{m.body(b1).name} <-> {m.body(b2).name}")
+        return out
+
+    def ik(self, pos, z_axis=None, y_axis=None, R=None, allow=(), seeds=None, n_random=8):
+        """Collision-free IK for a world-frame TCP target. Returns an IKResult (q in result.q)."""
+        q_now = self.d.ctrl[self.arm_act].copy()
+        seeds = [self.meta["arm_home"]] if seeds is None else seeds
+        return solve_multi(self.kin, self.make_target(pos, z_axis, y_axis, R), q_now, seeds=seeds,
+                           n_random=n_random, rng=np.random.default_rng(0),
+                           collision_fn=lambda q: self.arm_collisions(q, allow),
+                           q_pref=self.meta["arm_home"])
+
+    def move_to(self, pos, z_axis=None, y_axis=None, R=None, duration=2.0, allow=(), settle=0.4):
+        """IK + joint-space move. Returns the IKResult; the arm does not move if IK fails."""
+        r = self.ik(pos, z_axis, y_axis, R, allow=allow)
+        if r is not None and r.success:
+            self.move_arm(r.q, duration, settle)
+        return r
+
+    def move_linear(self, pos, z_axis=None, y_axis=None, R=None, speed=0.05, settle=0.3):
+        """Move the TCP along a straight line from where it is commanded now to `pos`, keeping the
+        orientation constraints, with a smooth speed profile. Each control step runs a few
+        warm-started DLS iterations (differential IK)."""
+        p0 = self.fk_world()[:3, 3]
+        p1 = np.asarray(pos, float)
+        L = float(np.linalg.norm(p1 - p0))
+        steps = max(1, int(np.ceil(L / speed / CONTROL_DT * 1.5)))   # 1.5: smoothstep peak speed
+        n_ctrl = int(round(CONTROL_DT / self.m.opt.timestep))
+        q = self.d.ctrl[self.arm_act].copy()
+        fails, dev, aborted = 0, 0.0, False
+        u = (p1 - p0) / L if L > 1e-9 else np.zeros(3)
+        for k in range(1, steps + 1):
+            s = k / steps
+            s = s * s * (3 - 2 * s)
+            r = solve(self.kin, self.make_target(p0 + s * (p1 - p0), z_axis, y_axis, R), q,
+                      max_iter=8, tol_pos=2e-4, tol_ang=2e-3)
+            fails += not r.success
+            if not r.success and (r.pos_err > 0.01 or r.ang_err > 0.05):
+                aborted = True                       # path leaves the workspace: stop, hold pose
+                break
+            q = r.q
+            self.d.ctrl[self.arm_act] = q
+            self.step(n_ctrl)
+            p = self.d.site_xpos[self.tcp] - p0              # measured TCP vs the ideal line
+            dev = max(dev, float(np.linalg.norm(p - (p @ u) * u)))
+        self.wait(settle)
+        err = float(np.linalg.norm(self.d.site_xpos[self.tcp] - p1))
+        return LinearMoveResult(not aborted and err < 0.005, dev, err, fails, aborted)
+
+    def set_gripper_width(self, width, wait=0.6):
+        """Open the fingers to `width` metres between the finger plates (0 .. 0.08)."""
+        self.d.ctrl[self.grip_act] = float(np.clip(width / 2 / 0.04 * 255.0, 0, 255))
+        self.wait(wait)
+
+    def gripper_width(self):
+        m = self.meta["arm_joints"][0].replace("joint1", "")
+        j1 = self.m.joint(m + "finger_joint1").qposadr[0]
+        j2 = self.m.joint(m + "finger_joint2").qposadr[0]
+        return float(self.d.qpos[j1] + self.d.qpos[j2])
 
     # ------------------------------------------------------------------ safety
     def robot_contacts(self):

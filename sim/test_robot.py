@@ -21,7 +21,6 @@ from pathlib import Path
 import imageio.v2 as imageio
 import mujoco
 import numpy as np
-from scipy.optimize import least_squares
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -34,31 +33,6 @@ META = json.loads((ROOT / "scene/library_meta.json").read_text())
 def table_parking(name, spot=1):
     """Fixed parking pose in front of an edge spot (0, 1, 2; 1 = middle), from library_meta.json."""
     return tuple(META["tables"][name]["parking"][spot])
-
-
-def ik_down(robot, target, q_seed, seeds=20):
-    """Temporary numerical IK (Phase 4 replaces it): TCP at `target`, z-axis pointing down."""
-    m = robot.m
-    d = mujoco.MjData(m)
-    d.qpos[:] = robot.d.qpos
-    lo, hi = np.array([m.jnt_range[m.jnt_qposadr.tolist().index(a)] for a in robot.arm_qadr]).T
-
-    def resid(q):
-        d.qpos[robot.arm_qadr] = q
-        mujoco.mj_kinematics(m, d)
-        R = d.site_xmat[robot.tcp].reshape(3, 3)
-        return np.concatenate([d.site_xpos[robot.tcp] - target, 0.3 * (R[:, 2] - [0, 0, -1])])
-
-    rng = np.random.default_rng(1)
-    best = None
-    for k in range(seeds):
-        q0 = np.clip(q_seed, lo, hi) if k == 0 else rng.uniform(lo, hi)
-        sol = least_squares(resid, q0, bounds=(lo, hi), xtol=1e-10, ftol=1e-10)
-        if best is None or sol.cost < best.cost:
-            best = sol
-        if np.linalg.norm(resid(sol.x)[:3]) < 1e-3:
-            break
-    return best.x, float(np.linalg.norm(resid(best.x)[:3]))
 
 
 def book_positions(m, d):
@@ -103,8 +77,8 @@ def main():
     bd = META["book_dims"]
     book_top = META["tables"]["B"]["top_z"] + bd["rib_height"] + bd["thickness"]
     target = np.array([book[0], book[1], book_top + 0.10])
-    q, ik_err = ik_down(robot, target, robot.meta["arm_home"])
-    robot.move_arm(q, duration=3.0)
+    r = robot.move_to(target, z_axis=np.array([0.0, 0.0, -1.0]), duration=3.0)   # Phase 4 IK
+    ik_err = r.pos_err
     tcp, R = robot.tcp_pose()
     t = META["tables"]["B"]
     over_table = (abs(tcp[0] - t["pos"][0]) < t["half_size"][0] and abs(tcp[1] - t["pos"][1]) < t["half_size"][1]

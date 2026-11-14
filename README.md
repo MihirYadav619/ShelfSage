@@ -5,7 +5,7 @@
 
 - **Course:** Robot Manipulators (IIT Mandi), course project
 - **Team:** Chirag, Mihir
-- **Status:** Phases 1-3 of 10 complete; Phase 4 next (see [Progress](#8-progress-tracker))
+- **Status:** Phases 1-4 of 10 complete; Phase 5 next (see [Progress](#8-progress-tracker))
 - **Note:** This is the *initial* idea. It can be simplified later if parts become too hard (see [Fallbacks](#9-risks-and-fallbacks)).
 
 > This README is written so that the whole project can be resumed from scratch, for example in a new chat with an AI assistant. See [How to resume](#12-how-to-resume-in-a-new-chat).
@@ -165,10 +165,10 @@ Everything is defined in [`scene/layout.json`](scene/layout.json) and generated 
 - **3 bookshelves** on the north wall: S1 (west, x = -2.6), S2 (centre, x = 0), S3 (east, x = 2.6). Each has 2 rows (A bottom, B top) x 4 columns; row A surface at z = 0.5 m, row B at 1.0 m, top at 1.4 m (row B moved up from 0.9 m to stay out of the arm's dead band, see Phase 3). Compartments are named `<shelf>-<row><col>`, e.g. **S2-A3**, so they cannot be confused with tables A-F. Each compartment holds up to 4 standing books, 7 cm apart
 - **39 books** (id, title, colour, location): 11 lying on tables, 28 standing in the shelves (14 of the 24 compartments used, some full, some empty for placing). Shelf locations are written `shelf:S2-A1` (the next free position from the left)
 - **Book design ("customised library books")**: every book is 22 x 15 x 4 cm, with 1 cm high, 2 cm wide bumper strips (ribs) across both covers at head and tail. Lying flat, a book rests on its ribs, leaving a 1 cm gap underneath for the lower fingertip (the Panda fingertip is 7.6 mm thick); standing in the shelf, neighbours touch only at the ribs, leaving gaps for the fingers. The title is printed on the spine (texture, Bebas Neue font, SIL OFL)
-- On a table a book lies flat with its **spine towards the robot side**, either at an edge spot (default) or anywhere on the table (`"pos": [dx, dy]` in the layout, e.g. Calculus, Control Systems, Databases). In the shelf it stands with the spine facing the room, 2 cm behind the shelf front
+- On a table a book lies flat with its **spine towards the robot side**, either at an edge spot (default) or anywhere on the table (`"pos": [dx, dy]` in the layout, e.g. Calculus, Control Systems, Databases). At an edge spot the spine **overhangs the table edge by 3 cm** (the gripper holds that overhanging part, see Phase 4); the robot drags other books to the edge and puts books it brings there. In a shelf it stands with the spine facing the room, flush with the shelf front (5 mm behind it)
 - 12 static wooden chairs, 2 per table on the readers' side (north), pushed in 8 cm; the robot side (south) stays free. The front row was moved 0.5 m south so its chairs stay out of the back-row robot zones. Chair legs show up in the LiDAR map like everything static
 - Robot start pose (0, -3.9, yaw 90 deg = facing the tables), on open floor outside every zone; the robot itself is described in Phase 3 below
-- **Fixed robot parking poses and floor zones**: the robot always picks / places from fixed poses, 0.30 m from the furniture: one per table edge spot (`tables.<T>.parking` in `library_meta.json`) and one per column of each shelf (`shelves.<S>.parking`). Around them the floor is marked with red tape, a light red fill and a **KEEP CLEAR - ROBOT WORK ZONE** plate (`robot_zones` in the layout and the meta). The markings are visual only (no collisions, not in the LiDAR map); the zone rectangles in the meta are meant for later use, e.g. injecting a "chair left in the robot zone" failure in Phase 9
+- **Fixed robot parking poses and floor zones**: the robot always picks / places from fixed poses, 0.50 m from the furniture: one per table edge spot (`tables.<T>.parking` in `library_meta.json`) and one per column of each shelf (`shelves.<S>.parking`). Around them the floor is marked with red tape, a light red fill and a **KEEP CLEAR - ROBOT WORK ZONE** plate (`robot_zones` in the layout and the meta). The markings are visual only (no collisions, not in the LiDAR map); the zone rectangles in the meta are meant for later use, e.g. injecting a "chair left in the robot zone" failure in Phase 9
 - The whole scene uses radians (`<compiler angle="radian">`), like the Panda
 - Books are free bodies (`freejoint`): collision = body box (geom group 3, hidden) + 4 rib boxes; visual = covers, spine, pages, ribs, spine label. Tables and shelf are fixed
 - Procedural textures (`scene/make_textures.py`), cameras `overview` and `cutaway`
@@ -296,12 +296,25 @@ Notes for later phases:
 - Travel pose: `robot.stow()` folds the arm over the chassis before driving; `home` sticks out 0.84 m and hit the shelf when parking there. At a table, unfold to `home` first (elbow up) before reaching down.
 - Camera near plane: `<visual><map znear="0.001">` (1.7 cm). The default clipped everything nearer than 16.6 cm, so close-up books were cut open.
 - The hand is mounted rotated 45 deg (Menagerie), so the wrist image is rotated; the detector / PCA yaw must handle any rotation.
-- **Grasp design (decided):** books are picked by their thickness, not top-down (15 cm is wider than the 8 cm gripper). Table: gripper horizontal, fingers close vertically, the lower fingertip slides into the 1 cm rib gap; this only works near the table edge, because the hand is 20 cm wide along the closing axis and would hit the table further in. A book that is not at the edge is first **dragged to the edge** (closed fingertips press on its top near the spine, gripper tilted 30 deg; reachable up to ~0.7 m into the table). Shelf: gripper horizontal, fingers close sideways around the standing book. The book is rotated 90 deg with the wrist between lying and standing. Friction: high on the finger pads, low book-on-table, so dragging works. The weld (attach) grasp stays as a fallback.
-- **Parking distances:** ~0.30 m between chassis and table / shelf, so grasp points are ~0.45 m ahead of the arm mount (middle of the reachable range); drive closer (~0.05 m) only to drag a far book.
+- **Grasp design (decided, refined in Phase 4):** books are picked by their thickness, not top-down (15 cm is wider than the 8 cm gripper). Table: gripper horizontal, fingers close vertically around the **3 cm overhanging spine**, TCP 1.5 cm in from the spine (inside the 1 cm rib gap the lower finger still hit the table: its pad is ~1 cm thick and MuJoCo collides the finger mesh as a convex hull, 24 mm thick near the hand). A book that is not at the edge is first **dragged to the edge** (closed fingertips press on its top near the spine, gripper tilted 30 deg). Shelf: gripper horizontal, fingers close sideways around the standing book, TCP 2 cm in from the spine; books stand flush with the shelf front, otherwise the 20 cm wide hand hits the dividers. The ribs keep 2 cm finger gaps between neighbouring shelf books. The book is rotated 90 deg with the wrist between lying and standing. The weld (attach) grasp stays as a fallback.
+- **Parking distances (Phase 4):** 0.50 m between chassis and table / shelf. At 0.30-0.40 m the pre-grasp / pre-place poses (10-15 cm out) folded the arm into the chassis or put joints 4/5 at their limits, so straight-line moves from there failed; 0.45-0.60 m works. Drive closer (~0.05 m) only to drag a far book.
 
-### Phase 4: Arm control (next)
+### Phase 4: Arm control (done)
 
-### Phases 5-10: not started
+- [x] `control/kinematics.py`: FK from Franka's modified DH parameters + Menagerie hand (-45 deg) + TCP offset, in the robot base frame (arm mount at 0.20 m / 0.65 m); geometric Jacobian. Matches MuJoCo to 0.004 mm / 0.0003 deg and `mj_jacSite` to 4e-6 (the saved XML rounds the base quaternion).
+- [x] `control/ik.py`: damped least squares IK with partial orientation targets (approach axis only; approach + finger closing axis, sign free; or full rotation). Null space: joint-limit avoidance + preferred posture (elbow up), with an exact projector (the damped one leaked into the task and stalled 3 cm short). Early stop when stuck, multi-start; solutions are ranked by joint motion, distance to the home posture and joint-limit margin (a solution with a joint at its limit can reach a pose but not move on from it). About 30 ms per IK incl. collision checks (scipy needed ~400 ms).
+- [x] `sim/robot.py`: `ik`, `move_to` (IK + joint move), `move_linear` (straight Cartesian line, differential IK every control step, aborts and holds when the line leaves the workspace), `set_gripper_width`, `arm_collisions` (MuJoCo contact check of a candidate configuration), world <-> base transforms through the *estimated* pose. Test, demo and Phase 3 test now use it (no more scipy IK there; `reach_check.py` keeps its own analysis IK).
+- [x] `sim/test_phase4.py`: **all 9 checks pass.** 10 random reachable poses reached in simulation with 2.8 mm max error (README done-when: 1-2 cm); every Phase 5 pose reachable without collisions at the fixed parking poses (table edge grasp, pre-grasp, lift; shelves S1-S3, rows A and B, grasp and pre-place); straight-line approach / lift / retract within 2.5 mm of the line; an unreachable line is aborted safely.
+- [x] Demo (`sim/demo_phase3.py`) shows the Phase 4 motions: pre-grasp, straight line in around the overhanging spine and back out at Table B; pre-place and straight line in/out at empty compartment S2-B3.
+
+Design changes found by the Phase 4 test (scene regenerated, all checks re-run):
+- Table books at an edge spot overhang the edge by 3 cm (was 5 mm inside); shelf books flush with the front (was 2 cm behind).
+- Parking 0.50 m from tables and shelves (was 0.30 m); the KEEP CLEAR zones grew with it.
+
+### Phase 5: Grasp and place skills (next)
+
+
+### Phases 6-10: not started
 
 ---
 
@@ -341,12 +354,13 @@ ShelfSage/
 │   ├── view_scene.py          # opens the library scene
 │   ├── robot.py               # cmd_vel, odometry, LiDAR, RGB-D, go_to, arm/gripper (Phase 3)
 │   ├── reach_check.py         # picks the chassis height (Phase 3)
+│   ├── test_phase4.py         # Phase 4 done-when test (FK, Jacobian, IK, straight lines)
 │   ├── demo_phase3.py         # watch the robot in the viewer (Phase 3)
 │   └── test_robot.py          # Phase 3 done-when test
 ├── skills/
 │   ├── __init__.py
 │   └── interface.py           # skill stubs + SKILLS dictionary
-├── control/                   # occupancy.py (done), ik.py, jacobian.py, rrt.py, astar.py, mcl.py (Phases 4-6)
+├── control/                   # occupancy.py, kinematics.py, ik.py (done); rrt.py, astar.py, mcl.py (Phases 5-6)
 ├── perception/                # make_dataset.py, train_yolo.py, detect.py, data/ (Phase 5)
 ├── planner/                   # baseline_planner.py, llm_planner.py, prompts/, schema.json
 ├── benchmark/                 # tasks.json, run_eval.py, logs/
