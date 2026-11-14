@@ -1153,6 +1153,45 @@
 
   <equality>
     <joint joint1="panda_finger_joint1" joint2="panda_finger_joint2" solref="0.005" solimp="0.95 0.99"/>
+    <weld name="grasp_linalg" body1="panda_hand" body2="book_linalg" anchor="0 1 0" active="false"/>
+    <weld name="grasp_calculus" body1="panda_hand" body2="book_calculus" anchor="0 1 0" active="false"/>
+    <weld name="grasp_ml" body1="panda_hand" body2="book_ml" anchor="0 1 0" active="false"/>
+    <weld name="grasp_dl" body1="panda_hand" body2="book_dl" anchor="0 1 0" active="false"/>
+    <weld name="grasp_robotics" body1="panda_hand" body2="book_robotics" anchor="0 1 0" active="false"/>
+    <weld name="grasp_control" body1="panda_hand" body2="book_control" anchor="0 1 0" active="false"/>
+    <weld name="grasp_signals" body1="panda_hand" body2="book_signals" anchor="0 1 0" active="false"/>
+    <weld name="grasp_python" body1="panda_hand" body2="book_python" anchor="0 1 0" active="false"/>
+    <weld name="grasp_algo" body1="panda_hand" body2="book_algo" anchor="0 1 0" active="false"/>
+    <weld name="grasp_db" body1="panda_hand" body2="book_db" anchor="0 1 0" active="false"/>
+    <weld name="grasp_thermo" body1="panda_hand" body2="book_thermo" anchor="0 1 0" active="false"/>
+    <weld name="grasp_physics" body1="panda_hand" body2="book_physics" anchor="0 1 0" active="false"/>
+    <weld name="grasp_stats" body1="panda_hand" body2="book_stats" anchor="0 1 0" active="false"/>
+    <weld name="grasp_os" body1="panda_hand" body2="book_os" anchor="0 1 0" active="false"/>
+    <weld name="grasp_networks" body1="panda_hand" body2="book_networks" anchor="0 1 0" active="false"/>
+    <weld name="grasp_compilers" body1="panda_hand" body2="book_compilers" anchor="0 1 0" active="false"/>
+    <weld name="grasp_arch" body1="panda_hand" body2="book_arch" anchor="0 1 0" active="false"/>
+    <weld name="grasp_discrete" body1="panda_hand" body2="book_discrete" anchor="0 1 0" active="false"/>
+    <weld name="grasp_graphs" body1="panda_hand" body2="book_graphs" anchor="0 1 0" active="false"/>
+    <weld name="grasp_prob" body1="panda_hand" body2="book_prob" anchor="0 1 0" active="false"/>
+    <weld name="grasp_optim" body1="panda_hand" body2="book_optim" anchor="0 1 0" active="false"/>
+    <weld name="grasp_numerics" body1="panda_hand" body2="book_numerics" anchor="0 1 0" active="false"/>
+    <weld name="grasp_dsa" body1="panda_hand" body2="book_dsa" anchor="0 1 0" active="false"/>
+    <weld name="grasp_kinematics" body1="panda_hand" body2="book_kinematics" anchor="0 1 0" active="false"/>
+    <weld name="grasp_dynamics" body1="panda_hand" body2="book_dynamics" anchor="0 1 0" active="false"/>
+    <weld name="grasp_mechatronics" body1="panda_hand" body2="book_mechatronics" anchor="0 1 0" active="false"/>
+    <weld name="grasp_embedded" body1="panda_hand" body2="book_embedded" anchor="0 1 0" active="false"/>
+    <weld name="grasp_digital" body1="panda_hand" body2="book_digital" anchor="0 1 0" active="false"/>
+    <weld name="grasp_power" body1="panda_hand" body2="book_power" anchor="0 1 0" active="false"/>
+    <weld name="grasp_cv" body1="panda_hand" body2="book_cv" anchor="0 1 0" active="false"/>
+    <weld name="grasp_nlp" body1="panda_hand" body2="book_nlp" anchor="0 1 0" active="false"/>
+    <weld name="grasp_rl" body1="panda_hand" body2="book_rl" anchor="0 1 0" active="false"/>
+    <weld name="grasp_ai" body1="panda_hand" body2="book_ai" anchor="0 1 0" active="false"/>
+    <weld name="grasp_infotheory" body1="panda_hand" body2="book_infotheory" anchor="0 1 0" active="false"/>
+    <weld name="grasp_crypto" body1="panda_hand" body2="book_crypto" anchor="0 1 0" active="false"/>
+    <weld name="grasp_quantum" body1="panda_hand" body2="book_quantum" anchor="0 1 0" active="false"/>
+    <weld name="grasp_fluids" body1="panda_hand" body2="book_fluids" anchor="0 1 0" active="false"/>
+    <weld name="grasp_heat" body1="panda_hand" body2="book_heat" anchor="0 1 0" active="false"/>
+    <weld name="grasp_materials" body1="panda_hand" body2="book_materials" anchor="0 1 0" active="false"/>
   </equality>
 
   <actuator>

@@ -485,6 +485,12 @@ def generate():
     spec = mujoco.MjSpec.from_string(xml)
     spec.modelfiledir = str(HERE) + "/"
     robot_model.add_robot(spec, robot_cfg, start)
+    # "attach" grasp (README fallback): one inactive weld hand<->book per book; the robot sets the
+    # relative pose and switches it on when the fingers have closed around the book
+    for b in layout["books"]:
+        e = spec.add_equality()
+        e.name, e.type, e.objtype = f"grasp_{b['id']}", mujoco.mjtEq.mjEQ_WELD, mujoco.mjtObj.mjOBJ_BODY
+        e.name1, e.name2, e.active = f"{robot_model.PREFIX}hand", f"book_{b['id']}", False
     robot_model.save_xml(spec, XML_PATH)
     model = mujoco.MjModel.from_xml_path(str(XML_PATH))   # make sure the saved file loads
 

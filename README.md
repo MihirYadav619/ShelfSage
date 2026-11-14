@@ -181,6 +181,7 @@ python scene\generate_scene.py --check     # also simulate 10 s and check books 
 python scene\generate_scene.py --preview   # also render scene\preview_*.png
 python sim\view_scene.py                   # open the scene in the viewer
 python sim\demo_phase3.py                  # watch the robot drive, reach the table and the shelf
+python sim\demo_pick_place.py              # table -> shelf -> table round trip (add --headless for a report)
 ```
 
 ---
@@ -313,6 +314,9 @@ Design changes found by the Phase 4 test (scene regenerated, all checks re-run):
 
 ### Phase 5: Grasp and place skills (next)
 
+- [x] First step: **attach (weld) grasp** (the README fallback). One inactive weld hand<->book per book in the scene; `robot.attach(book)` switches it on with the book's current pose relative to the hand, `robot.release(book)` switches it off. `sim/demo_pick_place.py` runs the full round trip with it (Deep Learning: Table B -> shelf S2-B3 -> back to its edge spot), using the Phase 3-4 stack: parking poses, IK, straight-line moves, wrist rotation between lying and standing, a carry pose for driving. Headless run: 30/30 steps ok, the book ends 0.3 cm from its spot, other books move at most 0.11 cm.
+- [ ] Friction grasp instead of the weld (finger pad friction, book-on-table friction), drag-to-edge for books not at the edge, GRASP / PLACE skills, YOLO perception
+
 
 ### Phases 6-10: not started
 
@@ -355,7 +359,8 @@ ShelfSage/
 │   ├── robot.py               # cmd_vel, odometry, LiDAR, RGB-D, go_to, arm/gripper (Phase 3)
 │   ├── reach_check.py         # picks the chassis height (Phase 3)
 │   ├── test_phase4.py         # Phase 4 done-when test (FK, Jacobian, IK, straight lines)
-│   ├── demo_phase3.py         # watch the robot in the viewer (Phase 3)
+│   ├── demo_phase3.py         # watch the robot in the viewer (Phases 3-4)
+│   ├── demo_pick_place.py     # table -> shelf -> table with the attach grasp (Phase 5 preview)
 │   └── test_robot.py          # Phase 3 done-when test
 ├── skills/
 │   ├── __init__.py

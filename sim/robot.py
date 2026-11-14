@@ -38,6 +38,7 @@ from control.kinematics import PandaKinematics  # noqa: E402
 META_PATH = ROOT / "scene/library_meta.json"
 
 CONTROL_DT = 0.02          # controller period (50 Hz)
+PREFIX_HAND = "panda_hand"
 
 
 def wrap(a):
@@ -356,6 +357,24 @@ class Robot:
         """Open the fingers to `width` metres between the finger plates (0 .. 0.08)."""
         self.d.ctrl[self.grip_act] = float(np.clip(width / 2 / 0.04 * 255.0, 0, 255))
         self.wait(wait)
+
+    def attach(self, book):
+        """Weld ("attach") grasp, the README fallback until the friction grasp of Phase 5:
+        switch on the hand<->book weld with the book's current pose relative to the hand."""
+        m, d = self.m, self.d
+        eq = m.equality(f"grasp_{book}").id
+        h, b = m.body(f"{PREFIX_HAND}").id, m.body(f"book_{book}").id
+        mujoco.mj_forward(m, d)
+        p = d.xmat[h].reshape(3, 3).T @ (d.xpos[b] - d.xpos[h])          # book in the hand frame
+        qc, q = np.zeros(4), np.zeros(4)
+        mujoco.mju_negQuat(qc, d.xquat[h])
+        mujoco.mju_mulQuat(q, qc, d.xquat[b])
+        m.eq_data[eq, :] = 0
+        m.eq_data[eq, 3:6], m.eq_data[eq, 6:10], m.eq_data[eq, 10] = p, q, 1.0
+        d.eq_active[eq] = 1
+
+    def release(self, book):
+        self.d.eq_active[self.m.equality(f"grasp_{book}").id] = 0
 
     def gripper_width(self):
         m = self.meta["arm_joints"][0].replace("joint1", "")
