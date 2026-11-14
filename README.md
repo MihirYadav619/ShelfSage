@@ -172,10 +172,12 @@ Everything is defined in [`scene/layout.json`](scene/layout.json) and generated 
 - The whole scene uses radians (`<compiler angle="radian">`), like the Panda
 - Books are free bodies (`freejoint`): collision = body box (geom group 3, hidden) + 4 rib boxes; visual = covers, spine, pages, ribs, spine label. Tables and shelf are fixed
 - Procedural textures (`scene/make_textures.py`), cameras `overview` and `cutaway`
+- **Real front covers** on every book: each generic title stands in for a well-known textbook (e.g. Deep Learning -> Goodfellow et al., Robotics -> Craig), list in `scene/fetch_covers.py`. The script downloads the covers from Open Library into `scene/textures/covers/<id>.jpg` (a file put there by hand is kept); `generate_scene.py` scales each to the 22 x 15 cm front and splits off the 2 cm strips under the head / tail ribs, so the cover is complete seen from above. The spine keeps the generic title (the planner's book names). A book without a cover file keeps its plain colour.
 
 Commands (project root, venv active):
 
 ```powershell
+python sceneetch_covers.py               # download the book covers (once; --force to redo)
 python scene\generate_scene.py             # regenerate library.xml + library_meta.json
 python scene\generate_scene.py --check     # also simulate 10 s and check books stay put
 python scene\generate_scene.py --preview   # also render scene\preview_*.png
@@ -359,6 +361,7 @@ ShelfSage/
 │   ├── layout.json            # single source of truth for the library
 │   ├── generate_scene.py      # layout -> library.xml + library_meta.json
 │   ├── make_textures.py       # procedural textures -> textures/
+│   ├── fetch_covers.py        # real book covers -> textures/covers/
 │   ├── robot_model.py         # base + Menagerie Panda (MjSpec attach), sensors, home keyframe
 │   ├── library.xml            # generated MJCF
 │   ├── library_meta.json      # generated positions (tables, shelf slots, books)

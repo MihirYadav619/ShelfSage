@@ -155,6 +155,26 @@ def make_spine(name, title, color, length=0.22, thickness=0.04):
     img.save(OUT / name)
 
 
+def make_cover(src, stem, length=0.22, width=0.15, rib_w=0.02, px_per_m=2500, orient=None):
+    """Front cover textures from a real cover image (scene/textures/covers/<id>.jpg).
+
+    The picture is scaled to the book's front (length x width, a mild stretch: real covers are
+    ~4:3, the book 22:15) and cut into three parts, because the 2 cm ribs at head and tail sit on
+    top of the cover: <stem>.png (whole cover, for the cover box between the ribs) and
+    <stem>_head.png / <stem>_tail.png (the 2 cm strips, for the tops of the ribs). Seen from
+    above, the parts make up the full cover. `orient` (name of a PIL transpose) is applied last so the
+    picture lands on the box face the right way round (see generate_scene.COVER_ORIENT)."""
+    from PIL import Image
+
+    W, H = int(width * px_per_m), int(length * px_per_m)      # upright cover, head at the top
+    img = Image.open(src).convert("RGB").resize((W, H), Image.LANCZOS)
+    r = int(rib_w * px_per_m)
+    parts = {"": img, "_head": img.crop((0, 0, W, r)), "_tail": img.crop((0, H - r, W, H))}
+    OUT.mkdir(exist_ok=True)
+    for suffix, im in parts.items():
+        (im.transpose(getattr(Image.Transpose, orient)) if orient else im).save(OUT / f"{stem}{suffix}.png")
+
+
 ZONE_RED = (0.78, 0.08, 0.08)
 
 

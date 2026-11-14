@@ -249,12 +249,15 @@ def build_shelf(name, pos, s):
 
 
 # ---------------------------------------------------------------------------- books
-def book_geoms(name, color):
+def book_geoms(name, color, has_cover=False):
     """Geoms of one book in the book frame (x length, y width with the spine at -y, z thickness).
 
     Collision: one box for the body + 4 rib boxes (the ribs touch the table / neighbours).
     Visual: covers, spine, page block, ribs, and a textured spine label (material spine_<id>_mat).
+    With `has_cover`, the front cover (+z) shows the real cover picture (cover_<id>_mat) and the
+    two top ribs the strips of it they sit on (cover_<id>_head_mat / _tail_mat).
     """
+    bid = name[len("book_"):]
     hl, hw, ht = BOOK_L / 2, BOOK_W / 2, BOOK_T / 2
     cover = tuple(color) + (1,)
     rib = tuple(c * 0.85 for c in color) + (1,)   # a shade darker than the cover
@@ -263,12 +266,17 @@ def book_geoms(name, color):
          f'rgba="{vec(cover)}" group="{COLLISION_GROUP}" {book_contact}/>']
     for sx, tx in ((-1, "head"), (1, "tail")):
         for sz, tz in ((1, "top"), (-1, "bottom")):
+            look = (f'material="cover_{bid}_{tx}_mat"' if has_cover and tz == "top"
+                    else f'rgba="{vec(rib)}"')
             g.append(f'<geom name="{name}_rib_{tx}_{tz}" type="box" '
                      f'pos="{vec((sx * (hl - RIB_W / 2), 0, sz * (ht + RIB_H / 2)))}" '
-                     f'size="{vec((RIB_W / 2, hw, RIB_H / 2))}" mass="{RIB_MASS}" rgba="{vec(rib)}" '
+                     f'size="{vec((RIB_W / 2, hw, RIB_H / 2))}" mass="{RIB_MASS}" {look} '
                      f'{book_contact}/>')
     c, st = 0.0015, 0.0025
-    g += [box(f"{name}_cover_{t}", (0, 0, sz * (ht - c)), (hl, hw, c), cover, collide=False, massless=True)
+    g += [box(f"{name}_cover_{t}", (0, 0, sz * (ht - c)), (hl, hw, c),
+              None if has_cover and t == "top" else cover,
+              material=f"cover_{bid}_mat" if has_cover and t == "top" else None,
+              collide=False, massless=True)
           for sz, t in ((1, "top"), (-1, "bottom"))]
     g.append(box(f"{name}_spine", (0, -(hw - st), 0), (hl, st, ht), cover, collide=False, massless=True))
     g.append(box(f"{name}_pages", (0, 0.0015, 0), (hl - 0.003, hw - 0.0035, ht - 0.003), PAGES,
@@ -327,7 +335,7 @@ def build_books(layout, tables_meta, comps):
         name = f"book_{b['id']}"
         parts = [f'<body name="{name}" pos="{vec(pos)}" quat="{vec(quat)}">',
                  f'  <freejoint name="{name}_joint"/>']
-        parts += ["  " + g for g in book_geoms(name, b["color"])]
+        parts += ["  " + g for g in book_geoms(name, b["color"], cover_file(b["id"]) is not None)]
         parts.append("</body>")
         xml.append("\n".join(parts))
         meta[b["id"]] = {"title": b["title"], "location": b["location"], "body": name,
@@ -335,16 +343,39 @@ def build_books(layout, tables_meta, comps):
     return xml, meta
 
 
+COVERS_DIR = Path(__file__).resolve().parent / "textures" / "covers"   # scene/fetch_covers.py
+COVER_ORIENT = "ROTATE_90"  # MuJoCo maps a 2D texture onto a box's +z face with image x along +x
+                            # and image y along -y. The upright cover turned 90 deg anticlockwise
+                            # puts its head at -x and its left (spine) edge at -y, like the book
+
+
+def cover_file(book_id):
+    """Real cover picture of a book (textures/covers/<id>.jpg or .png), or None."""
+    for ext in (".jpg", ".jpeg", ".png"):
+        if (COVERS_DIR / f"{book_id}{ext}").exists():
+            return COVERS_DIR / f"{book_id}{ext}"
+    return None
+
+
 def book_assets(layout):
-    """Spine label textures + materials (regenerated every run, they are cheap)."""
+    """Spine label and front cover textures + materials (regenerated every run, they are cheap)."""
     import make_textures
     out = []
     for b in layout["books"]:
-        f = f"spine_{b['id']}.png"
+        bid = b["id"]
+        f = f"spine_{bid}.png"
         make_textures.make_spine(f, b["title"], b["color"], BOOK_L, BOOK_T)
-        out.append(f'<texture name="spine_{b["id"]}_tex" type="2d" file="{f}"/>')
-        out.append(f'<material name="spine_{b["id"]}_mat" texture="spine_{b["id"]}_tex" '
+        out.append(f'<texture name="spine_{bid}_tex" type="2d" file="{f}"/>')
+        out.append(f'<material name="spine_{bid}_mat" texture="spine_{bid}_tex" '
                    f'specular="0.2" shininess="0.3"/>')
+        src = cover_file(bid)
+        if src is None:
+            continue
+        make_textures.make_cover(src, f"cover_{bid}", BOOK_L, BOOK_W, RIB_W, orient=COVER_ORIENT)
+        for part in ("", "_head", "_tail"):
+            out.append(f'<texture name="cover_{bid}{part}_tex" type="2d" file="cover_{bid}{part}.png"/>')
+            out.append(f'<material name="cover_{bid}{part}_mat" texture="cover_{bid}{part}_tex" '
+                       f'specular="0.15" shininess="0.3"/>')
     return out
 
 
