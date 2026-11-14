@@ -2,7 +2,16 @@
   "room": {"size": [8.0, 8.0], "center": [0.0, -1.0], "wall_height": 2.5},
   "sign": {"center_x": 0.0, "center_z": 1.78, "width": 4.2},
   "window": {"pos": [3.97, 0.0, 1.4], "half_size": [0.02, 1.0, 0.6]},
-  "robot_start": [0.0, -2.5, 0.0],
+  "robot_start": [0.0, -3.2, 1.5708],
+  "robot": {
+    "chassis_half": [0.30, 0.25],
+    "ground_clearance": 0.05,
+    "mount_height": 0.45,
+    "mount_x": 0.20,
+    "mass": 30.0,
+    "lidar": {"x": 0.30, "z": 0.20, "fov_deg": 270, "rays": 541, "range": 8.0, "noise": 0.01},
+    "wrist_cam": {"fovy": 58, "width": 640, "height": 480}
+  },
   "hidden_walls": ["south"],
 
   "table_half_size": [0.6, 0.4],

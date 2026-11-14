@@ -15,6 +15,9 @@ import json
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import robot_model  # noqa: E402
+
 HERE = Path(__file__).resolve().parent
 LAYOUT_PATH = HERE / "layout.json"
 XML_PATH = HERE / "library.xml"
@@ -97,8 +100,8 @@ def build_sign(room, sign):
     cx, cy, hx, hy = room_frame(room)
     w = sign["width"]
     pos = (sign["center_x"], cy + hy - 0.001, sign["center_z"])
-    # euler 90 0 0: plane normal (+z) -> -y (into the room), plane +y -> world +z (up)
-    return [f'<geom name="wall_sign" type="plane" pos="{vec(pos)}" euler="90 0 0" '
+    # rotate 90 deg about x: plane normal (+z) -> -y (into the room), plane +y -> world +z (up)
+    return [f'<geom name="wall_sign" type="plane" pos="{vec(pos)}" quat="0.7071068 0.7071068 0 0" '
             f'size="{w / 2:.4f} {w / 6:.4f} 0.01" material="sign_mat" contype="0" conaffinity="0"/>']
 
 
@@ -275,6 +278,9 @@ def generate():
     body += table_xml
     body += shelf_geoms
     body += book_xml
+    robot_cfg, start = layout["robot"], layout["robot_start"]
+    base_body, base_actuators = robot_model.base_xml(robot_cfg, start)
+    body.append(base_body)
     body_text = "\n".join("    " + line.replace("\n", "\n    ") for line in body)
 
     lamps = "\n".join(
@@ -286,8 +292,8 @@ def generate():
     cut_y, cut_z = cy - hy - 4.5, 4.8 + 0.25 * (2 * hy - 6.0)
 
     xml = f"""<mujoco model="library">
-  <compiler texturedir="textures"/>
-  <option timestep="0.002"/>
+  <compiler texturedir="textures" angle="radian"/>
+  <option timestep="0.002" integrator="implicitfast"/>
   <visual>
     <global offwidth="1920" offheight="1080"/>
     <quality shadowsize="4096" offsamples="8"/>
@@ -314,9 +320,18 @@ def generate():
     <geom name="floor" type="plane" pos="{cx} {cy} 0" size="{hx} {hy} 0.05" material="floor_mat"/>
 {body_text}
   </worldbody>
+  <actuator>
+    {base_actuators.replace(chr(10), chr(10) + "    ")}
+  </actuator>
 </mujoco>
 """
-    XML_PATH.write_text(xml)
+    # attach the Panda (MjSpec), add the 'home' keyframe, then save as plain MJCF
+    import mujoco
+    spec = mujoco.MjSpec.from_string(xml)
+    spec.modelfiledir = str(HERE) + "/"
+    robot_model.add_robot(spec, robot_cfg, start)
+    robot_model.save_xml(spec, XML_PATH)
+    model = mujoco.MjModel.from_xml_path(str(XML_PATH))   # make sure the saved file loads
 
     meta = {
         "room_size": room["size"],
@@ -327,11 +342,12 @@ def generate():
         "tables": tables_meta,
         "shelf": {"pos": layout["shelf"]["pos"], "slots": slots},
         "books": books_meta,
+        "robot": robot_model.robot_meta(robot_cfg, start),
     }
     META_PATH.write_text(json.dumps(meta, indent=2))
     print(f"Wrote {XML_PATH.name} and {META_PATH.name}: "
           f"{len(tables_meta)} tables, {len(slots)} shelf slots, {len(books_meta)} books, "
-          f"hidden walls: {sorted(hidden) or 'none'}")
+          f"hidden walls: {sorted(hidden) or 'none'}; robot: nq={model.nq}, nu={model.nu}")
 
 
 def check(seconds=10.0, tol=0.01):
@@ -341,6 +357,7 @@ def check(seconds=10.0, tol=0.01):
 
     model = mujoco.MjModel.from_xml_path(str(XML_PATH))
     data = mujoco.MjData(model)
+    mujoco.mj_resetDataKeyframe(model, data, model.key("home").id)
     mujoco.mj_forward(model, data)
     names = [model.body(i).name for i in range(model.nbody) if model.body(i).name.startswith("book_")]
     start = {n: data.body(n).xpos.copy() for n in names}
@@ -362,6 +379,7 @@ def preview(width=1280, height=720):
 
     model = mujoco.MjModel.from_xml_path(str(XML_PATH))
     data = mujoco.MjData(model)
+    mujoco.mj_resetDataKeyframe(model, data, model.key("home").id)
     mujoco.mj_forward(model, data)
     renderer = mujoco.Renderer(model, height, width)
     for cam in ("overview", "cutaway"):

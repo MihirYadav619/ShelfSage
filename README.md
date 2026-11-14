@@ -5,7 +5,7 @@
 
 - **Course:** Robot Manipulators (IIT Mandi), course project
 - **Team:** Chirag, Mihir
-- **Status:** Phases 1 and 2 of 10 complete; Phase 3 next (see [Progress](#8-progress-tracker))
+- **Status:** Phases 1-3 of 10 complete; Phase 4 next (see [Progress](#8-progress-tracker))
 - **Note:** This is the *initial* idea. It can be simplified later if parts become too hard (see [Fallbacks](#9-risks-and-fallbacks)).
 
 > This README is written so that the whole project can be resumed from scratch, for example in a new chat with an AI assistant. See [How to resume](#12-how-to-resume-in-a-new-chat).
@@ -164,7 +164,8 @@ Everything is defined in [`scene/layout.json`](scene/layout.json) and generated 
 - 6 tables (A to F), top at z = 0.75 m, holding up to 3 flat books each
 - 1 bookshelf at (0, 2.7): 2 rows (A, B) x 4 columns, compartments A1-A4 (surface z = 0.5 m) and B1-B4 (z = 0.9 m), top at 1.3 m
 - 13 books (id, title, colour, location): 11 on tables, 2 standing in the shelf (Physics in A1, Statistics in B2)
-- Robot start pose (0, -2.5, 0)
+- Robot start pose (0, -3.2, yaw 90 deg = facing the tables); the robot itself is described in Phase 3 below
+- The whole scene uses radians (`<compiler angle="radian">`), like the Panda
 - Books are free bodies (`freejoint`) with one invisible box collision proxy (geom group 3) plus non-colliding visual covers, spine and pages; tables and shelf are fixed
 - Procedural textures (`scene/make_textures.py`), cameras `overview` and `cutaway`
 
@@ -277,14 +278,22 @@ Update this section as work proceeds.
 - [x] `sim/view_scene.py`: opens the scene in the viewer
 - [x] Done-when check passed: `--check` shows all 13 books stable over 10 s (each settles 0.11 cm, the 1 mm spawn gap, then stays put)
 
-### Phase 3: Robot assembly (next)
+### Phase 3: Robot assembly (done)
 
-- [ ] Robot model: holonomic base (velocity actuators), Panda attached at the front edge, `home` keyframe, `tcp` / `lidar` sites, wrist camera; inserted into the library scene
-- [ ] Reach check picks the chassis height for table tops (0.75 m) and both shelf rows (0.5 m, 0.9 m)
-- [ ] `sim/robot.py`: cmd_vel, odometry, LiDAR scan, RGB-D, go_to, arm and gripper helpers
-- [ ] `sim/test_robot.py`: drive to Table B + arm over table, LiDAR overlay image, odometry drift log, wrist RGB-D image
+- [x] `scene/robot_model.py`: chassis 0.6 x 0.5 m, top (arm mount) at 0.45 m, arm 10 cm behind the front edge; base joints `base_x/base_y/base_yaw` (their qpos *is* the world pose, via `ref`) with velocity actuators `base_vx/vy/wz`; Menagerie Panda attached with MjSpec (prefix `panda_`), gravity compensation on, `panda_tcp` site and `panda_wrist_cam` (640x480, fovy 58) on the hand; `home` keyframe; LiDAR site at the front, 0.20 m high. Robot settings live in `layout.json` -> `robot`.
+- [x] `sim/reach_check.py`: numerical IK over mount heights 0.20-0.55 m. Below 0.40 m shelf row A (and its pre-place pose) is not reachable; 0.40 m and up reaches every table and shelf target, also 5 cm further away. 0.45 m chosen.
+- [x] `sim/robot.py`: `send_cmd_vel`, noisy `odometry` (2 % scale error + white noise), `lidar_scan` (270 deg, 541 rays, 8 m, 1 cm noise), `get_rgbd` + `camera_intrinsics`, `get_pose` (odom / true; MCL in Phase 6), `true_pose` (evaluation only), `go_to` (P-controller, speed and acceleration limits), `move_arm`, `home`, gripper, `robot_contacts`.
+- [x] `control/occupancy.py`: occupancy grid of static boxes at a height band (the known map for Phase 6).
+- [x] `sim/test_robot.py`: **all 9 checks pass.** Drive to Table B: 0.4 cm / 0.0 deg error, no overshoot, no collisions; TCP reaches 10 cm above the middle book (error < 1 mm); LiDAR scan 100 % within 4 cm of the map; wrist RGB-D saved; books stable. Odometry over an 11 m loop drifts about 9 cm and 5 deg, which is what MCL must fix. Images in `sim/output/phase3/` (git-ignored).
 
-### Phases 4-10: not started
+Notes for later phases:
+- With the camera 10 cm above a book, the book fills the image; Phase 5 needs a "look" pose about 40-50 cm above the table to see all books.
+- The hand is mounted rotated 45 deg (Menagerie), so the wrist image is rotated; the detector / PCA yaw must handle any rotation.
+- Flat books (14 cm wide) do not fit the Panda gripper (8 cm max opening) top-down, so the table grasp stays an attach (weld) grasp unless books are re-designed.
+
+### Phase 4: Arm control (next)
+
+### Phases 5-10: not started
 
 ---
 
@@ -313,6 +322,7 @@ ShelfSage/
 │   ├── layout.json            # single source of truth for the library
 │   ├── generate_scene.py      # layout -> library.xml + library_meta.json
 │   ├── make_textures.py       # procedural textures -> textures/
+│   ├── robot_model.py         # base + Menagerie Panda (MjSpec attach), sensors, home keyframe
 │   ├── library.xml            # generated MJCF
 │   ├── library_meta.json      # generated positions (tables, shelf slots, books)
 │   ├── textures/
@@ -322,11 +332,12 @@ ShelfSage/
 │   ├── save_joint_names.py    # writes NOTES.md
 │   ├── view_scene.py          # opens the library scene
 │   ├── robot.py               # cmd_vel, odometry, LiDAR, RGB-D, go_to, arm/gripper (Phase 3)
+│   ├── reach_check.py         # picks the chassis height (Phase 3)
 │   └── test_robot.py          # Phase 3 done-when test
 ├── skills/
 │   ├── __init__.py
 │   └── interface.py           # skill stubs + SKILLS dictionary
-├── control/                   # ik.py, jacobian.py, rrt.py, astar.py, mcl.py (Phases 4-6)
+├── control/                   # occupancy.py (done), ik.py, jacobian.py, rrt.py, astar.py, mcl.py (Phases 4-6)
 ├── perception/                # make_dataset.py, train_yolo.py, detect.py, data/ (Phase 5)
 ├── planner/                   # baseline_planner.py, llm_planner.py, prompts/, schema.json
 ├── benchmark/                 # tasks.json, run_eval.py, logs/

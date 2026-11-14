@@ -8,4 +8,5 @@ import mujoco.viewer
 
 model = mujoco.MjModel.from_xml_path("scene/library.xml")
 data = mujoco.MjData(model)
+mujoco.mj_resetDataKeyframe(model, data, model.key("home").id)
 mujoco.viewer.launch(model, data)

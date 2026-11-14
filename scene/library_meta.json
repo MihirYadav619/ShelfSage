@@ -9,8 +9,8 @@
   ],
   "robot_start": [
     0.0,
-    -2.5,
-    0.0
+    -3.2,
+    1.5708
   ],
   "window_pos": [
     3.97,
@@ -201,6 +201,75 @@
       "title": "Statistics",
       "location": "shelf:B2",
       "body": "book_stats"
+    }
+  },
+  "robot": {
+    "start": [
+      0.0,
+      -3.2,
+      1.5708
+    ],
+    "base_joints": [
+      "base_x",
+      "base_y",
+      "base_yaw"
+    ],
+    "base_actuators": [
+      "base_vx",
+      "base_vy",
+      "base_wz"
+    ],
+    "arm_joints": [
+      "panda_joint1",
+      "panda_joint2",
+      "panda_joint3",
+      "panda_joint4",
+      "panda_joint5",
+      "panda_joint6",
+      "panda_joint7"
+    ],
+    "arm_actuators": [
+      "panda_actuator1",
+      "panda_actuator2",
+      "panda_actuator3",
+      "panda_actuator4",
+      "panda_actuator5",
+      "panda_actuator6",
+      "panda_actuator7"
+    ],
+    "gripper_actuator": "panda_actuator8",
+    "arm_home": [
+      0.0,
+      0.0,
+      0.0,
+      -1.57079,
+      0.0,
+      1.57079,
+      -0.7853
+    ],
+    "tcp_site": "panda_tcp",
+    "lidar_site": "lidar",
+    "wrist_camera": "panda_wrist_cam",
+    "chassis_half": [
+      0.3,
+      0.25
+    ],
+    "ground_clearance": 0.05,
+    "mount_height": 0.45,
+    "mount_x": 0.2,
+    "mass": 30.0,
+    "lidar": {
+      "x": 0.3,
+      "z": 0.2,
+      "fov_deg": 270,
+      "rays": 541,
+      "range": 8.0,
+      "noise": 0.01
+    },
+    "wrist_cam": {
+      "fovy": 58,
+      "width": 640,
+      "height": 480
     }
   }
 }
