@@ -325,6 +325,15 @@ Design changes found by the Phase 4 test (scene regenerated, all checks re-run):
   - **Gripper tilted back** (-30 deg, i.e. fingertips towards the robot): tilted forwards, the arm cannot reach closer than 0.40 m from the mount, so the strokes ended early. The skill checks the IK at both ends of each stroke and falls back to -15 / 0 deg.
   - **Base station keeping** (`robot.hold_base`): the velocity actuators only damp motion, so the ~5 N drag reaction pulled the base 13 cm towards (and under) the table in one stroke. Held with a P-loop on the estimated pose it stays within 5 mm. Off by default: during fast arm swings the yaw loop rings (2 deg), which broke the Phase 4 accuracy checks.
   - Re-run after these changes: books stable (`--check`), Phase 3 test 9/9, Phase 4 test 9/9, pick-and-place demo 30/30.
+- [x] **Whole-body drag: the arm presses, the base pulls** (`drag_to_edge(..., method="base")`, now the default; the arm strokes above stay as `method="arm"`). The fingertips press 0.50 m ahead of the arm mount and the arm keeps its joint targets while the base backs away at 4 cm/s, so the book comes the whole way in one stroke, however far in it lies. A long pull leaves the book ~4 % short (fingertip creep + the base stopping ~5 mm early under the load), so the base pulls 4 % further. Headless, drag only (simulated time):
+
+  | book (distance to pull) | arm strokes | base pull |
+  |---|---|---|
+  | Calculus, Table A (41 cm) | 2 strokes, 3.0 cm overhang, 50 s | 1 stroke, 3.4 cm, 33 s |
+  | Databases, Table E (36 cm) | 2 strokes, 3.2 cm, 48 s | 1 stroke, 3.3 cm, 32 s |
+  | Control Systems, Table C (55 cm; Signals and Systems moved away for this test) | 3 strokes, 3.5 cm, 70 s | 1 stroke, 3.5 cm, 37 s |
+
+  Book yaw stays below 0.5 deg, the grasp afterwards lifts it 9.9 cm, other books move at most 0.11 cm. `python sim\demo_drag_grasp.py --method arm` runs the old way.
 - [x] **Shelf books packed against the divider.** Before, the 4 slots sat in the middle of the 40 cm compartment (first book ~9 cm from the divider), because a finger does not fit in the 1 cm rib gap at a divider. Now shelf books stick out **3 cm past the shelf front** (`SHELF_OVERHANG`, was 5 mm inside) and are gripped 1.5 cm in from the spine (was 2 cm), so the fingers stay outside the compartment, where the divider ends. Books are packed from the left divider (ribs 1 mm from it), 5 per compartment (was 4). The pick-and-place demo now puts Deep Learning into the slot against the divider and takes it out again: 30/30 ok.
   - Pitch stays 7 cm (3 cm between covers). With ribs touching (6 cm pitch, 2 cm between covers, 6 per compartment) the Phase 4 test failed at every shelf grasp: the finger's collision hull is 24 mm thick towards the hand, and there it hit the neighbour's spine, which now sticks out too. Even with the gripper opened only 4.4 cm it fits only at 5 mm grip depth, too little for a real grasp.
   - Re-run: books stable, Phase 3 test 9/9, Phase 4 test 9/9 (all shelf grasps collision-free), pick-and-place 30/30, drag-then-grasp ok.

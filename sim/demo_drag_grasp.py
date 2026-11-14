@@ -9,6 +9,7 @@ Usage (project root, venv active):
     python sim/demo_drag_grasp.py --book db          # Databases, middle of Table E
     python sim/demo_drag_grasp.py --book control     # Table C: refuses, Signals and Systems lies
                                                      # in its lane to the edge
+    python sim/demo_drag_grasp.py --method arm       # the arm pulls in strokes (default: base pulls)
     python sim/demo_drag_grasp.py --headless         # no window: run it and print a report
 """
 import math
@@ -47,9 +48,9 @@ def drive_to_table(robot, book, table, say, log):
         log.append((f"drive to {np.round(wp[:2], 2)}", res.success))
 
 
-def run(robot, book, table, say, log):
+def run(robot, book, table, say, log, method="base"):
     drive_to_table(robot, book, table, say, log)
-    res = drag_to_edge(robot, book, table, say=say, log=log)
+    res = drag_to_edge(robot, book, table, say=say, log=log, method=method)
     say(f"drag: {res.message}")
     if not res.success:
         return res
@@ -70,6 +71,7 @@ def main():
     headless = "--headless" in sys.argv
     speed = float(arg("--speed", 1.0))
     book = arg("--book", "calculus")
+    method = arg("--method", "base")
     table = META["books"][book]["location"].split(":")[1]
     model = mujoco.MjModel.from_xml_path(str(ROOT / "scene/library.xml"))
     data = mujoco.MjData(model)
@@ -79,10 +81,11 @@ def main():
     p_book0 = data.body(f"book_{book}").xpos.copy()
     log = []
     say = lambda s: print(f"  - {s}", flush=True)  # noqa: E731
-    print(f"ShelfSage drag-then-grasp demo: {META['books'][book]['title']} on Table {table}")
+    print(f"ShelfSage drag-then-grasp demo: {META['books'][book]['title']} on Table {table}, "
+          f"drag method '{method}'")
 
     if headless:
-        run(robot, book, table, say, log)
+        run(robot, book, table, say, log, method)
     else:
         with mujoco.viewer.launch_passive(model, data) as viewer:
             tx, ty = META["tables"][table]["pos"]
@@ -92,7 +95,7 @@ def main():
             try:
                 print("(close the window to stop)")
                 robot.wait(1.0)
-                run(robot, book, table, say, log)
+                run(robot, book, table, say, log, method)
                 print("  - done, close the window to exit")
                 while viewer.is_running():
                     robot.wait(0.1)
