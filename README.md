@@ -65,11 +65,13 @@ Natural-language command
         v
   Skill Executor:  NAVIGATE -> GRASP -> PLACE -> VERIFY
         |               |         |
-     A* + base       IK/Jacobian  attach grasp (contact grasp = stretch)
-     waypoints       + RRT-Connect
+     A* + cmd_vel    IK/Jacobian  attach grasp (contact grasp = stretch)
+     on MCL pose     + RRT-Connect
+     LiDAR obstacle  wrist RGB-D -> YOLOv8-seg -> book pose
+     detection
         |
         v
-   MuJoCo simulation (library scene, Panda on a cart)
+   MuJoCo simulation (library scene, Panda on a cart; LiDAR, odometry, wrist RGB-D)
         |
         v
    VERIFY (simulator ground truth) --> on failure: send new state to LLM and replan
@@ -115,13 +117,25 @@ Simulators considered and rejected: PyBullet (less stable contact, basic renderi
 - **Arm:** Franka Emika Panda, 7-DoF serial arm, revolute joints, redundant DoF useful for obstacle avoidance and shelf poses.
 - **Model source:** MuJoCo Menagerie (`franka_emika_panda`). It is a *simplified* MJCF derived from the public URDF, with position-controlled arm actuators and custom fingertip collision geoms. It is not an exact digital twin: do not quote simulated forces as real Panda values. (If the folder is missing in a newer Menagerie, the FR3 model is the likely replacement; also 7-DoF.)
 - **Gripper:** standard Panda **2-finger parallel gripper** (changed from the "3-point gripper" in the original deck; Panda does not ship with a 3-finger gripper, and a parallel gripper suits flat books better).
-- **Base ("cart"):** a **virtual holonomic base** built from x, y and yaw joints under the arm, driven to waypoints by a simple P-controller. This replaces "differential-drive base" from the deck. Real wheel physics is not simulated.
+- **Base ("cart"):** a **virtual holonomic base** built from x, y and yaw joints under the arm, driven by **velocity commands** (`cmd_vel`: vx, vy, wz) like a real mobile base. The controller closes the loop on the **estimated** pose, never on simulator ground truth. This replaces "differential-drive base" from the deck. Real wheel physics is not simulated. The arm is mounted at the **front edge** of the chassis (reach is tight otherwise).
 - **Optional:** a vertical lift (extra prismatic z joint) between base and arm, to reach upper shelf rows. Panda reach is only about 85 cm.
-- **Sensors:** RGB-D camera (MuJoCo camera) and optionally LiDAR via ray casting. Both are optional for the core pipeline.
+- **Sensors (core, decided):**
+  - **2D LiDAR**: 360 rays via `mujoco.mj_multiRay` from a site on the front of the chassis, about 0.25-0.3 m high (below the arm), 8 m range, with noise. At this height it sees walls, shelf and table *legs*, as a real robot would.
+  - **Odometry**: base velocities integrated with noise, so it drifts like wheel odometry.
+  - **Wrist RGB-D camera** (eye-in-hand, on the `hand` body), rendered on demand with the MuJoCo offscreen renderer.
+
+### 4.2a Localization, obstacles and perception (decided: realistic route)
+
+- **Map:** static prior map from `layout.json` (in practice a map is built once with SLAM, then reused). Full SLAM is not implemented.
+- **Localization:** Monte Carlo Localization (particle filter, as in AMCL): predict with odometry, weight particles by matching the LiDAR scan against the scan expected from the map, resample. `get_pose()` returns odometry in Phase 3 and the MCL estimate from Phase 6; `true_pose()` is used only to measure error.
+- **Obstacles:** LiDAR returns much shorter than the map predicts are marked in the occupancy grid; the robot stops if one is too close and replans with A*. If no path exists, `NAVIGATE` fails with a reason and the LLM replans (Phase 9). Test obstacles are pre-placed out of the room and moved into the path at runtime.
+- **Perception:** a learned detector, **YOLOv8n-seg** with 13 classes (one per book), trained on images generated from the simulator with domain randomization (book poses, lighting, camera pose, textures). Labels come for free from MuJoCo segmentation renders. Mask + depth -> 3D points -> centre and yaw (PCA) -> grasp target in the robot frame, so localization error does not affect the grasp. Colour + depth thresholding is the classical baseline; ground truth is always the fallback.
+- **Assumption to state in the report:** after parking, the book pose comes from the wrist camera relative to the robot, not from the global map.
 
 ### 4.3 Libraries and tools
 
 - Python virtual environment (`venv`), packages: `mujoco`, `numpy`, `scipy`, `imageio` (pinned in `requirements.txt`)
+- Perception (Phase 5): PyTorch with CUDA + `ultralytics` (YOLOv8), trained on the RTX 4060
 - LLM: API-based model returning JSON (final choice still open)
 - Git for version control
 
@@ -131,9 +145,9 @@ Simulators considered and rejected: PyBullet (less stable contact, basic renderi
 |---|---|
 | Mobile manipulation (base + arm coordination) | Fixed **parking pose** in front of each table and shelf; the base stops, then the arm works. Base and arm never move together. |
 | Grasping | Start with ground-truth object poses and an **"attach" (weld) grasp**. Contact-based friction grasp is a stretch goal. |
-| SLAM / Nav2 | **Known map** from the layout file + A* waypoint navigation. SLAM only as an optional separate demo. |
+| SLAM / Nav2 | **Known map** from the layout file + A* waypoint navigation; the robot still localizes itself with LiDAR + odometry + MCL. Full SLAM is not implemented. |
 | RRT | Use RRT-Connect only where needed (entering the shelf). Fallback: hand-designed approach trajectory. |
-| Perception | Ground truth first. RGB-D detection is optional future work. |
+| Perception | Ground truth first, then a YOLOv8-seg detector on the wrist RGB-D camera (trained on auto-labelled sim images). Ground truth stays as fallback. |
 | Shelf extraction | Leave gaps between books, spines facing out, pull straight out. |
 
 Easy and not needing simplification: IK, Jacobian control (numpy), PID, collision checks, LLM API call and JSON schema, the action library, world-state JSON, the rule-based baseline, VERIFY from ground truth.
@@ -144,7 +158,8 @@ Easy and not needing simplification: IK, Jacobian control (numpy), PID, collisio
 
 Everything is defined in [`scene/layout.json`](scene/layout.json) and generated by `scene/generate_scene.py` into `scene/library.xml` (MJCF) and `scene/library_meta.json` (positions of tables, shelf slots and books; the starting point for the world-state JSON).
 
-- Room 8 m x 6 m, wall height 2.5 m; south wall collides but is hidden (geom group 4) so the cameras can see in
+- Room 8 m x 8 m (x -4..4, y -5..3, `room.center` = (0, -1)), wall height 2.5 m; the south side was extended 2 m to leave free floor for the robot. South wall collides but is hidden (geom group 4) so the cameras can see in
+- "ShelfSage" graffiti tag on the north wall above the shelf (`sign` in the layout; texture from `make_textures.py` using the Sedgwick Ave font, SIL OFL, in `assets/fonts/`)
 - Window on the east wall at x = 3.97 (used for commands like "nearest to the window")
 - 6 tables (A to F), top at z = 0.75 m, holding up to 3 flat books each
 - 1 bookshelf at (0, 2.7): 2 rows (A, B) x 4 columns, compartments A1-A4 (surface z = 0.5 m) and B1-B4 (z = 0.9 m), top at 1.3 m
@@ -182,7 +197,7 @@ Every skill returns a `SkillResult(success, message, data)`, so a failure and it
 
 ## 7. The 10-phase plan
 
-Each phase has a "Done when" check. Phases 2, 3 and 4 can be split between two people.
+Each phase has a "Done when" check. Phases 2, 3 and 4 can be split between two people. The detector does not need the robot: once the wrist camera is fixed in Phase 3 (640x480, fovy about 58 deg, similar to a RealSense D435), dataset generation and YOLO training run in parallel with Phase 4, and Phase 5 only plugs the detector into the grasp. Changing the camera later means regenerating the dataset.
 
 ### Phase 1: Setup and foundations
 - Install MuJoCo, load the Panda from Menagerie, create repo and folders, define the skill interface.
@@ -193,8 +208,11 @@ Each phase has a "Done when" check. Phases 2, 3 and 4 can be split between two p
 - **Done when:** the scene loads and no book falls or jitters during a 10-second simulation.
 
 ### Phase 3: Robot assembly (cart + arm)
-- Virtual holonomic base (x, y, yaw), Panda on top in one XML, base P-controller, arm and gripper control, state-reading helper, optional lift.
-- **Done when:** the robot drives to a table, stops, and the arm reaches over the table surface.
+- Virtual holonomic base (x, y, yaw) with velocity actuators; Panda attached at the front edge (MuJoCo `attach` API, loaded from Menagerie, not copy-pasted); `home` keyframe; `tcp` site; inserted by `generate_scene.py` at `robot_start`.
+- Reach check that picks the chassis height for table tops and both shelf rows; optional lift only if needed.
+- Sensors: `lidar` site + `lidar_scan()`, noisy `odometry()`, wrist RGB-D camera + `get_rgbd()`.
+- `sim/robot.py`: `send_cmd_vel`, `get_pose` (odometry for now), `true_pose` (evaluation only), `go_to` P-controller, arm and gripper helpers.
+- **Done when:** the robot drives to a table, stops, and the arm reaches over the table surface; a LiDAR scan drawn at the true pose lines up with the map; odometry drift over a drive is logged; a wrist RGB + depth image is saved; books are still stable.
 
 ### Phase 4: Arm control (FK, IK, Jacobian)
 - Forward kinematics (checked against MuJoCo), Jacobian, differential IK with damped least squares and null-space joint-limit avoidance, Cartesian straight-line moves, gripper open/close.
@@ -202,11 +220,13 @@ Each phase has a "Done when" check. Phases 2, 3 and 4 can be split between two p
 
 ### Phase 5: Grasp and place skills
 - `GRASP`: pre-grasp pose, descend, close, lift (attach grasp first). `PLACE`: pre-place in front of compartment, insert, release, retract. RRT-Connect for entering the shelf. Small success checks after each step.
-- **Done when:** with the robot standing still, a book moves from a table to shelf A3 correctly at least 8 of 10 times.
+- Perception: dataset generator (domain randomization, auto labels from segmentation renders), YOLOv8n-seg training, mask + depth -> book pose; colour + depth baseline.
+- **Done when:** with the robot standing still, a book moves from a table to shelf A3 correctly at least 8 of 10 times, first with ground-truth poses, then with poses from the detector.
 
 ### Phase 6: Navigation
 - Occupancy grid from the layout, obstacle inflation, A*, smoothed waypoints, parking pose per table and shelf.
-- **Done when:** the robot reaches every table and shelf without collisions and the arm can reach from each parking pose.
+- MCL localization (odometry + LiDAR vs map); LiDAR obstacle detection, stop and A* replanning.
+- **Done when:** the robot reaches every table and shelf without collisions using only the MCL pose, the arm can reach from each parking pose, localization error is logged against ground truth, and an obstacle placed in the path is detected and avoided.
 
 ### Phase 7: Skills integration and baseline planner
 - Executor that runs an action list step by step; rule-based parser for fixed templates; logging of every step (time, success).
@@ -217,7 +237,7 @@ Each phase has a "Done when" check. Phases 2, 3 and 4 can be split between two p
 - **Done when:** the same commands work via the LLM and newly phrased commands (which the baseline cannot handle) also produce correct plans.
 
 ### Phase 9: Verify, failure injection and replanning
-- `VERIFY` from ground truth, injected failures (dropped book, full target shelf, blocked path), replanning with the new state and error sent back to the LLM (retry limit 2-3), same failures through the baseline. Optional: RGB-D perception instead of ground truth.
+- `VERIFY` from ground truth, injected failures (dropped book, full target shelf, blocked path), replanning with the new state and error sent back to the LLM (retry limit 2-3), same failures through the baseline. Optional: VERIFY with the wrist camera, compared to ground truth.
 - **Done when:** the LLM planner recovers after at least 2-3 different injected failures.
 
 ### Phase 10: Benchmark, evaluation and report
@@ -225,7 +245,7 @@ Each phase has a "Done when" check. Phases 2, 3 and 4 can be split between two p
 - **Done when:** results for both planners are clear in a table and at least 2-3 plots.
 
 ### If time runs short
-Cut first: optional perception, LiDAR simulation, contact-based grasping. Do **not** cut Phases 1-8 (ground-truth version) or verify and replanning in Phase 9, since that is the core story.
+Cut first: contact-based grasping, camera-based VERIFY, then the learned detector (fall back to colour + depth or ground truth), then MCL (fall back to ground-truth pose; keep LiDAR obstacle detection). Do **not** cut Phases 1-8 (ground-truth version) or verify and replanning in Phase 9, since that is the core story.
 
 **Evaluation is deliberately deferred.** Metrics and statistical tests will be decided at the end. Ideas from the original deck (task success rate, navigation success, grasp success, placement accuracy, collision rate, replanning success, planning latency, execution time; ablation LLM only / + world model / + verification and replanning; McNemar or Wilcoxon tests) are options, not commitments.
 
@@ -251,15 +271,18 @@ Update this section as work proceeds.
 ### Phase 2: Library scene (done)
 
 - [x] `scene/layout.json`: room, window, 6 tables, shelf (2 x 4 compartments), 13 books, robot start
-- [x] `scene/make_textures.py`: procedural floor, wood, shelf and plaster textures
+- [x] `scene/make_textures.py`: procedural floor, wood, shelf and plaster textures, plus the ShelfSage wall tag
+- [x] Room extended 2 m to the south (8 m x 8 m) for robot clearance; check re-run, all books stable
 - [x] `scene/generate_scene.py`: writes `library.xml` + `library_meta.json`, with `--check` and `--preview`
 - [x] `sim/view_scene.py`: opens the scene in the viewer
 - [x] Done-when check passed: `--check` shows all 13 books stable over 10 s (each settles 0.11 cm, the 1 mm spawn gap, then stays put)
 
 ### Phase 3: Robot assembly (next)
 
-- [ ] Choose cart height so the Panda reaches the table tops (0.75 m) and both shelf rows (0.5 m, 0.9 m) before adding the optional lift
-- [ ] Holonomic base (x, y, yaw joints) with the Panda mounted, inserted into the library scene
+- [ ] Robot model: holonomic base (velocity actuators), Panda attached at the front edge, `home` keyframe, `tcp` / `lidar` sites, wrist camera; inserted into the library scene
+- [ ] Reach check picks the chassis height for table tops (0.75 m) and both shelf rows (0.5 m, 0.9 m)
+- [ ] `sim/robot.py`: cmd_vel, odometry, LiDAR scan, RGB-D, go_to, arm and gripper helpers
+- [ ] `sim/test_robot.py`: drive to Table B + arm over table, LiDAR overlay image, odometry drift log, wrist RGB-D image
 
 ### Phases 4-10: not started
 
@@ -284,7 +307,8 @@ Update this section as work proceeds.
 ```
 ShelfSage/
 ├── assets/
-│   └── mujoco_menagerie/      # cloned, git-ignored
+│   ├── mujoco_menagerie/      # cloned, git-ignored
+│   └── fonts/                 # Sedgwick Ave (SIL OFL) for the wall tag
 ├── scene/
 │   ├── layout.json            # single source of truth for the library
 │   ├── generate_scene.py      # layout -> library.xml + library_meta.json
@@ -296,11 +320,14 @@ ShelfSage/
 ├── sim/
 │   ├── test_panda.py          # Phase 1 viewer test
 │   ├── save_joint_names.py    # writes NOTES.md
-│   └── view_scene.py          # opens the library scene
+│   ├── view_scene.py          # opens the library scene
+│   ├── robot.py               # cmd_vel, odometry, LiDAR, RGB-D, go_to, arm/gripper (Phase 3)
+│   └── test_robot.py          # Phase 3 done-when test
 ├── skills/
 │   ├── __init__.py
 │   └── interface.py           # skill stubs + SKILLS dictionary
-├── control/                   # ik.py, jacobian.py, rrt.py, astar.py (Phases 4-6)
+├── control/                   # ik.py, jacobian.py, rrt.py, astar.py, mcl.py (Phases 4-6)
+├── perception/                # make_dataset.py, train_yolo.py, detect.py, data/ (Phase 5)
 ├── planner/                   # baseline_planner.py, llm_planner.py, prompts/, schema.json
 ├── benchmark/                 # tasks.json, run_eval.py, logs/
 ├── requirements.txt
@@ -345,7 +372,9 @@ Paste this block, plus this README, into a new chat:
 I am working on ShelfSage, a course project (Robot Manipulators): an LLM-guided mobile
 librarian robot in MuJoCo with a Franka Panda (2-finger gripper) on a virtual holonomic
 cart. The LLM plans, conventional controllers execute. Simulator is MuJoCo (not Isaac Sim,
-because of an RTX 4060 with 8 GB). Please read the README, treat "Progress tracker" as the
+because of an RTX 4060 with 8 GB). Realistic route: known map + LiDAR/odometry + MCL
+localization, LiDAR obstacle detection, wrist RGB-D camera with a YOLOv8-seg detector
+trained on sim images. Please read the README, treat "Progress tracker" as the
 current state, and continue from the first unchecked item. I use Windows + PowerShell.
 ```
 
@@ -361,7 +390,7 @@ current state, and continue from the first unchecked item. I use Windows + Power
   - Gripper: "3-Point gripper" -> 2-finger parallel gripper
   - Base: "Differential-drive base" -> holonomic / virtual base; navigation: known map + A*
 - **Team split** (suggestion): one person on scene, simulator and navigation (Phases 2, 3, 6); the other on arm skills and planners (Phases 4, 5, 7, 8, 9); both on integration and benchmark
-- **Later ideas, not part of the 10 phases:** polished demo video, Blender-rendered visuals, 3-finger gripper variant as an extra experiment, RGB-D perception
+- **Later ideas, not part of the 10 phases:** polished demo video, Blender-rendered visuals, 3-finger gripper variant as an extra experiment, full SLAM demo (map building from LiDAR), pose-noise robustness experiment (grasp success vs localization error)
 
 ---
 

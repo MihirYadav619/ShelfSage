@@ -62,8 +62,14 @@ def box(name, pos, half, rgba=None, material=None, collide=True, group=None, mas
 
 
 # ----------------------------------------------------------------------------- room
+def room_frame(room):
+    """Centre and half-size of the room floor (the room need not be centred on the origin)."""
+    cx, cy = room.get("center", [0.0, 0.0])
+    return cx, cy, room["size"][0] / 2, room["size"][1] / 2
+
+
 def build_walls(room, hidden):
-    hx, hy = room["size"][0] / 2, room["size"][1] / 2
+    cx, cy, hx, hy = room_frame(room)
     h, t = room["wall_height"], 0.05
     bh = 0.06  # baseboard half-height
     specs = {
@@ -76,12 +82,24 @@ def build_walls(room, hidden):
         "west": ("wall_w", (-hx - t, 0, h / 2), (t, hy + t, h / 2),
                  (-hx + 0.01, 0, bh), (0.01, hy, bh)),
     }
+    shift = lambda p: (p[0] + cx, p[1] + cy, p[2])
     out = []
     for side, (name, pos, half, bpos, bhalf) in specs.items():
         g = HIDDEN_WALL_GROUP if side in hidden else None
-        out.append(box(name, pos, half, material="plaster_mat", group=g))
-        out.append(box(f"baseboard_{side}", bpos, bhalf, BASEBOARD, collide=False, group=g))
+        out.append(box(name, shift(pos), half, material="plaster_mat", group=g))
+        out.append(box(f"baseboard_{side}", shift(bpos), bhalf, BASEBOARD, collide=False, group=g))
     return out
+
+
+def build_sign(room, sign):
+    """Graffiti 'ShelfSage' tag painted on the north wall: a textured, non-colliding plane
+    1 mm in front of the wall, facing the room. Texture aspect is 3:1 (see make_textures.py)."""
+    cx, cy, hx, hy = room_frame(room)
+    w = sign["width"]
+    pos = (sign["center_x"], cy + hy - 0.001, sign["center_z"])
+    # euler 90 0 0: plane normal (+z) -> -y (into the room), plane +y -> world +z (up)
+    return [f'<geom name="wall_sign" type="plane" pos="{vec(pos)}" euler="90 0 0" '
+            f'size="{w / 2:.4f} {w / 6:.4f} 0.01" material="sign_mat" contype="0" conaffinity="0"/>']
 
 
 def build_window(win):
@@ -229,7 +247,7 @@ def build_books(layout, tables_meta, slots):
 
 # -------------------------------------------------------------------------- generate
 def ensure_textures():
-    needed = ["floor_wood.png", "wood.png", "shelf_wood.png", "plaster.png"]
+    needed = ["floor_wood.png", "wood.png", "shelf_wood.png", "plaster.png", "sign_shelfsage.png"]
     if all((TEXTURE_DIR / n).exists() for n in needed):
         return
     print("Textures missing, generating them first ...")
@@ -241,7 +259,7 @@ def generate():
     ensure_textures()
     layout = json.loads(LAYOUT_PATH.read_text())
     room = layout["room"]
-    hx, hy = room["size"][0] / 2, room["size"][1] / 2
+    cx, cy, hx, hy = room_frame(room)
     hidden = set(layout.get("hidden_walls", []))
 
     table_xml, tables_meta = build_tables(layout)
@@ -252,6 +270,8 @@ def generate():
     body = []
     body += build_walls(room, hidden)
     body += build_window(win)
+    if "sign" in layout:
+        body += build_sign(room, layout["sign"])
     body += table_xml
     body += shelf_geoms
     body += book_xml
@@ -260,7 +280,10 @@ def generate():
     lamps = "\n".join(
         f'    <light name="lamp{i}" pos="{x} {y} 2.4" dir="0 0 -1" diffuse="0.38 0.36 0.33" '
         f'specular="0.05 0.05 0.05" cutoff="90" exponent="1" castshadow="true"/>'
-        for i, (x, y) in enumerate([(-2.2, -0.8), (2.2, -0.8), (0.0, 0.8), (0.0, 2.0)]))
+        for i, (x, y) in enumerate([(-2.2, -0.8), (2.2, -0.8), (0.0, 0.8), (0.0, 2.0),
+                                    (-2.2, cy - hy + 1.5), (2.2, cy - hy + 1.5)]))
+    # cutaway camera sits outside the (hidden) south wall, looking down into the room
+    cut_y, cut_z = cy - hy - 4.5, 4.8 + 0.25 * (2 * hy - 6.0)
 
     xml = f"""<mujoco model="library">
   <compiler texturedir="textures"/>
@@ -281,12 +304,14 @@ def generate():
     <material name="wood_mat" texture="wood_tex" texuniform="true" texrepeat="1 1" specular="0.25" shininess="0.30"/>
     <material name="shelf_mat" texture="shelf_tex" texuniform="true" texrepeat="1 1" specular="0.25" shininess="0.30"/>
     <material name="plaster_mat" texture="plaster_tex" texuniform="true" texrepeat="0.5 0.5" specular="0.05" shininess="0.05"/>
+    <texture name="sign_tex" type="2d" file="sign_shelfsage.png"/>
+    <material name="sign_mat" texture="sign_tex" specular="0.05" shininess="0.05"/>
   </asset>
   <worldbody>
 {lamps}
     <camera name="overview" pos="0 -2.8 2.3" xyaxes="1 0 0 0 0.425 0.905" fovy="80"/>
-    <camera name="cutaway" pos="0 -7.5 4.8" xyaxes="1 0 0 0 0.471 0.883" fovy="45"/>
-    <geom name="floor" type="plane" size="{hx} {hy} 0.05" material="floor_mat"/>
+    <camera name="cutaway" pos="{cx} {cut_y:.2f} {cut_z:.2f}" xyaxes="1 0 0 0 0.471 0.883" fovy="45"/>
+    <geom name="floor" type="plane" pos="{cx} {cy} 0" size="{hx} {hy} 0.05" material="floor_mat"/>
 {body_text}
   </worldbody>
 </mujoco>
@@ -295,6 +320,7 @@ def generate():
 
     meta = {
         "room_size": room["size"],
+        "room_center": [cx, cy],
         "robot_start": layout["robot_start"],
         "window_pos": win["pos"],
         "hidden_walls": sorted(hidden),
