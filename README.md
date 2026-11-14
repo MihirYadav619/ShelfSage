@@ -14,7 +14,7 @@
 
 ## 1. Project in one paragraph
 
-We are building a **simulated mobile manipulator** (a cart with a Franka Panda arm) that receives a natural-language instruction such as *"Find the Machine Learning book on Table B and place it in shelf A3"* and carries it out on its own inside a simulated library. A **pretrained LLM acts as the high-level task planner**: it turns the instruction into a structured action sequence. **Low-level control stays conventional and verifiable** (A* navigation, inverse kinematics, Jacobian control, RRT, grasp and place routines). The LLM never touches the joints.
+We are building a **simulated mobile manipulator** (a cart with a Franka Panda arm) that receives a natural-language instruction such as *"Find the Machine Learning book on Table B and place it in shelf S2-A3"* and carries it out on its own inside a simulated library. A **pretrained LLM acts as the high-level task planner**: it turns the instruction into a structured action sequence. **Low-level control stays conventional and verifiable** (A* navigation, inverse kinematics, Jacobian control, RRT, grasp and place routines). The LLM never touches the joints.
 
 The core research question: **does an LLM planner make the robot more flexible than a hand-written rule-based planner, when the navigation and manipulation stack underneath is identical?**
 
@@ -80,7 +80,7 @@ Natural-language command
 Example LLM output:
 
 ```
-FIND_BOOK -> NAVIGATE(Table B) -> GRASP(Book) -> NAVIGATE(Shelf A3) -> PLACE(Book, A3) -> VERIFY()
+FIND_BOOK -> NAVIGATE(Table B) -> GRASP(Book) -> NAVIGATE(Shelf S2-A3) -> PLACE(Book, S2-A3) -> VERIFY()
 ```
 
 ### 3.3 Design principles
@@ -162,13 +162,13 @@ Everything is defined in [`scene/layout.json`](scene/layout.json) and generated 
 - "ShelfSage" graffiti tag on the north wall above the shelf (`sign` in the layout; texture from `make_textures.py` using the Sedgwick Ave font, SIL OFL, in `assets/fonts/`)
 - Window on the east wall at x = 3.97 (used for commands like "nearest to the window")
 - 6 tables (A to F) in two rows (front row A-C at y = -2.0, back row D-F at y = 0.5), top at z = 0.75 m; each has 3 **edge spots** on the robot side (south), where the robot puts books it brings from the shelf
-- 1 bookshelf at (0, 2.7): 2 rows (A, B) x 4 columns, compartments A1-A4 (surface z = 0.5 m) and B1-B4 (z = 1.0 m), top at 1.4 m (row B moved up from 0.9 m to stay out of the arm's dead band, see Phase 3)
-- 13 books (id, title, colour, location): 11 on tables, 2 standing in the shelf (Physics in A1, Statistics in B2)
+- **3 bookshelves** on the north wall: S1 (west, x = -2.6), S2 (centre, x = 0), S3 (east, x = 2.6). Each has 2 rows (A bottom, B top) x 4 columns; row A surface at z = 0.5 m, row B at 1.0 m, top at 1.4 m (row B moved up from 0.9 m to stay out of the arm's dead band, see Phase 3). Compartments are named `<shelf>-<row><col>`, e.g. **S2-A3**, so they cannot be confused with tables A-F. Each compartment holds up to 4 standing books, 7 cm apart
+- **39 books** (id, title, colour, location): 11 lying on tables, 28 standing in the shelves (14 of the 24 compartments used, some full, some empty for placing). Shelf locations are written `shelf:S2-A1` (the next free position from the left)
 - **Book design ("customised library books")**: every book is 22 x 15 x 4 cm, with 1 cm high, 2 cm wide bumper strips (ribs) across both covers at head and tail. Lying flat, a book rests on its ribs, leaving a 1 cm gap underneath for the lower fingertip (the Panda fingertip is 7.6 mm thick); standing in the shelf, neighbours touch only at the ribs, leaving gaps for the fingers. The title is printed on the spine (texture, Bebas Neue font, SIL OFL)
 - On a table a book lies flat with its **spine towards the robot side**, either at an edge spot (default) or anywhere on the table (`"pos": [dx, dy]` in the layout, e.g. Calculus, Control Systems, Databases). In the shelf it stands with the spine facing the room, 2 cm behind the shelf front
 - 12 static wooden chairs, 2 per table on the readers' side (north), pushed in 8 cm; the robot side (south) stays free. The front row was moved 0.5 m south so its chairs stay out of the back-row robot zones. Chair legs show up in the LiDAR map like everything static
 - Robot start pose (0, -3.9, yaw 90 deg = facing the tables), on open floor outside every zone; the robot itself is described in Phase 3 below
-- **Fixed robot parking poses and floor zones**: the robot always picks / places from fixed poses, 0.30 m from the furniture: one per table edge spot (`tables.<T>.parking` in `library_meta.json`) and one per shelf column (`shelf.parking`). Around them the floor is marked with red tape, a light red fill and a **KEEP CLEAR - ROBOT WORK ZONE** plate (`robot_zones` in the layout and the meta). The markings are visual only (no collisions, not in the LiDAR map); the zone rectangles in the meta are meant for later use, e.g. injecting a "chair left in the robot zone" failure in Phase 9
+- **Fixed robot parking poses and floor zones**: the robot always picks / places from fixed poses, 0.30 m from the furniture: one per table edge spot (`tables.<T>.parking` in `library_meta.json`) and one per column of each shelf (`shelves.<S>.parking`). Around them the floor is marked with red tape, a light red fill and a **KEEP CLEAR - ROBOT WORK ZONE** plate (`robot_zones` in the layout and the meta). The markings are visual only (no collisions, not in the LiDAR map); the zone rectangles in the meta are meant for later use, e.g. injecting a "chair left in the robot zone" failure in Phase 9
 - The whole scene uses radians (`<compiler angle="radian">`), like the Panda
 - Books are free bodies (`freejoint`): collision = body box (geom group 3, hidden) + 4 rib boxes; visual = covers, spine, pages, ribs, spine label. Tables and shelf are fixed
 - Procedural textures (`scene/make_textures.py`), cameras `overview` and `cutaway`
@@ -227,7 +227,7 @@ Each phase has a "Done when" check. Phases 2, 3 and 4 can be split between two p
 ### Phase 5: Grasp and place skills
 - `GRASP`: pre-grasp pose, descend, close, lift (attach grasp first). `PLACE`: pre-place in front of compartment, insert, release, retract. RRT-Connect for entering the shelf. Small success checks after each step.
 - Perception: dataset generator (domain randomization, auto labels from segmentation renders), YOLOv8n-seg training, mask + depth -> book pose; colour + depth baseline.
-- **Done when:** with the robot standing still, a book moves from a table to shelf A3 correctly at least 8 of 10 times, first with ground-truth poses, then with poses from the detector.
+- **Done when:** with the robot standing still, a book moves from a table to shelf compartment S2-A3 correctly at least 8 of 10 times, first with ground-truth poses, then with poses from the detector.
 
 ### Phase 6: Navigation
 - Occupancy grid from the layout, obstacle inflation, A*, smoothed waypoints, parking pose per table and shelf.

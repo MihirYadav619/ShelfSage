@@ -28,13 +28,19 @@
     "F": {"pos": [2.5, 0.5]}
   },
 
-  "shelf": {
-    "pos": [0.0, 2.7],
+  "shelf_design": {
     "width": 1.6,
     "depth": 0.35,
     "cols": 4,
     "row_surface_z": [0.5, 1.0],
-    "top_z": 1.4
+    "top_z": 1.4,
+    "books_per_compartment": 4,
+    "book_pitch": 0.07
+  },
+  "shelves": {
+    "S1": {"pos": [-2.6, 2.7]},
+    "S2": {"pos": [0.0, 2.7]},
+    "S3": {"pos": [2.6, 2.7]}
   },
 
   "books": [
@@ -49,7 +55,33 @@
     {"id": "algo",     "title": "Algorithms",           "color": [0.25, 0.25, 0.30], "location": "table:E"},
     {"id": "db",       "title": "Databases",            "color": [0.50, 0.50, 0.55], "location": "table:E", "pos": [0.30, 0.00]},
     {"id": "thermo",   "title": "Thermodynamics",       "color": [0.70, 0.30, 0.10], "location": "table:F"},
-    {"id": "physics",  "title": "Physics",              "color": [0.30, 0.50, 0.90], "location": "shelf:A1"},
-    {"id": "stats",    "title": "Statistics",           "color": [0.90, 0.45, 0.25], "location": "shelf:B2"}
+    {"id": "physics",  "title": "Physics",              "color": [0.30, 0.50, 0.90], "location": "shelf:S2-A1"},
+    {"id": "stats",    "title": "Statistics",           "color": [0.90, 0.45, 0.25], "location": "shelf:S2-B2"},
+    {"id": "os",          "title": "Operating Systems",           "color": [0.80, 0.54, 0.36], "location": "shelf:S1-A1"},
+    {"id": "networks",    "title": "Computer Networks",           "color": [0.20, 0.80, 0.63], "location": "shelf:S1-A1"},
+    {"id": "compilers",   "title": "Compilers",                   "color": [0.80, 0.44, 0.80], "location": "shelf:S1-A2"},
+    {"id": "arch",        "title": "Computer Architecture",       "color": [0.52, 0.62, 0.28], "location": "shelf:S1-A4"},
+    {"id": "discrete",    "title": "Discrete Mathematics",        "color": [0.15, 0.35, 0.62], "location": "shelf:S1-A4"},
+    {"id": "graphs",      "title": "Graph Theory",                "color": [0.62, 0.34, 0.37], "location": "shelf:S1-A4"},
+    {"id": "prob",        "title": "Probability",                 "color": [0.41, 0.92, 0.50], "location": "shelf:S1-B1"},
+    {"id": "optim",       "title": "Optimization",                "color": [0.55, 0.23, 0.92], "location": "shelf:S1-B1"},
+    {"id": "numerics",    "title": "Numerical Methods",           "color": [0.92, 0.82, 0.51], "location": "shelf:S1-B3"},
+    {"id": "dsa",         "title": "Data Structures",             "color": [0.36, 0.78, 0.80], "location": "shelf:S1-B3"},
+    {"id": "kinematics",  "title": "Kinematics",                  "color": [0.80, 0.20, 0.60], "location": "shelf:S2-A1"},
+    {"id": "dynamics",    "title": "Dynamics",                    "color": [0.57, 0.80, 0.44], "location": "shelf:S2-A1"},
+    {"id": "mechatronics", "title": "Mechatronics",                "color": [0.28, 0.31, 0.62], "location": "shelf:S2-A4"},
+    {"id": "embedded",    "title": "Embedded Systems",            "color": [0.62, 0.25, 0.15], "location": "shelf:S2-B2"},
+    {"id": "digital",     "title": "Digital Electronics",         "color": [0.34, 0.62, 0.48], "location": "shelf:S2-B2"},
+    {"id": "power",       "title": "Power Electronics",           "color": [0.82, 0.41, 0.92], "location": "shelf:S2-B4"},
+    {"id": "cv",          "title": "Computer Vision",             "color": [0.86, 0.92, 0.23], "location": "shelf:S3-A1"},
+    {"id": "nlp",         "title": "Natural Language Processing", "color": [0.51, 0.76, 0.92], "location": "shelf:S3-A1"},
+    {"id": "rl",          "title": "Reinforcement Learning",      "color": [0.80, 0.36, 0.50], "location": "shelf:S3-A1"},
+    {"id": "ai",          "title": "Artificial Intelligence",     "color": [0.22, 0.80, 0.20], "location": "shelf:S3-A3"},
+    {"id": "infotheory",  "title": "Information Theory",          "color": [0.53, 0.44, 0.80], "location": "shelf:S3-B1"},
+    {"id": "crypto",      "title": "Cryptography",                "color": [0.62, 0.47, 0.28], "location": "shelf:S3-B1"},
+    {"id": "quantum",     "title": "Quantum Computing",           "color": [0.15, 0.62, 0.55], "location": "shelf:S3-B2"},
+    {"id": "fluids",      "title": "Fluid Mechanics",             "color": [0.62, 0.34, 0.58], "location": "shelf:S3-B4"},
+    {"id": "heat",        "title": "Heat Transfer",               "color": [0.71, 0.92, 0.41], "location": "shelf:S3-B4"},
+    {"id": "materials",   "title": "Materials Science",           "color": [0.23, 0.43, 0.92], "location": "shelf:S3-B4"}
   ]
 }

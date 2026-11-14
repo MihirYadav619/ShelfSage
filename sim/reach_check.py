@@ -39,7 +39,7 @@ POS_TOL, ANG_TOL = 0.005, np.deg2rad(3)
 
 TABLE_TOP = 0.75
 BOOK_L, BOOK_T, RIB_H = 0.22, 0.04, 0.01
-SHELF = LAYOUT["shelf"]
+SHELF = LAYOUT["shelf_design"]
 DISTANCES = np.round(np.arange(0.20, 0.95, 0.05), 2)
 
 

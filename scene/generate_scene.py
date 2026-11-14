@@ -180,37 +180,47 @@ def build_chair(name, x, y):
 
 
 # ---------------------------------------------------------------------------- shelf
-def build_shelf(s):
-    cx, cy = s["pos"]
+def build_shelf(name, pos, s):
+    """One bookcase. Compartments are named <shelf>-<row><col>, e.g. "S2-A3" (row A = bottom).
+
+    Each compartment holds up to `books_per_compartment` standing books, `book_pitch` apart
+    (ribs touch, leaving finger gaps between neighbours). Returns geoms and
+    {compartment: {"surface": [x, y, z], "positions": [[x, y, z_centre], ...]}}.
+    """
+    cx, cy = pos
     W, D, cols = s["width"], s["depth"], s["cols"]
     surfaces, top_z = s["row_surface_z"], s["top_z"]
+    n, pitch = s["books_per_compartment"], s["book_pitch"]
     t = BOARD_T
     total_h = top_z + t
     m = "shelf_mat"
     geoms = []
-
     for sx in (-1, 1):
         geoms.append(box(None, (cx + sx * (W / 2 + t / 2), cy, total_h / 2),
                          (t / 2, D / 2, total_h / 2), material=m))
-    geoms.append(box("shelf_back", (cx, cy + D / 2 + 0.005, total_h / 2),
+    geoms.append(box(f"{name}_back", (cx, cy + D / 2 + 0.005, total_h / 2),
                      (W / 2 + t, 0.005, total_h / 2), material=m))
     geoms.append(box(None, (cx, cy, top_z + t / 2), (W / 2 + t, D / 2 + 0.01, t / 2), material=m))
-    # plinth at the bottom
-    geoms.append(box(None, (cx, cy - D / 2 + 0.01, 0.06), (W / 2, 0.01, 0.06), material=m))
+    geoms.append(box(None, (cx, cy - D / 2 + 0.01, 0.06), (W / 2, 0.01, 0.06), material=m))   # plinth
 
-    slots = {}
+    front = cy - D / 2
+    book_y = front + SHELF_INSET + BOOK_W / 2
+    comps = {}
     for i, z_s in enumerate(surfaces):
         row = "ABCDEFGH"[i]
-        geoms.append(box(f"shelf_board_{row}", (cx, cy, z_s - t / 2), (W / 2, D / 2, t / 2), material=m))
+        geoms.append(box(f"{name}_board_{row}", (cx, cy, z_s - t / 2), (W / 2, D / 2, t / 2), material=m))
         ceiling = (surfaces[i + 1] - t) if i + 1 < len(surfaces) else top_z
         row_h = ceiling - z_s
         for c in range(1, cols):
             x_div = cx - W / 2 + c * W / cols
             geoms.append(box(None, (x_div, cy, z_s + row_h / 2), (0.006, D / 2, row_h / 2), material=m))
         for c in range(1, cols + 1):
-            x_slot = cx - W / 2 + (c - 0.5) * W / cols
-            slots[f"{row}{c}"] = [x_slot, cy, z_s]
-    return geoms, slots
+            x_c = cx - W / 2 + (c - 0.5) * W / cols
+            offsets = [(k - (n - 1) / 2) * pitch for k in range(n)]
+            comps[f"{name}-{row}{c}"] = {
+                "surface": [x_c, cy, z_s],
+                "positions": [[x_c + o, book_y, z_s + BOOK_L / 2 + EPS] for o in offsets]}
+    return geoms, comps
 
 
 # ---------------------------------------------------------------------------- books
@@ -244,11 +254,12 @@ def book_geoms(name, color):
     return g
 
 
-def build_books(layout, tables_meta, slots):
+def build_books(layout, tables_meta, comps):
     """Place the books. Table books lie flat with the spine towards the robot side (-y):
     at a free edge spot (default) or anywhere on the table with "pos": [dx, dy] (book centre
-    relative to the table centre). Shelf books stand in a slot, spine facing the room."""
-    used_spots, used_slots, footprints = {}, set(), {}
+    relative to the table centre). Shelf books stand in a compartment ("shelf:S2-A1": next free
+    position from the left), spine facing the room."""
+    used_spots, used_pos, footprints = {}, {}, {}
     hl, hw = BOOK_L / 2, BOOK_W / 2
     xml, meta = [], {}
     for b in layout["books"]:
@@ -276,14 +287,13 @@ def build_books(layout, tables_meta, slots):
             footprints.setdefault(where, []).append((pos[0], pos[1]))
             quat = QUAT_FLAT
         elif kind == "shelf":
-            if where not in slots:
-                raise ValueError(f"Book {b['id']}: unknown shelf slot {where}")
-            if where in used_slots:
-                raise ValueError(f"Shelf slot {where} is used twice")
-            used_slots.add(where)
-            sx, sy, sz = slots[where]
-            front = sy - layout["shelf"]["depth"] / 2
-            pos = (sx, front + SHELF_INSET + hw, sz + hl + EPS)
+            if where not in comps:
+                raise ValueError(f"Book {b['id']}: unknown shelf compartment {where}")
+            k = used_pos.get(where, 0)
+            if k >= len(comps[where]["positions"]):
+                raise ValueError(f"Compartment {where} is full")
+            used_pos[where] = k + 1
+            pos = tuple(comps[where]["positions"][k])
             quat = QUAT_STAND
         else:
             raise ValueError(f"Book {b['id']}: bad location {b['location']}")
@@ -312,11 +322,11 @@ def book_assets(layout):
 
 
 # --------------------------------------------------------------------- robot zones
-def parking_and_zones(layout, tables_meta, slots):
+def parking_and_zones(layout, tables_meta, shelves_meta):
     """Fixed robot parking poses (where it stands to pick / place) and the floor zones around them.
 
     Tables: one pose per edge spot, facing the table (+y) from the robot side.
-    Shelf: one pose per column, facing the shelf.
+    Shelves: one pose per column of each shelf, facing the shelf.
     The robot stands `park_clearance` away from the edge (grasp points then sit ~0.45 m ahead of
     the arm mount, see sim/reach_check.py). Each zone covers the chassis at every pose of that
     table / the shelf plus the gap to the furniture, where the arm works.
@@ -334,14 +344,16 @@ def parking_and_zones(layout, tables_meta, slots):
         xs = [sp[0] for sp in t["edge_spots"]]
         zones.append({"name": f"table_{name}", "x": [min(min(xs) - hy, tx - thx) - m, max(max(xs) + hy, tx + thx) + m],
                       "y": [park_y - hx - m, edge]})
-    sh = layout["shelf"]
-    front = sh["pos"][1] - sh["depth"] / 2
-    park_y = front - clr - hx
-    cols = sorted({k[1:] for k in slots})
-    shelf_parking = {c: [slots[f"A{c}"][0], park_y, yaw] for c in cols}
-    xs = [p[0] for p in shelf_parking.values()]
-    zones.append({"name": "shelf", "x": [min(xs) - hy - m, max(xs) + hy + m], "y": [park_y - hx - m, front]})
-    return shelf_parking, zones
+    design = layout["shelf_design"]
+    for sname, sh in shelves_meta.items():
+        front = sh["pos"][1] - design["depth"] / 2
+        park_y = front - clr - hx
+        cols = sorted({k.split("-")[1][1:] for k in sh["compartments"]})
+        sh["parking"] = {c: [sh["compartments"][f"{sname}-A{c}"]["surface"][0], park_y, yaw] for c in cols}
+        xs = [p[0] for p in sh["parking"].values()]
+        zones.append({"name": f"shelf_{sname}", "x": [min(xs) - hy - m, max(xs) + hy + m],
+                      "y": [park_y - hx - m, front]})
+    return zones
 
 
 def build_zones(zones, zc):
@@ -385,9 +397,14 @@ def generate():
     hidden = set(layout.get("hidden_walls", []))
 
     table_xml, tables_meta = build_tables(layout)
-    shelf_geoms, slots = build_shelf(layout["shelf"])
-    book_xml, books_meta = build_books(layout, tables_meta, slots)
-    shelf_parking, zones = parking_and_zones(layout, tables_meta, slots)
+    shelf_geoms, comps, shelves_meta = [], {}, {}
+    for sname, sh in layout["shelves"].items():
+        geoms, c = build_shelf(sname, sh["pos"], layout["shelf_design"])
+        shelf_geoms += geoms
+        comps.update(c)
+        shelves_meta[sname] = {"pos": sh["pos"], "compartments": c}
+    book_xml, books_meta = build_books(layout, tables_meta, comps)
+    zones = parking_and_zones(layout, tables_meta, shelves_meta)
     zc = layout["robot_zones"]
     import make_textures
     make_textures.make_floor_label("zone_label.png", zc["text"], zc["subtext"], zc["label_size"])
@@ -471,7 +488,8 @@ def generate():
         "window_pos": win["pos"],
         "hidden_walls": sorted(hidden),
         "tables": tables_meta,
-        "shelf": {"pos": layout["shelf"]["pos"], "slots": slots, "parking": shelf_parking},
+        "shelf_design": layout["shelf_design"],
+        "shelves": shelves_meta,
         "robot_zones": zones,
         "books": books_meta,
         "book_dims": {"length": BOOK_L, "width": BOOK_W, "thickness": BOOK_T,
@@ -481,7 +499,7 @@ def generate():
     }
     META_PATH.write_text(json.dumps(meta, indent=2))
     print(f"Wrote {XML_PATH.name} and {META_PATH.name}: "
-          f"{len(tables_meta)} tables, {len(slots)} shelf slots, {len(books_meta)} books, "
+          f"{len(tables_meta)} tables, {len(shelves_meta)} shelves / {len(comps)} compartments, {len(books_meta)} books, "
           f"hidden walls: {sorted(hidden) or 'none'}; robot: nq={model.nq}, nu={model.nu}")
 
 

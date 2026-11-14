@@ -24,7 +24,7 @@ def grasp(obj: str) -> SkillResult:
 
 
 def place(obj: str, shelf: str) -> SkillResult:
-    """Put the held book into a shelf compartment, e.g. 'A3'."""
+    """Put the held book into a shelf compartment, e.g. 'S2-A3' (shelf S1/S2/S3, row A/B, column 1-4)."""
     raise NotImplementedError
 
 

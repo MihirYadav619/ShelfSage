@@ -130,21 +130,22 @@ def main():
             robot.stow()
 
             say("driving through the aisle to the shelf")
-            sh = META["shelf"]
+            sh = META["shelves"]["S2"]                     # centre shelf
+            depth = META["shelf_design"]["depth"]
             hx = META["robot"]["chassis_half"][0]
             # park ~30 cm from the shelf: the shelf grasp point is then ~0.45 m ahead of the arm
             # mount, in the middle of the reachable range (sim/reach_check.py)
-            front = sh["pos"][1] - 0.35 / 2
+            front = sh["pos"][1] - depth / 2
             shelf_park = tuple(sh["parking"]["3"])          # fixed pose for column 3
             for wp in [(1.25, -2.6, math.pi / 2), (1.25, 1.7, math.pi / 2), shelf_park]:
                 robot.go_to(*wp, tol_xy=0.02, tol_yaw=0.02)
 
-            slot = np.array(sh["slots"]["B3"])
+            slot = np.array(sh["compartments"]["S2-B3"]["surface"])
             bd = META["book_dims"]
             fwd = np.array([0.0, 1.0, 0.0])   # into the shelf
             # where a book's grasp point would be: 2 cm + 2.5 cm behind the shelf front, mid-height
             grasp = np.array([slot[0], front + 0.045, slot[2] + bd["length"] / 2 + 0.03])
-            say("pre-place: 15 cm in front of empty slot B3")
+            say("pre-place: 15 cm in front of empty compartment S2-B3")
             robot.move_arm(ik(robot, grasp - [0, 0.15, 0], fwd, y_axis=np.array([1.0, 0, 0])), 3.0)
             say("move in to where a book would be held, then back out")
             robot.move_arm(ik(robot, grasp, fwd, y_axis=np.array([1.0, 0, 0])), 2.0)
