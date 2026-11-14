@@ -269,9 +269,9 @@ Update this section as work proceeds.
 - [x] Folder structure created: `scene/ sim/ skills/ control/ planner/ benchmark/ assets/`
 - [x] `.gitignore` created (`venv/`, `.venv/`, `__pycache__/`, `assets/mujoco_menagerie/`)
 - [x] MuJoCo Menagerie cloned into `assets/mujoco_menagerie` (Panda model)
-- [x] Test script `sim/test_panda.py` runs: Panda shows in the viewer and a joint moves
+- [x] Test script `sim/test_panda.py` ran: Panda showed in the viewer and a joint moved (removed later; the whole robot is tested in Phases 3-4)
 - [x] Skill interface written: `skills/__init__.py` and `skills/interface.py` (stubs)
-- [x] Joint names and actuator count saved into `NOTES.md` (via `sim/save_joint_names.py`)
+- [x] Joint names and actuator count saved into `NOTES.md` (via `sim/save_joint_names.py`; now regenerated for the full robot)
 - [x] `requirements.txt` committed (UTF-8)
 - [x] First Git commit made
 
@@ -353,8 +353,7 @@ ShelfSage/
 │   ├── textures/
 │   └── preview_*.png
 ├── sim/
-│   ├── test_panda.py          # Phase 1 viewer test
-│   ├── save_joint_names.py    # writes NOTES.md
+│   ├── save_joint_names.py    # writes NOTES.md (robot joints, actuators, sites, poses)
 │   ├── view_scene.py          # opens the library scene
 │   ├── robot.py               # cmd_vel, odometry, LiDAR, RGB-D, go_to, arm/gripper (Phase 3)
 │   ├── reach_check.py         # picks the chassis height (Phase 3)
@@ -370,7 +369,7 @@ ShelfSage/
 ├── planner/                   # baseline_planner.py, llm_planner.py, prompts/, schema.json
 ├── benchmark/                 # tasks.json, run_eval.py, logs/
 ├── requirements.txt
-├── NOTES.md                   # joint names, misc notes
+├── NOTES.md                   # robot joints, actuators, sites, poses (generated)
 └── README.md
 ```
 
@@ -390,11 +389,12 @@ pip install -r requirements.txt
 git clone --depth 1 https://github.com/google-deepmind/mujoco_menagerie.git assets/mujoco_menagerie
 
 # test: run from the project root (the model paths in the scripts are relative)
-python sim\test_panda.py
 python sim\view_scene.py
+python sim\test_robot.py
+python sim\test_phase4.py
 ```
 
-Expected: `test_panda.py` prints joint names and actuator count, and a viewer window opens with the Panda; its first joint swings slowly. `view_scene.py` opens the library.
+Expected: `view_scene.py` opens the library with the robot in its home pose; both tests end with `RESULT: all passed`.
 
 Notes:
 - Run commands from the project root with the venv active (prompt shows `(venv)`).
