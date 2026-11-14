@@ -182,6 +182,7 @@ python scene\generate_scene.py --preview   # also render scene\preview_*.png
 python sim\view_scene.py                   # open the scene in the viewer
 python sim\demo_phase3.py                  # watch the robot drive, reach the table and the shelf
 python sim\demo_pick_place.py              # table -> shelf -> table round trip (add --headless for a report)
+python sim\demo_drag_grasp.py              # pull a mid-table book to the edge, then grasp it (--book db, --headless)
 ```
 
 ---
@@ -297,8 +298,8 @@ Notes for later phases:
 - Travel pose: `robot.stow()` folds the arm over the chassis before driving; `home` sticks out 0.84 m and hit the shelf when parking there. At a table, unfold to `home` first (elbow up) before reaching down.
 - Camera near plane: `<visual><map znear="0.001">` (1.7 cm). The default clipped everything nearer than 16.6 cm, so close-up books were cut open.
 - The hand is mounted rotated 45 deg (Menagerie), so the wrist image is rotated; the detector / PCA yaw must handle any rotation.
-- **Grasp design (decided, refined in Phase 4):** books are picked by their thickness, not top-down (15 cm is wider than the 8 cm gripper). Table: gripper horizontal, fingers close vertically around the **3 cm overhanging spine**, TCP 1.5 cm in from the spine (inside the 1 cm rib gap the lower finger still hit the table: its pad is ~1 cm thick and MuJoCo collides the finger mesh as a convex hull, 24 mm thick near the hand). A book that is not at the edge is first **dragged to the edge** (closed fingertips press on its top near the spine, gripper tilted 30 deg). Shelf: gripper horizontal, fingers close sideways around the standing book, TCP 2 cm in from the spine; books stand flush with the shelf front, otherwise the 20 cm wide hand hits the dividers. The ribs keep 2 cm finger gaps between neighbouring shelf books. The book is rotated 90 deg with the wrist between lying and standing. The weld (attach) grasp stays as a fallback.
-- **Parking distances (Phase 4):** 0.50 m between chassis and table / shelf. At 0.30-0.40 m the pre-grasp / pre-place poses (10-15 cm out) folded the arm into the chassis or put joints 4/5 at their limits, so straight-line moves from there failed; 0.45-0.60 m works. Drive closer (~0.05 m) only to drag a far book.
+- **Grasp design (decided, refined in Phase 4):** books are picked by their thickness, not top-down (15 cm is wider than the 8 cm gripper). Table: gripper horizontal, fingers close vertically around the **3 cm overhanging spine**, TCP 1.5 cm in from the spine (inside the 1 cm rib gap the lower finger still hit the table: its pad is ~1 cm thick and MuJoCo collides the finger mesh as a convex hull, 24 mm thick near the hand). A book that is not at the edge is first **dragged to the edge** (closed fingertips press on its top 4 cm in from the spine, gripper tilted 30 deg *back* towards the robot; see Phase 5). Shelf: gripper horizontal, fingers close sideways around the standing book, TCP 2 cm in from the spine; books stand flush with the shelf front, otherwise the 20 cm wide hand hits the dividers. The ribs keep 2 cm finger gaps between neighbouring shelf books. The book is rotated 90 deg with the wrist between lying and standing. The weld (attach) grasp stays as a fallback.
+- **Parking distances (Phase 4):** 0.50 m between chassis and table / shelf. At 0.30-0.40 m the pre-grasp / pre-place poses (10-15 cm out) folded the arm into the chassis or put joints 4/5 at their limits, so straight-line moves from there failed; 0.45-0.60 m works. Drive closer (3-50 cm, chosen per stroke) only to drag a far book.
 
 ### Phase 4: Arm control (done)
 
@@ -315,7 +316,15 @@ Design changes found by the Phase 4 test (scene regenerated, all checks re-run):
 ### Phase 5: Grasp and place skills (next)
 
 - [x] First step: **attach (weld) grasp** (the README fallback). One inactive weld hand<->book per book in the scene; `robot.attach(book)` switches it on with the book's current pose relative to the hand, `robot.release(book)` switches it off. `sim/demo_pick_place.py` runs the full round trip with it (Deep Learning: Table B -> shelf S2-B3 -> back to its edge spot), using the Phase 3-4 stack: parking poses, IK, straight-line moves, wrist rotation between lying and standing, a carry pose for driving. Headless run: 30/30 steps ok, the book ends 0.3 cm from its spot, other books move at most 0.11 cm.
-- [ ] Friction grasp instead of the weld (finger pad friction, book-on-table friction), drag-to-edge for books not at the edge, GRASP / PLACE skills, YOLO perception
+- [x] **Drag to the edge, then grasp** ("kheencho, phir pakdo") for a book lying inside a table: `skills/manipulation.py` (`drag_to_edge`, `pick_from_table_edge`), demo `sim/demo_drag_grasp.py`. In strokes: park in line with the book so the press point is ~0.58 m ahead of the arm mount (3-50 cm from the edge), closed fingertips above the cover 4 cm in from the spine, guarded move down to 10 N, pull straight towards the robot (max 25 cm), lift, measure the book again, repeat until the spine overhangs 3 cm (+-1 cm). Then the normal edge grasp (attach), lift 10 cm, back off, carry pose. Headless: **Calculus** (40 cm in, Table A) and **Databases** (middle of Table E) both reach 3.0 / 3.2 cm overhang in 2 strokes, book yaw < 0.2 deg, lifted 9.9 cm, other books move at most 0.11 cm. **Control Systems** (Table C) is refused up front: Signals and Systems lies in its lane to the edge (`drag_blockers`), it would be pushed off; the planner has to move that one first.
+  - Friction (scene): books 0.4 (paper on wood), finger pads 1.5 (rubber), set with geom **priority** so the book's value also holds against the 1.0 table / shelf and the pad's against the book. Pressing and pulling works when 1.5 F > 0.4 (F + m g), any F. Before, everything was 1.0 and the fingers just slid over the cover.
+  - **Elliptic friction cone + impratio 10** (`<option>`): with the default pyramidal cone the fingertips crept 4 cm per 12 cm stroke and slid off the book; now ~5 mm per stroke (the skill pulls 5 mm further to compensate).
+  - **Press force by a guarded move** (`robot.guarded_move`, force from `robot.finger_force`, the simulated fingertip force sensing): a fixed 1 cm press gave 120-170 N.
+  - **Gripper tilted back** (-30 deg, i.e. fingertips towards the robot): tilted forwards, the arm cannot reach closer than 0.40 m from the mount, so the strokes ended early. The skill checks the IK at both ends of each stroke and falls back to -15 / 0 deg.
+  - **Base station keeping** (`robot.hold_base`): the velocity actuators only damp motion, so the ~5 N drag reaction pulled the base 13 cm towards (and under) the table in one stroke. Held with a P-loop on the estimated pose it stays within 5 mm. Off by default: during fast arm swings the yaw loop rings (2 deg), which broke the Phase 4 accuracy checks.
+  - Re-run after these changes: books stable (`--check`), Phase 3 test 9/9, Phase 4 test 9/9, pick-and-place demo 30/30.
+  - Driving to the north-row tables (D-F) goes through the aisle at x = 1.25 m in the demo (straight lines until A* in Phase 6).
+- [ ] Friction grasp instead of the weld, GRASP / PLACE skills in `skills/interface.py`, YOLO perception
 
 
 ### Phases 6-10: not started
@@ -360,10 +369,12 @@ ShelfSage/
 │   ├── test_phase4.py         # Phase 4 done-when test (FK, Jacobian, IK, straight lines)
 │   ├── demo_phase3.py         # watch the robot in the viewer (Phases 3-4)
 │   ├── demo_pick_place.py     # table -> shelf -> table with the attach grasp (Phase 5 preview)
+│   ├── demo_drag_grasp.py     # mid-table book: drag to the edge, grasp, lift (Phase 5)
 │   └── test_robot.py          # Phase 3 done-when test
 ├── skills/
 │   ├── __init__.py
-│   └── interface.py           # skill stubs + SKILLS dictionary
+│   ├── interface.py           # skill stubs + SKILLS dictionary
+│   └── manipulation.py        # drag_to_edge, pick_from_table_edge (Phase 5)
 ├── control/                   # occupancy.py, kinematics.py, ik.py (done); rrt.py, astar.py, mcl.py (Phases 5-6)
 ├── perception/                # make_dataset.py, train_yolo.py, detect.py, data/ (Phase 5)
 ├── planner/                   # baseline_planner.py, llm_planner.py, prompts/, schema.json

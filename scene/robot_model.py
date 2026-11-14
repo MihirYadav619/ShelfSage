@@ -31,6 +31,7 @@ ARM_HOME = [0.0, 0.0, 0.0, -1.57079, 0.0, 1.57079, -0.7853]   # Menagerie "home"
 ARM_STOW = [0.0, -1.7, 0.0, -2.844, 0.0, 3.6, 0.785]
 FINGER_OPEN = 0.04
 GRIPPER_OPEN_CTRL = 255.0
+FINGER_FRICTION, FINGER_PRIORITY = 1.5, 2   # rubber pads; beats the books' 0.4 (generate_scene.py)
 
 CHASSIS_RGBA = (0.18, 0.21, 0.26, 1)
 TRIM_RGBA = (0.85, 0.47, 0.12, 1)     # orange trim stripe
@@ -91,6 +92,11 @@ def panda_spec(cfg):
             b.gravcomp = 1.0
     for k in list(panda.keys):          # we write our own full-model keyframe
         panda.delete(k)
+    for f in ("left_finger", "right_finger"):
+        for g in panda.body(f).geoms:
+            if g.contype or g.conaffinity:      # collision geoms only (mesh hull + pads)
+                g.friction = [FINGER_FRICTION, 0.005, 0.0001]
+                g.priority = FINGER_PRIORITY
     hand = panda.body("hand")
     hand.add_site(name="tcp", pos=[0, 0, TCP_OFFSET], size=[0.006, 0, 0], rgba=[0, 1, 0, 0.6], group=4)
     cam = cfg["wrist_cam"]

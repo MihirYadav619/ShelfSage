@@ -31,6 +31,11 @@ BOOK_L, BOOK_W, BOOK_T = 0.22, 0.15, 0.04
 RIB_H, RIB_W = 0.01, 0.02          # bumper strips at head and tail on both covers: lying flat,
                                    # the book rests on them and leaves a 1 cm gap for a fingertip
 BOOK_MASS, RIB_MASS = 0.3, 0.01
+# Friction (Phase 5): MuJoCo takes the max of two geoms' friction unless one has a higher priority,
+# then that geom's friction is used. Books: paper / cardboard on wood, 0.4 (priority 1, so it also
+# holds against the 1.0 table and shelf). Finger pads (robot_model.py): rubber, 1.5, priority 2.
+# Pressing on a book and dragging it then works: 1.5 * F > 0.4 * (F + m g) for any press force F.
+BOOK_FRICTION, BOOK_PRIORITY = 0.4, 1
 TABLE_OVERHANG = 0.03             # flat at a table edge: spine 3 cm past the edge. The gripper holds
                                    # the overhanging part; with the spine inside the edge the lower
                                    # finger (pad ~1 cm, convex hull 24 mm thick near the hand) hits the
@@ -238,13 +243,15 @@ def book_geoms(name, color):
     hl, hw, ht = BOOK_L / 2, BOOK_W / 2, BOOK_T / 2
     cover = tuple(color) + (1,)
     rib = tuple(c * 0.85 for c in color) + (1,)   # a shade darker than the cover
+    book_contact = f'friction="{BOOK_FRICTION} 0.005 0.0001" priority="{BOOK_PRIORITY}"'
     g = [f'<geom name="{name}_geom" type="box" size="{vec((hl, hw, ht))}" mass="{BOOK_MASS}" '
-         f'rgba="{vec(cover)}" group="{COLLISION_GROUP}"/>']
+         f'rgba="{vec(cover)}" group="{COLLISION_GROUP}" {book_contact}/>']
     for sx, tx in ((-1, "head"), (1, "tail")):
         for sz, tz in ((1, "top"), (-1, "bottom")):
             g.append(f'<geom name="{name}_rib_{tx}_{tz}" type="box" '
                      f'pos="{vec((sx * (hl - RIB_W / 2), 0, sz * (ht + RIB_H / 2)))}" '
-                     f'size="{vec((RIB_W / 2, hw, RIB_H / 2))}" mass="{RIB_MASS}" rgba="{vec(rib)}"/>')
+                     f'size="{vec((RIB_W / 2, hw, RIB_H / 2))}" mass="{RIB_MASS}" rgba="{vec(rib)}" '
+                     f'{book_contact}/>')
     c, st = 0.0015, 0.0025
     g += [box(f"{name}_cover_{t}", (0, 0, sz * (ht - c)), (hl, hw, c), cover, collide=False, massless=True)
           for sz, t in ((1, "top"), (-1, "bottom"))]
@@ -442,7 +449,9 @@ def generate():
 
     xml = f"""<mujoco model="library">
   <compiler texturedir="textures" angle="radian"/>
-  <option timestep="0.002" integrator="implicitfast"/>
+  <!-- elliptic friction cone + impratio 10: far less creep in sticking contacts (a fingertip
+       dragging a book, later the friction grasp) than the default pyramidal cone -->
+  <option timestep="0.002" integrator="implicitfast" cone="elliptic" impratio="10"/>
   <visual>
     <global offwidth="1920" offheight="1080"/>
     <!-- znear is relative to the scene extent (~16.6 m): 0.001 -> 1.7 cm, so the wrist camera

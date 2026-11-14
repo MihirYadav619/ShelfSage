@@ -61,6 +61,13 @@ class LinearMoveResult:
 
 
 @dataclass
+class GuardedMoveResult:
+    success: bool              # contact force reached (at least half of it after settling)
+    distance: float            # how far the TCP was commanded before the force was reached (m)
+    force: float               # normal finger contact force after settling (N)
+
+
+@dataclass
 class DriveResult:
     success: bool
     message: str
@@ -89,6 +96,8 @@ class Robot:
         self.lidar_site = model.site(self.meta["lidar_site"]).id
         self.base_body = model.body("base").id
         self.robot_bodies = {b for b in range(model.nbody) if model.body_rootid[b] == self.base_body}
+        hand_prefix = self.meta["arm_joints"][0].replace("joint1", "")
+        self.finger_bodies = {model.body(hand_prefix + f).id for f in ("left_finger", "right_finger")}
         self.floor_geom = model.geom("floor").id
         self.v_max = [abs(model.actuator_ctrlrange[a][1]) for a in self.base_act]
         self.kin = PandaKinematics((self.meta["mount_x"], 0.0, self.meta["mount_height"]))
@@ -111,6 +120,7 @@ class Robot:
         self.speed = 1.0           # real-time factor when a viewer is attached
         self.on_sync = None        # optional callback before each viewer sync (e.g. draw rays)
         self._sync = None
+        self.hold = None           # base pose (x, y, yaw) held while parked, see hold_base()
         if reset:
             self.reset()
 
@@ -119,6 +129,7 @@ class Robot:
         mujoco.mj_resetDataKeyframe(self.m, self.d, self.m.key(key).id)
         mujoco.mj_forward(self.m, self.d)
         self.odom = np.array(self.true_pose())   # odometry starts at the known start pose
+        self.hold = None
 
     def true_pose(self):
         """Ground truth (x, y, yaw). For evaluation only, the controller must not use it."""
@@ -144,6 +155,8 @@ class Robot:
         """Advance physics by n steps and integrate odometry."""
         dt = self.m.opt.timestep
         for _ in range(n):
+            if self.hold is not None:
+                self._hold_base()
             mujoco.mj_step(self.m, self.d)
             v_world = self.d.qvel[self.vadr[:2]]
             yaw_true = self.d.qpos[self.qadr[2]]
@@ -188,10 +201,29 @@ class Robot:
     def stop(self):
         self.send_cmd_vel(0.0, 0.0, 0.0)
 
+    def hold_base(self, on=True):
+        """Station keeping while parked (on: hold the current estimated pose; off: release).
+        The velocity actuators alone only damp motion: a steady push (the arm dragging a book,
+        ~5 N) made the base creep 1 cm/s, 13 cm in one stroke. Held, it stays within ~5 mm.
+        Off by default: with fast arm swings the yaw loop rings (2 deg), so switch it on only
+        for slow, forceful arm work. go_to() releases it."""
+        self.hold = self.get_pose() if on else None
+        if not on:
+            self.stop()
+
+    def _hold_base(self, kp_xy=4.0, kp_yaw=4.0, v_max=0.05, w_max=0.1):
+        """One step of station keeping: P-control on the estimated pose back to `self.hold`."""
+        x, y, yaw = self.get_pose()
+        e = rot2(yaw).T @ (np.array(self.hold[:2]) - (x, y))
+        sp = float(np.linalg.norm(e)) * kp_xy
+        v = kp_xy * e * (min(1.0, v_max / sp) if sp > 0 else 1.0)
+        self.send_cmd_vel(*v, float(np.clip(kp_yaw * wrap(self.hold[2] - yaw), -w_max, w_max)))
+
     def go_to(self, x, y, yaw, tol_xy=0.01, tol_yaw=0.01, v_max=0.5, w_max=1.0, a_max=0.8,
               kp_xy=1.5, kp_yaw=2.0, timeout=60.0):
         """Drive to (x, y, yaw) with a P-controller on get_pose(), speed and acceleration
         limited. Straight line only; A* waypoints come in Phase 6."""
+        self.hold = None
         start = np.array(self.true_pose()[:2])
         goal = np.array([x, y])
         line = goal - start
@@ -352,6 +384,50 @@ class Robot:
         self.wait(settle)
         err = float(np.linalg.norm(self.d.site_xpos[self.tcp] - p1))
         return LinearMoveResult(not aborted and err < 0.005, dev, err, fails, aborted)
+
+    def finger_force(self, body=None):
+        """Simulated fingertip force sensing (a real Franka estimates it from the joint torques):
+        total (normal, tangential) contact force in N on the two fingers, from contacts with the
+        body named `body` only, or with anything outside the robot."""
+        m, d = self.m, self.d
+        only = None if body is None else m.body(body).id
+        f6, fn, ft = np.zeros(6), 0.0, 0.0
+        for i, c in enumerate(d.contact[:d.ncon]):
+            b1, b2 = m.geom_bodyid[c.geom1], m.geom_bodyid[c.geom2]
+            if not ({b1, b2} & self.finger_bodies):
+                continue
+            other = b2 if b1 in self.finger_bodies else b1
+            if other in self.robot_bodies or (only is not None and other != only):
+                continue
+            mujoco.mj_contactForce(m, d, i, f6)
+            fn += f6[0]
+            ft += float(np.linalg.norm(f6[1:3]))
+        return fn, ft
+
+    def guarded_move(self, direction, force, z_axis=None, y_axis=None, R=None, speed=0.01,
+                     max_dist=0.05, body=None, settle=0.3):
+        """Move the TCP along `direction` (world) until the finger contact force reaches `force` N,
+        then hold that position (a guarded move, e.g. pressing down on a book). Fails if nothing is
+        touched within `max_dist`."""
+        u = np.asarray(direction, float)
+        u = u / np.linalg.norm(u)
+        n_ctrl = int(round(CONTROL_DT / self.m.opt.timestep))
+        q = self.d.ctrl[self.arm_act].copy()
+        p0 = self.fk_world()[:3, 3].copy()
+        p, fn = p0.copy(), 0.0
+        while np.linalg.norm(p - p0) < max_dist:
+            p = p + speed * CONTROL_DT * u
+            r = solve(self.kin, self.make_target(p, z_axis, y_axis, R), q, max_iter=8,
+                      tol_pos=2e-4, tol_ang=2e-3)
+            q = r.q
+            self.d.ctrl[self.arm_act] = q
+            self.step(n_ctrl)
+            fn = self.finger_force(body)[0]
+            if fn >= force:
+                break
+        self.wait(settle)
+        fn = self.finger_force(body)[0]
+        return GuardedMoveResult(fn >= 0.5 * force, float(np.linalg.norm(p - p0)), fn)
 
     def set_gripper_width(self, width, wait=0.6):
         """Open the fingers to `width` metres between the finger plates (0 .. 0.08)."""
