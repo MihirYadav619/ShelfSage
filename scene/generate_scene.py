@@ -285,6 +285,62 @@ def book_assets(layout):
     return out
 
 
+# --------------------------------------------------------------------- robot zones
+def parking_and_zones(layout, tables_meta, slots):
+    """Fixed robot parking poses (where it stands to pick / place) and the floor zones around them.
+
+    Tables: one pose per edge spot, facing the table (+y) from the robot side.
+    Shelf: one pose per column, facing the shelf.
+    The robot stands `park_clearance` away from the edge (grasp points then sit ~0.45 m ahead of
+    the arm mount, see sim/reach_check.py). Each zone covers the chassis at every pose of that
+    table / the shelf plus the gap to the furniture, where the arm works.
+    """
+    rc, zc = layout["robot"], layout["robot_zones"]
+    hx, hy = rc["chassis_half"]
+    clr, m = rc["park_clearance"], zc["margin"]
+    yaw = 1.5707963
+    zones = []
+    for name, t in tables_meta.items():
+        (tx, ty), (thx, thy) = t["pos"], t["half_size"]
+        edge = ty - thy
+        park_y = edge - clr - hx
+        t["parking"] = [[sp[0], park_y, yaw] for sp in t["edge_spots"]]
+        xs = [sp[0] for sp in t["edge_spots"]]
+        zones.append({"name": f"table_{name}", "x": [min(min(xs) - hy, tx - thx) - m, max(max(xs) + hy, tx + thx) + m],
+                      "y": [park_y - hx - m, edge]})
+    sh = layout["shelf"]
+    front = sh["pos"][1] - sh["depth"] / 2
+    park_y = front - clr - hx
+    cols = sorted({k[1:] for k in slots})
+    shelf_parking = {c: [slots[f"A{c}"][0], park_y, yaw] for c in cols}
+    xs = [p[0] for p in shelf_parking.values()]
+    zones.append({"name": "shelf", "x": [min(xs) - hy - m, max(xs) + hy + m], "y": [park_y - hx - m, front]})
+    return shelf_parking, zones
+
+
+def build_zones(zones, zc):
+    """Floor markings: translucent red fill, red tape border, KEEP CLEAR plate near the outer edge.
+    Purely visual (no collisions, not in the LiDAR map)."""
+    nc = 'contype="0" conaffinity="0"'
+    tape = zc["tape"]
+    lw, lh = zc["label_size"]
+    red = "0.78 0.08 0.08"
+    out = []
+    for z in zones:
+        (x0, x1), (y0, y1) = z["x"], z["y"]
+        cx, cy, hx, hy = (x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0) / 2, (y1 - y0) / 2
+        n = z["name"]
+        out.append(f'<geom name="zone_{n}_fill" type="box" pos="{vec((cx, cy, 0.0006))}" '
+                   f'size="{vec((hx, hy, 0.0005))}" rgba="{red} 0.13" {nc}/>')
+        for side, (px, py, sx, sy) in {"s": (cx, y0 + tape / 2, hx, tape / 2), "n": (cx, y1 - tape / 2, hx, tape / 2),
+                                       "w": (x0 + tape / 2, cy, tape / 2, hy), "e": (x1 - tape / 2, cy, tape / 2, hy)}.items():
+            out.append(f'<geom name="zone_{n}_tape_{side}" type="box" pos="{vec((px, py, 0.0012))}" '
+                       f'size="{vec((sx, sy, 0.0005))}" rgba="{red} 1" {nc}/>')
+        out.append(f'<geom name="zone_{n}_label" type="box" pos="{vec((cx, y0 + tape + 0.04 + lh / 2, 0.0014))}" '
+                   f'size="{vec((lw / 2, lh / 2, 0.0005))}" material="zone_label_mat" {nc}/>')
+    return out
+
+
 # -------------------------------------------------------------------------- generate
 def ensure_textures():
     needed = ["floor_wood.png", "wood.png", "shelf_wood.png", "plaster.png", "sign_shelfsage.png"]
@@ -305,11 +361,16 @@ def generate():
     table_xml, tables_meta = build_tables(layout)
     shelf_geoms, slots = build_shelf(layout["shelf"])
     book_xml, books_meta = build_books(layout, tables_meta, slots)
+    shelf_parking, zones = parking_and_zones(layout, tables_meta, slots)
+    zc = layout["robot_zones"]
+    import make_textures
+    make_textures.make_floor_label("zone_label.png", zc["text"], zc["subtext"], zc["label_size"])
     spine_assets = "\n    ".join(book_assets(layout))
     win = layout["window"]
 
     body = []
     body += build_walls(room, hidden)
+    body += build_zones(zones, zc)
     body += build_window(win)
     if "sign" in layout:
         body += build_sign(room, layout["sign"])
@@ -354,6 +415,8 @@ def generate():
     <texture name="sign_tex" type="2d" file="sign_shelfsage.png"/>
     <material name="sign_mat" texture="sign_tex" specular="0.05" shininess="0.05"/>
     {spine_assets}
+    <texture name="zone_label_tex" type="2d" file="zone_label.png"/>
+    <material name="zone_label_mat" texture="zone_label_tex" specular="0.1" shininess="0.1"/>
   </asset>
   <worldbody>
 {lamps}
@@ -382,7 +445,8 @@ def generate():
         "window_pos": win["pos"],
         "hidden_walls": sorted(hidden),
         "tables": tables_meta,
-        "shelf": {"pos": layout["shelf"]["pos"], "slots": slots},
+        "shelf": {"pos": layout["shelf"]["pos"], "slots": slots, "parking": shelf_parking},
+        "robot_zones": zones,
         "books": books_meta,
         "book_dims": {"length": BOOK_L, "width": BOOK_W, "thickness": BOOK_T,
                       "rib_height": RIB_H, "rib_width": RIB_W, "mass": BOOK_MASS + 4 * RIB_MASS,

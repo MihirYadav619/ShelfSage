@@ -155,6 +155,26 @@ def make_spine(name, title, color, length=0.22, thickness=0.04):
     img.save(OUT / name)
 
 
+ZONE_RED = (0.78, 0.08, 0.08)
+
+
+def make_floor_label(name, text, subtext, size=(0.90, 0.22)):
+    """Floor marking plate: white text on safety red (Bebas Neue)."""
+    from PIL import Image, ImageDraw, ImageFont
+
+    W, H = int(size[0] * 2000), int(size[1] * 2000)
+    img = Image.new("RGB", (W, H), tuple(int(c * 255) for c in ZONE_RED))
+    d = ImageDraw.Draw(img)
+    white = (250, 248, 240)
+    d.rectangle([12, 12, W - 13, H - 13], outline=white, width=10)
+    big = ImageFont.truetype(str(SPINE_FONT), int(H * 0.50))
+    small = ImageFont.truetype(str(SPINE_FONT), int(H * 0.30))
+    d.text((W / 2, H * 0.36), text, font=big, fill=white, anchor="mm")
+    d.text((W / 2, H * 0.76), subtext, font=small, fill=white, anchor="mm")
+    OUT.mkdir(exist_ok=True)
+    img.save(OUT / name)
+
+
 def main():
     make_parquet("floor_wood.png")
     make_wood("wood.png")

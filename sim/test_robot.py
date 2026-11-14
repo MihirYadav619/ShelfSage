@@ -30,15 +30,10 @@ from sim.robot import Robot, rot2  # noqa: E402
 
 OUT = ROOT / "sim/output/phase3"
 META = json.loads((ROOT / "scene/library_meta.json").read_text())
-CLEARANCE = 0.30   # gap between chassis front and table edge when parked: puts edge books ~0.45 m
-                   # ahead of the arm mount, mid-range for the 0.65 m mount (sim/reach_check.py)
 
-
-def table_parking(name):
-    """Facing the table from the south (+y), centred on the table, chassis CLEARANCE from the edge."""
-    t = META["tables"][name]
-    hx = META["robot"]["chassis_half"][0]
-    return t["pos"][0], t["pos"][1] - t["half_size"][1] - CLEARANCE - hx, math.pi / 2
+def table_parking(name, spot=1):
+    """Fixed parking pose in front of an edge spot (0, 1, 2; 1 = middle), from library_meta.json."""
+    return tuple(META["tables"][name]["parking"][spot])
 
 
 def ik_down(robot, target, q_seed, seeds=20):

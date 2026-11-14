@@ -135,7 +135,7 @@ def main():
             # park ~30 cm from the shelf: the shelf grasp point is then ~0.45 m ahead of the arm
             # mount, in the middle of the reachable range (sim/reach_check.py)
             front = sh["pos"][1] - 0.35 / 2
-            shelf_park = (sh["pos"][0] + 0.2, front - 0.30 - hx, math.pi / 2)
+            shelf_park = tuple(sh["parking"]["3"])          # fixed pose for column 3
             for wp in [(1.25, -2.6, math.pi / 2), (1.25, 1.7, math.pi / 2), shelf_park]:
                 robot.go_to(*wp, tol_xy=0.02, tol_yaw=0.02)
 
