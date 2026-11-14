@@ -284,10 +284,11 @@ Update this section as work proceeds.
 - [x] `sim/reach_check.py`: numerical IK over mount heights 0.20-0.55 m. Below 0.40 m shelf row A (and its pre-place pose) is not reachable; 0.40 m and up reaches every table and shelf target, also 5 cm further away. 0.45 m chosen.
 - [x] `sim/robot.py`: `send_cmd_vel`, noisy `odometry` (2 % scale error + white noise), `lidar_scan` (270 deg, 541 rays, 8 m, 1 cm noise), `get_rgbd` + `camera_intrinsics`, `get_pose` (odom / true; MCL in Phase 6), `true_pose` (evaluation only), `go_to` (P-controller, speed and acceleration limits), `move_arm`, `home`, gripper, `robot_contacts`.
 - [x] `control/occupancy.py`: occupancy grid of static boxes at a height band (the known map for Phase 6).
-- [x] `sim/test_robot.py`: **all 9 checks pass.** Drive to Table B: 0.4 cm / 0.0 deg error, no overshoot, no collisions; TCP reaches 10 cm above the middle book (error < 1 mm); LiDAR scan 100 % within 4 cm of the map; wrist RGB-D saved; books stable. Odometry over an 11 m loop drifts about 9 cm and 5 deg, which is what MCL must fix. Images in `sim/output/phase3/` (git-ignored).
+- [x] `sim/test_robot.py`: **all 10 checks pass.** Drive to Table B: 0.4 cm / 0.0 deg error, no overshoot, no collisions; TCP reaches 10 cm above the middle book (error < 1 mm); LiDAR scan 100 % within 4 cm of the map; wrist depth sees the book top at 15.6 cm and the table at 18.5 cm (expected 15.5 / 18.5); books stable. A combined image is written to `sim/output/phase3/results.png`. Odometry over an 11 m loop drifts about 9 cm and 5 deg, which is what MCL must fix. Images in `sim/output/phase3/` (git-ignored).
 
 Notes for later phases:
 - With the camera 10 cm above a book, the book fills the image; Phase 5 needs a "look" pose about 40-50 cm above the table to see all books.
+- Camera near plane: `<visual><map znear="0.001">` (1.7 cm). The default clipped everything nearer than 16.6 cm, so close-up books were cut open.
 - The hand is mounted rotated 45 deg (Menagerie), so the wrist image is rotated; the detector / PCA yaw must handle any rotation.
 - Flat books (14 cm wide) do not fit the Panda gripper (8 cm max opening) top-down, so the table grasp stays an attach (weld) grasp unless books are re-designed.
 

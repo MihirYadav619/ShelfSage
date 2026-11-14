@@ -124,13 +124,20 @@ def main():
     # ---------------------------------------------------------------- 4. wrist RGB-D (arm is over the table now)
     rgb, depth = robot.get_rgbd()
     imageio.imwrite(OUT / "wrist_rgb.png", rgb)
-    dvis = np.clip(depth / 1.0, 0, 1)
+    np.save(OUT / "wrist_depth.npy", depth)
+    lo_d, hi_d = np.percentile(depth, [1, 99])
+    dvis = np.clip((depth - lo_d) / max(hi_d - lo_d, 1e-6), 0, 1)     # near = red, far = blue
     dvis = (np.stack([1 - dvis, 0.5 * (1 - abs(2 * dvis - 1)), dvis], axis=-1) * 255).astype(np.uint8)
     imageio.imwrite(OUT / "wrist_depth.png", dvis)
     h, w = depth.shape
     centre = float(np.median(depth[h // 2 - 5:h // 2 + 5, w // 2 - 5:w // 2 + 5]))
-    print(f"[4] wrist RGB-D saved ({w}x{h}); depth at image centre {centre * 100:.1f} cm")
-    checks.append(("wrist depth at image centre is plausible (5-40 cm)", 0.05 < centre < 0.40))
+    print(f"[4] wrist RGB-D saved ({w}x{h}); depth at image centre {centre * 100:.1f} cm, "
+          f"range {lo_d * 100:.1f}-{hi_d * 100:.1f} cm")
+    cam_z = robot.d.cam_xpos[model.camera(robot.meta["wrist_camera"]).id][2]
+    exp_book, exp_table = cam_z - book_top, cam_z - META["tables"]["B"]["top_z"]
+    print(f"    expected: book top {exp_book * 100:.1f} cm, table {exp_table * 100:.1f} cm")
+    checks.append(("wrist depth sees the book top and the table at the right distance (+-5 mm)",
+                   abs(lo_d - exp_book) < 0.005 and abs(hi_d - exp_table) < 0.005))
 
     # ---------------------------------------------------------------- 2. LiDAR vs map
     lz = robot.d.site_xpos[robot.lidar_site][2]

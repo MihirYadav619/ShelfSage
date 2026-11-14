@@ -296,6 +296,9 @@ def generate():
   <option timestep="0.002" integrator="implicitfast"/>
   <visual>
     <global offwidth="1920" offheight="1080"/>
+    <!-- znear is relative to the scene extent (~16.6 m): 0.001 -> 1.7 cm, so the wrist camera
+         sees books close up (the default 0.01 clipped everything nearer than 16.6 cm) -->
+    <map znear="0.001"/>
     <quality shadowsize="4096" offsamples="8"/>
     <headlight diffuse="0.30 0.30 0.30" ambient="0.30 0.30 0.30" specular="0 0 0"/>
     <rgba haze="0.75 0.82 0.9 1"/>
