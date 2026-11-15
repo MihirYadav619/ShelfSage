@@ -32,6 +32,20 @@ ARM_STOW = [0.0, -1.7, 0.0, -2.844, 0.0, 3.6, 0.785]
 FINGER_OPEN = 0.04
 GRIPPER_OPEN_CTRL = 255.0
 FINGER_FRICTION, FINGER_PRIORITY = 1.5, 2   # rubber pads; beats the books' 0.4 (generate_scene.py)
+# Friction grasp (Phase 5). The fingers hold a book only by the 1.5 cm next to its spine, 6 cm from
+# its centre of mass, so the grasp must resist twisting: condim 4 adds torsional friction (0.02 m,
+# about the pad's contact radius). Without it the book turned in the fingers while carried.
+FINGER_CONDIM, FINGER_TORSION = 4, 0.02
+# Stiffer finger contacts (solref time constant 4 ms = 2 timesteps, default 20 ms) plus the scene's
+# noslip iterations (generate_scene.py): a held book crept 2.9 cm in 40 s, now 0.02 cm. Trade-off:
+# pressing on a book chatters (the contact keeps breaking), so the base-pull drag needs ~3 strokes
+# instead of 1. At 10 ms the drag took 1 stroke, but the ~2 mm creep left in the grasp made the
+# shelf insertion fail.
+FINGER_SOLREF = (0.004, 1.0)
+# Menagerie's gripper is a weak position servo (100 N/m on the finger-gap tendon: ~2 N on a 4 cm
+# book, less than its weight). 3000 N/m with the fingers commanded shut squeezes a 4 cm book with
+# ~60 N in total, inside the real Franka Hand's 70 N continuous grasp force.
+GRIPPER_KP, GRIPPER_FORCE = 3000.0, 140.0
 
 CHASSIS_RGBA = (0.18, 0.21, 0.26, 1)
 TRIM_RGBA = (0.85, 0.47, 0.12, 1)     # orange trim stripe
@@ -95,8 +109,14 @@ def panda_spec(cfg):
     for f in ("left_finger", "right_finger"):
         for g in panda.body(f).geoms:
             if g.contype or g.conaffinity:      # collision geoms only (mesh hull + pads)
-                g.friction = [FINGER_FRICTION, 0.005, 0.0001]
+                g.friction = [FINGER_FRICTION, FINGER_TORSION, 0.0001]
                 g.priority = FINGER_PRIORITY
+                g.condim = FINGER_CONDIM
+                g.solref = list(FINGER_SOLREF)
+    grip = panda.actuator("actuator8")      # ctrl 0..255 -> finger gap tendon 0..0.04 m
+    grip.gainprm[0] = GRIPPER_KP * 0.04 / 255
+    grip.biasprm[1], grip.biasprm[2] = -GRIPPER_KP, -2 * (GRIPPER_KP * 0.1) ** 0.5   # ~critical damping
+    grip.forcerange = [-GRIPPER_FORCE, GRIPPER_FORCE]
     hand = panda.body("hand")
     hand.add_site(name="tcp", pos=[0, 0, TCP_OFFSET], size=[0.006, 0, 0], rgba=[0, 1, 0, 0.6], group=4)
     cam = cfg["wrist_cam"]

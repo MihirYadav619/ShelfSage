@@ -11,6 +11,7 @@ Usage (project root, venv active):
                                                      # in its lane to the edge
     python sim/demo_drag_grasp.py --method arm       # the arm pulls in strokes (default: base pulls)
     python sim/demo_drag_grasp.py --headless         # no window: run it and print a report
+    python sim/demo_drag_grasp.py --weld             # weld (attach) grasp instead of friction only
 """
 import math
 import sys
@@ -23,8 +24,8 @@ import numpy as np
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from sim.robot import Robot  # noqa: E402
-from skills.manipulation import (META, drag_to_edge, pick_from_table_edge, table_frame,  # noqa: E402
-                                 table_parking)
+from skills.manipulation import (META, carry_target, drag_to_edge, pick_from_table_edge,  # noqa: E402
+                                 table_frame, table_parking)
 
 AISLE_X = 1.25      # free lane between tables B and C (straight-line driving until A* in Phase 6)
 
@@ -58,11 +59,8 @@ def run(robot, book, table, say, log, method="base"):
     say(f"pick: {res.message}")
     if res.success:
         say("carry pose: turn the book upright above the chassis")
-        x, y, yaw = robot.get_pose()
-        f = np.array([math.cos(yaw), math.sin(yaw), 0.0])
-        p = np.array([x, y, 0.0]) + 0.45 * f + np.array([0, 0, 1.15])
-        r = robot.move_to(p, z_axis=f, y_axis=np.array([-f[1], f[0], 0.0]), duration=2.5,
-                          allow=(f"book_{book}",))
+        p, f, left = carry_target(robot)
+        r = robot.move_to(p, z_axis=f, y_axis=left, duration=2.5, allow=(f"book_{book}",))
         log.append(("carry pose", r is not None and r.success))
     return res
 
@@ -75,7 +73,7 @@ def main():
     table = META["books"][book]["location"].split(":")[1]
     model = mujoco.MjModel.from_xml_path(str(ROOT / "scene/library.xml"))
     data = mujoco.MjData(model)
-    robot = Robot(model, data, pose_source="true")
+    robot = Robot(model, data, pose_source="true", grasp_mode="weld" if "--weld" in sys.argv else "friction")
     others0 = {model.body(i).name: data.xpos[i].copy() for i in range(model.nbody)
                if model.body(i).name.startswith("book_") and model.body(i).name != f"book_{book}"}
     p_book0 = data.body(f"book_{book}").xpos.copy()

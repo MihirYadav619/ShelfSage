@@ -130,11 +130,12 @@ def limit_margin(kin, q):
 
 
 def solve_multi(kin, target, q_now, seeds=(), n_random=8, rng=None, collision_fn=None, q_pref=None,
-                min_margin=0.3, **kw):
+                min_margin=0.3, reject_margin=None, **kw):
     """Try q_now, the given seeds and some random starts; among the collision-free solutions pick
     the one with the lowest cost = joint motion from q_now + distance to the preferred posture
     + a penalty for being close to joint limits (a configuration with a joint at its limit can
-    reach the target but not move on from it, e.g. along a straight line)."""
+    reach the target but not move on from it, e.g. along a straight line). With `reject_margin`,
+    solutions closer than that to a joint limit are dropped as long as another one exists."""
     rng = rng or np.random.default_rng(0)
     q_now = np.asarray(q_now, float)
     q_pref_v = q_now if q_pref is None else np.asarray(q_pref, float)
@@ -155,10 +156,13 @@ def solve_multi(kin, target, q_now, seeds=(), n_random=8, rng=None, collision_fn
             if k == 0 and limit_margin(kin, r.q) >= min_margin:
                 return r                            # small move from here and nowhere near a limit
             good.append(r)
-            if len(good) >= 4:
+            ok_margin = [g for g in good if reject_margin is None or limit_margin(kin, g.q) >= reject_margin]
+            if len(ok_margin) >= 4:
                 break
         elif best is None or (r.pos_err + 0.1 * r.ang_err) < (best.pos_err + 0.1 * best.ang_err):
             best = r
+    if reject_margin is not None and any(limit_margin(kin, g.q) >= reject_margin for g in good):
+        good = [g for g in good if limit_margin(kin, g.q) >= reject_margin]
     if good:
         return min(good, key=cost)
     if best is not None and best.success:          # every solution collided

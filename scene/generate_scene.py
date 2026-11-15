@@ -496,8 +496,9 @@ def generate():
     xml = f"""<mujoco model="library">
   <compiler texturedir="textures" angle="radian"/>
   <!-- elliptic friction cone + impratio 10: far less creep in sticking contacts (a fingertip
-       dragging a book, later the friction grasp) than the default pyramidal cone -->
-  <option timestep="0.002" integrator="implicitfast" cone="elliptic" impratio="10"/>
+       dragging a book) than the default pyramidal cone; noslip iterations remove the rest of the
+       creep, so a book held by friction alone stays put in the fingers -->
+  <option timestep="0.002" integrator="implicitfast" cone="elliptic" impratio="10" noslip_iterations="3"/>
   <visual>
     <global offwidth="1920" offheight="1080"/>
     <!-- znear is relative to the scene extent (~16.6 m): 0.001 -> 1.7 cm, so the wrist camera

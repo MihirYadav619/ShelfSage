@@ -24,7 +24,8 @@ Drag to the edge ("pull, then grasp"), for a book lying inside the table. Two wa
        next one re-parks and starts from a fresh IK solution.
 
 Pick from the edge (as in sim/demo_pick_place.py): normal parking, pre-grasp, straight in around
-the overhanging spine, close + attach (weld; friction grasp later), lift, back away.
+the overhanging spine, close the fingers (friction grasp; robot.grasp_mode "weld" adds the attach
+weld), lift, back away.
 """
 import json
 import math
@@ -54,8 +55,21 @@ MAX_BASE_STROKE = 0.60     # longest single pull of the base
 BASE_SLIP = 0.04           # a long base pull leaves the book ~4 % short (fingertip creep + the base
                            # stopping ~5 mm early under the load): pull that much further
 OVERHANG_TOL = 0.01
-W_OPEN, W_HOLD = 0.06, 0.036
+W_OPEN = 0.06
 LIFT, BACK = 0.10, 0.16
+# carry pose for driving (book standing above the front of the chassis): 0.60 m ahead of the base
+# centre, 1.20 m up. The old 0.45 m / 1.15 m put joint 5 at its limit, and moving on to the shelf
+# then swung the wrist by 5 rad, which turned the book in a friction grasp. Here every joint keeps
+# >= 0.34 rad from its limits and the shelf pre-place is 0.5 rad (row B) / 2 rad (row A) away.
+CARRY_FWD, CARRY_Z = 0.60, 1.20
+
+
+def carry_target(robot):
+    """Carry pose: TCP position, approach (forward) and finger closing (left) axes, world frame."""
+    x, y, yaw = robot.get_pose()
+    f = np.array([math.cos(yaw), math.sin(yaw), 0.0])
+    return np.array([x, y, 0.0]) + CARRY_FWD * f + np.array([0, 0, CARRY_Z]), f, np.array([-f[1], f[0], 0.0])
+
 
 
 # ---------------------------------------------------------------------------- geometry helpers
@@ -236,7 +250,7 @@ def drag_to_edge(robot, book, table, say=print, log=None, method="base"):
 
 def pick_from_table_edge(robot, book, table, say=print, log=None):
     """Grasp a book whose spine overhangs the robot-side edge: drive to the normal parking in
-    line with it, fingers around the spine, close + attach, lift 10 cm, back away 16 cm."""
+    line with it, fingers around the spine, close (robot.grasp), lift 10 cm, back away 16 cm."""
     log = [] if log is None else log
     fwd, left, _, _ = table_frame(table)
     over = spine_overhang(robot, book, table)
@@ -245,7 +259,8 @@ def pick_from_table_edge(robot, book, table, say=print, log=None):
     c, spine, _, _ = book_state(robot, book)
 
     def check(name, res):
-        ok = res is not None and getattr(res, "success", True)
+        ok = bool(res) if isinstance(res, (bool, np.bool_)) else (
+            res is not None and getattr(res, "success", True))
         log.append((name, ok))
         return ok
 
@@ -257,15 +272,16 @@ def pick_from_table_edge(robot, book, table, say=print, log=None):
         return SkillResult(False, f"drive failed: {res.message} {res.collisions}")
 
     g = c + spine * (BD["width"] / 2 - BD["grip_in"]["table"])
-    say("pre-grasp, straight in around the spine, close, attach")
+    say("pre-grasp, straight in around the spine, close the fingers")
     robot.home(2.0)
     robot.set_gripper_width(W_OPEN, 0.3)
     if not check("pre-grasp", robot.move_to(g - 0.10 * fwd, z_axis=fwd, y_axis=UP, duration=2.5)):
         return SkillResult(False, "pre-grasp not reachable")
     if not check("approach", robot.move_linear(g, z_axis=fwd, y_axis=UP, speed=0.04)):
         return SkillResult(False, "approach failed")
-    robot.set_gripper_width(W_HOLD, 0.6)
-    robot.attach(book)
+    width, force = robot.grasp(book)
+    if not check(f"grasp: width {width * 100:.1f} cm, squeeze {force:.0f} N", 0.03 < width < 0.045 and force > 20):
+        return SkillResult(False, "fingers did not close on the book")
     say("lift and back away")
     ok = check("lift", robot.move_linear(g + LIFT * UP, z_axis=fwd, y_axis=UP, speed=0.05))
     ok &= check("back off", robot.move_linear(g + LIFT * UP - BACK * fwd, z_axis=fwd, y_axis=UP, speed=0.06))

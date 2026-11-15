@@ -79,9 +79,11 @@ class DriveResult:
 
 
 class Robot:
-    def __init__(self, model, data, seed=0, pose_source="odom", reset=True,
+    def __init__(self, model, data, seed=0, pose_source="odom", reset=True, grasp_mode="friction",
                  odom_scale_sigma=0.02, odom_vel_sigma=0.02, odom_yaw_sigma=0.02):
         self.m, self.d = model, data
+        self.grasp_mode = grasp_mode     # "friction" (fingers only) or "weld" (attach fallback)
+        self.holding = None              # book id held since grasp(), until release()
         self.meta = json.loads(META_PATH.read_text())["robot"]
         self.rng = np.random.default_rng(seed)
         self.pose_source = pose_source
@@ -336,22 +338,38 @@ class Robot:
             r1, r2 = b1 in self.robot_bodies, b2 in self.robot_bodies
             if not (r1 or r2) or self.floor_geom in (c.geom1, c.geom2) or {b1, b2} & allow_ids:
                 continue
+            if {b1, b2} <= self.finger_bodies:      # closed fingers touching each other
+                continue
             out.append(f"{m.body(b1).name} <-> {m.body(b2).name}")
         return out
 
-    def ik(self, pos, z_axis=None, y_axis=None, R=None, allow=(), seeds=None, n_random=8):
-        """Collision-free IK for a world-frame TCP target. Returns an IKResult (q in result.q)."""
+    def ik(self, pos, z_axis=None, y_axis=None, R=None, allow=(), seeds=None, n_random=8,
+           reject_margin=None):
+        """Collision-free IK for a world-frame TCP target. Returns an IKResult (q in result.q).
+        reject_margin: drop solutions with a joint closer than that (rad) to its limit if possible."""
         q_now = self.d.ctrl[self.arm_act].copy()
         seeds = [self.meta["arm_home"]] if seeds is None else seeds
         return solve_multi(self.kin, self.make_target(pos, z_axis, y_axis, R), q_now, seeds=seeds,
                            n_random=n_random, rng=np.random.default_rng(0),
                            collision_fn=lambda q: self.arm_collisions(q, allow),
-                           q_pref=self.meta["arm_home"])
+                           q_pref=self.meta["arm_home"], reject_margin=reject_margin)
 
-    def move_to(self, pos, z_axis=None, y_axis=None, R=None, duration=2.0, allow=(), settle=0.4):
-        """IK + joint-space move. Returns the IKResult; the arm does not move if IK fails."""
-        r = self.ik(pos, z_axis, y_axis, R, allow=allow)
+    HOLD_JOINT_SPEED = 0.8     # rad/s peak while holding a book with the friction grasp
+    HOLD_MARGIN = 0.2          # rad: while holding, avoid postures with a joint this close to a limit
+                               # (from one at the limit the next move needed a 5 rad wrist swing)
+
+    def move_to(self, pos, z_axis=None, y_axis=None, R=None, duration=2.0, allow=(), settle=0.4,
+                reject_margin=None):
+        """IK + joint-space move. Returns the IKResult; the arm does not move if IK fails.
+        While holding a book with the friction grasp the move is slowed down to a peak joint
+        speed of HOLD_JOINT_SPEED (a fast wrist swing turned the book in the fingers)."""
+        if reject_margin is None and self.holding is not None and self.grasp_mode == "friction":
+            reject_margin = self.HOLD_MARGIN
+        r = self.ik(pos, z_axis, y_axis, R, allow=allow, reject_margin=reject_margin)
         if r is not None and r.success:
+            if self.holding is not None and self.grasp_mode == "friction":
+                dq = float(np.max(np.abs(r.q - self.d.ctrl[self.arm_act])))
+                duration = max(duration, 1.5 * dq / self.HOLD_JOINT_SPEED)   # smoothstep peak 1.5x
             self.move_arm(r.q, duration, settle)
         return r
 
@@ -404,11 +422,27 @@ class Robot:
             ft += float(np.linalg.norm(f6[1:3]))
         return fn, ft
 
+    def object_contact_force(self, body):
+        """Total normal contact force (N) between `body` (name) and everything outside the robot,
+        e.g. a held book touching the shelf board (on a real robot: the load change seen by the
+        wrist force sensor)."""
+        m, d = self.m, self.d
+        bid = m.body(body).id
+        f6, fn = np.zeros(6), 0.0
+        for i, c in enumerate(d.contact[:d.ncon]):
+            b1, b2 = m.geom_bodyid[c.geom1], m.geom_bodyid[c.geom2]
+            if bid in (b1, b2) and (b2 if b1 == bid else b1) not in self.robot_bodies:
+                mujoco.mj_contactForce(m, d, i, f6)
+                fn += f6[0]
+        return fn
+
     def guarded_move(self, direction, force, z_axis=None, y_axis=None, R=None, speed=0.01,
-                     max_dist=0.05, body=None, settle=0.3):
+                     max_dist=0.05, body=None, settle=0.3, sense=None):
         """Move the TCP along `direction` (world) until the finger contact force reaches `force` N,
-        then hold that position (a guarded move, e.g. pressing down on a book). Fails if nothing is
-        touched within `max_dist`."""
+        then hold that position (a guarded move, e.g. pressing down on a book). `sense` replaces the
+        finger force with another reading (e.g. object_contact_force of a held book, to set it down).
+        Fails if nothing is touched within `max_dist`."""
+        read = sense if sense is not None else (lambda: self.finger_force(body)[0])
         u = np.asarray(direction, float)
         u = u / np.linalg.norm(u)
         n_ctrl = int(round(CONTROL_DT / self.m.opt.timestep))
@@ -422,11 +456,11 @@ class Robot:
             q = r.q
             self.d.ctrl[self.arm_act] = q
             self.step(n_ctrl)
-            fn = self.finger_force(body)[0]
+            fn = read()
             if fn >= force:
                 break
         self.wait(settle)
-        fn = self.finger_force(body)[0]
+        fn = read()
         return GuardedMoveResult(fn >= 0.5 * force, float(np.linalg.norm(p - p0)), fn)
 
     def set_gripper_width(self, width, wait=0.6):
@@ -449,8 +483,22 @@ class Robot:
         m.eq_data[eq, 3:6], m.eq_data[eq, 6:10], m.eq_data[eq, 10] = p, q, 1.0
         d.eq_active[eq] = 1
 
+    def grasp(self, book, wait=0.8):
+        """Close the fingers on a book (they are commanded shut; the stiff gripper servo squeezes a
+        4 cm book with ~60 N). grasp_mode "weld" also switches on the attach weld. Returns
+        (gripper width, finger normal force on the book): a width near the book thickness and a
+        force of tens of N mean the book is held."""
+        self.d.ctrl[self.grip_act] = 0.0
+        self.wait(wait)
+        if self.grasp_mode == "weld":
+            self.attach(book)
+        self.holding = book
+        return self.gripper_width(), self.finger_force(f"book_{book}")[0]
+
     def release(self, book):
+        """Let go of the book: weld off (if on). The caller opens the fingers."""
         self.d.eq_active[self.m.equality(f"grasp_{book}").id] = 0
+        self.holding = None
 
     def gripper_width(self):
         m = self.meta["arm_joints"][0].replace("joint1", "")
@@ -460,13 +508,14 @@ class Robot:
 
     # ------------------------------------------------------------------ safety
     def robot_contacts(self):
-        """Names of things the robot touches (anything except the floor), plus self-contacts."""
+        """Names of things the robot touches (anything except the floor), plus self-contacts
+        (except the closed fingers touching each other)."""
         out = set()
         m, d = self.m, self.d
         for c in d.contact[:d.ncon]:
             b1, b2 = m.geom_bodyid[c.geom1], m.geom_bodyid[c.geom2]
             r1, r2 = b1 in self.robot_bodies, b2 in self.robot_bodies
-            if not (r1 or r2) or self.floor_geom in (c.geom1, c.geom2):
+            if not (r1 or r2) or self.floor_geom in (c.geom1, c.geom2) or {b1, b2} <= self.finger_bodies:
                 continue
             n1, n2 = m.body(b1).name, m.body(b2).name
             out.add(f"{n1} <-> {n2}" if r1 else f"{n2} <-> {n1}")

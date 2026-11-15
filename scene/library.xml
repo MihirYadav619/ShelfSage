@@ -1,7 +1,7 @@
 <mujoco model="library">
   <compiler meshdir="../assets/mujoco_menagerie/franka_emika_panda/assets/" angle="radian" texturedir="textures"/>
 
-  <option impratio="10" integrator="implicitfast" cone="elliptic"/>
+  <option impratio="10" integrator="implicitfast" cone="elliptic" noslip_iterations="3"/>
 
   <size nkey="1"/>
 
@@ -1342,24 +1342,24 @@
                             <joint name="panda_finger_joint1" class="panda_finger"/>
                             <geom class="panda_visual" quat="1 0 0 0" material="panda_off_white" mesh="panda_finger_0"/>
                             <geom class="panda_visual" pos="8.04681e-21 -3.38271e-17 -3.19189e-16" quat="1 0 0 0" material="panda_black" mesh="panda_finger_1"/>
-                            <geom class="panda_collision" quat="1 0 0 0" priority="2" friction="1.5" mesh="panda_finger_0"/>
-                            <geom class="panda_fingertip_pad_collision_1" pos="0 0.0055 0.0445" priority="2" friction="1.5"/>
-                            <geom class="panda_fingertip_pad_collision_2" pos="0.0055 0.002 0.05" priority="2" friction="1.5"/>
-                            <geom class="panda_fingertip_pad_collision_3" pos="-0.0055 0.002 0.05" priority="2" friction="1.5"/>
-                            <geom class="panda_fingertip_pad_collision_4" pos="0.0055 0.002 0.0395" priority="2" friction="1.5"/>
-                            <geom class="panda_fingertip_pad_collision_5" pos="-0.0055 0.002 0.0395" priority="2" friction="1.5"/>
+                            <geom class="panda_collision" quat="1 0 0 0" condim="4" priority="2" friction="1.5 0.02" solref="0.004" mesh="panda_finger_0"/>
+                            <geom class="panda_fingertip_pad_collision_1" pos="0 0.0055 0.0445" condim="4" priority="2" friction="1.5 0.02" solref="0.004"/>
+                            <geom class="panda_fingertip_pad_collision_2" pos="0.0055 0.002 0.05" condim="4" priority="2" friction="1.5 0.02" solref="0.004"/>
+                            <geom class="panda_fingertip_pad_collision_3" pos="-0.0055 0.002 0.05" condim="4" priority="2" friction="1.5 0.02" solref="0.004"/>
+                            <geom class="panda_fingertip_pad_collision_4" pos="0.0055 0.002 0.0395" condim="4" priority="2" friction="1.5 0.02" solref="0.004"/>
+                            <geom class="panda_fingertip_pad_collision_5" pos="-0.0055 0.002 0.0395" condim="4" priority="2" friction="1.5 0.02" solref="0.004"/>
                           </body>
                           <body name="panda_right_finger" pos="0 0 0.0584" quat="0 0 0 1" gravcomp="1">
                             <inertial pos="0 0 0" mass="0.015" diaginertia="2.375e-06 2.375e-06 7.5e-07"/>
                             <joint name="panda_finger_joint2" class="panda_finger"/>
                             <geom class="panda_visual" quat="1 0 0 0" material="panda_off_white" mesh="panda_finger_0"/>
                             <geom class="panda_visual" pos="8.04681e-21 -3.38271e-17 -3.19189e-16" quat="1 0 0 0" material="panda_black" mesh="panda_finger_1"/>
-                            <geom class="panda_collision" quat="1 0 0 0" priority="2" friction="1.5" mesh="panda_finger_0"/>
-                            <geom class="panda_fingertip_pad_collision_1" pos="0 0.0055 0.0445" priority="2" friction="1.5"/>
-                            <geom class="panda_fingertip_pad_collision_2" pos="0.0055 0.002 0.05" priority="2" friction="1.5"/>
-                            <geom class="panda_fingertip_pad_collision_3" pos="-0.0055 0.002 0.05" priority="2" friction="1.5"/>
-                            <geom class="panda_fingertip_pad_collision_4" pos="0.0055 0.002 0.0395" priority="2" friction="1.5"/>
-                            <geom class="panda_fingertip_pad_collision_5" pos="-0.0055 0.002 0.0395" priority="2" friction="1.5"/>
+                            <geom class="panda_collision" quat="1 0 0 0" condim="4" priority="2" friction="1.5 0.02" solref="0.004" mesh="panda_finger_0"/>
+                            <geom class="panda_fingertip_pad_collision_1" pos="0 0.0055 0.0445" condim="4" priority="2" friction="1.5 0.02" solref="0.004"/>
+                            <geom class="panda_fingertip_pad_collision_2" pos="0.0055 0.002 0.05" condim="4" priority="2" friction="1.5 0.02" solref="0.004"/>
+                            <geom class="panda_fingertip_pad_collision_3" pos="-0.0055 0.002 0.05" condim="4" priority="2" friction="1.5 0.02" solref="0.004"/>
+                            <geom class="panda_fingertip_pad_collision_4" pos="0.0055 0.002 0.0395" condim="4" priority="2" friction="1.5 0.02" solref="0.004"/>
+                            <geom class="panda_fingertip_pad_collision_5" pos="-0.0055 0.002 0.0395" condim="4" priority="2" friction="1.5 0.02" solref="0.004"/>
                           </body>
                         </body>
                       </body>
@@ -1439,7 +1439,7 @@
     <general name="panda_actuator5" class="panda_panda" joint="panda_joint5" forcerange="-12 12" gainprm="2000" biasprm="0 -2000 -200"/>
     <general name="panda_actuator6" class="panda_panda" joint="panda_joint6" ctrlrange="-0.0175 3.7525" forcerange="-12 12" gainprm="2000" biasprm="0 -2000 -200"/>
     <general name="panda_actuator7" class="panda_panda" joint="panda_joint7" forcerange="-12 12" gainprm="2000" biasprm="0 -2000 -200"/>
-    <general name="panda_actuator8" class="panda_panda" tendon="panda_split" ctrlrange="0 255" forcerange="-100 100" gainprm="0.0156863" biasprm="0 -100 -10"/>
+    <general name="panda_actuator8" class="panda_panda" tendon="panda_split" ctrlrange="0 255" forcerange="-140 140" gainprm="0.470588" biasprm="0 -3000 -34.641"/>
   </actuator>
 
   <keyframe>

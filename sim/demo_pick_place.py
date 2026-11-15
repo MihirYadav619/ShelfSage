@@ -1,10 +1,10 @@
 """Pick-and-place demo: Table B -> shelf S2-B3 -> back to Table B (Deep Learning book).
 
-Grasp = fingers close around the book + the "attach" (weld) grasp, the README fallback; the
-friction grasp replaces the weld in Phase 5. Everything else is the real Phase 3-4 stack:
-parking poses, our own IK, straight-line Cartesian moves, gripper width.
+Grasp = friction grasp: the fingers squeeze the book (~60 N) and hold it by friction only; with
+--weld the "attach" weld holds it as well (the README fallback). Everything else is the real
+Phase 3-4 stack: parking poses, our own IK, straight-line Cartesian moves, gripper width.
 
-    table:  pre-grasp -> straight in around the overhanging spine -> close + attach -> lift 10 cm
+    table:  pre-grasp -> straight in around the overhanging spine -> close (grasp) -> lift 10 cm
             -> straight back 16 cm (book clears the table) -> rotate the wrist 90 deg (book stands,
             spine towards the robot) -> carry pose
     shelf:  pre-place 15 cm out -> straight in -> down 3 cm onto the board -> release + open ->
@@ -16,6 +16,7 @@ Usage (project root, venv active):
     python sim/demo_pick_place.py              # viewer, real time
     python sim/demo_pick_place.py --speed 2    # twice as fast
     python sim/demo_pick_place.py --headless   # no window: run it and print a report
+    python sim/demo_pick_place.py --weld       # weld (attach) grasp instead of friction only
 """
 import math
 import sys
@@ -29,6 +30,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from sim.robot import Robot  # noqa: E402
 from sim.test_robot import META  # noqa: E402
+from skills.manipulation import carry_target  # noqa: E402
 
 FWD, UP, SIDE = np.array([0.0, 1.0, 0.0]), np.array([0.0, 0.0, 1.0]), np.array([1.0, 0.0, 0.0])
 BD = META["book_dims"]
@@ -36,7 +38,9 @@ BOOK = "dl"
 TABLE, SPOT = "B", 1
 SHELF, COMP = "S2", "S2-B3"
 LIFT, BACK, CARRY_UP = 0.10, 0.16, 0.03
-W_OPEN_T, W_OPEN_S, W_HOLD = 0.06, 0.05, 0.036
+W_OPEN_T, W_OPEN_S = 0.06, 0.05
+SET_DOWN_FORCE = 2.5    # N on the surface under the book (its weight is 3.3 N)
+PLACE_CLEARANCE = 0.006  # m: placing in a shelf slot, aim this far off the divider / left neighbour
 AISLE_X = 1.25
 
 
@@ -51,6 +55,38 @@ class Demo:
             self.say(f"    !! {name} failed: {res}")
         return ok
 
+    def in_hand_correction(self, tcp_nominal, book_nominal, what):
+        """Horizontal shift of the TCP target that puts the book where it should go, given where the
+        book really sits in the fingers now (it slips a little in a friction grasp; ground truth
+        here, the wrist camera later). Call it with the hand already in the placing orientation."""
+        r = self.r
+        now = r.d.body(f"book_{BOOK}").xpos - r.d.site_xpos[r.tcp]
+        c = (np.asarray(book_nominal) - tcp_nominal) - now
+        c[2] = 0.0                                    # height: the guarded set-down takes care of it
+        self.say(f"  book sits {np.linalg.norm(c) * 100:.1f} cm off in the hand, correcting the {what} target")
+        return c
+
+    def grasp_point(self, where):
+        """Grasp point from the book's current pose: middle of its length and thickness,
+        grip_in from the spine."""
+        b = self.r.d.body(f"book_{BOOK}")
+        return b.xpos - b.xmat.reshape(3, 3)[:, 1] * (BD["width"] / 2 - BD["grip_in"][where])
+
+    def set_down(self, y_axis, max_dist):
+        """Lower the held book until it rests on the surface: the surface carries most of its
+        weight (3.3 N). Lowering to a fixed height failed when the book had slipped a few mm in
+        the fingers; this works wherever the book is in the hand."""
+        r = self.r
+        g = r.guarded_move(-UP, SET_DOWN_FORCE, z_axis=FWD, y_axis=y_axis, speed=0.02, max_dist=max_dist,
+                           sense=lambda: r.object_contact_force(f"book_{BOOK}"))
+        self.log.append((f"set down: book on the surface ({g.force:.1f} N, {g.distance * 100:.1f} cm down)",
+                         g.success))
+
+    def check_grasp(self, res):
+        width, force = res
+        self.log.append((f"grasp: width {width * 100:.1f} cm, squeeze {force:.0f} N",
+                         0.03 < width < 0.045 and force > 20))
+
     def drive(self, waypoints):
         for wp in waypoints:
             res = self.r.go_to(*wp, tol_xy=0.02, tol_yaw=0.02)
@@ -59,10 +95,7 @@ class Demo:
 
     def carry_pose(self):
         """Book standing, held above the front of the chassis, for driving."""
-        x, y, yaw = self.r.get_pose()
-        f = np.array([math.cos(yaw), math.sin(yaw), 0.0])
-        p = np.array([x, y, 0.0]) + 0.45 * f + np.array([0, 0, 1.15])
-        left = np.array([-f[1], f[0], 0.0])
+        p, f, left = carry_target(self.r)
         return self.check("carry pose", self.r.move_to(p, z_axis=f, y_axis=left, duration=2.5, allow=(f"book_{BOOK}",)))
 
     def run(self):
@@ -79,10 +112,9 @@ class Demo:
         r.home(2.0)
         r.set_gripper_width(W_OPEN_T, 0.3)
         self.check("table pre-grasp", r.move_to(g - 0.10 * FWD, z_axis=FWD, y_axis=UP, duration=2.5))
-        self.say("straight in around the overhanging spine, close, attach")
+        self.say("straight in around the overhanging spine, close the fingers")
         self.check("table approach", r.move_linear(g, z_axis=FWD, y_axis=UP, speed=0.04))
-        r.set_gripper_width(W_HOLD, 0.6)
-        r.attach(BOOK)
+        self.check_grasp(r.grasp(BOOK))
         self.say("lift, back away from the table, turn the book upright")
         self.check("lift", r.move_linear(g + LIFT * UP, z_axis=FWD, y_axis=UP, speed=0.05))
         self.check("back off", r.move_linear(g + LIFT * UP - BACK * FWD, z_axis=FWD, y_axis=UP, speed=0.06))
@@ -100,8 +132,12 @@ class Demo:
         self.say(f"pre-place in front of {COMP}, slide in, set it down, let go")
         self.check("shelf pre-place", r.move_to(gs + CARRY_UP * UP - 0.15 * FWD, z_axis=FWD, y_axis=SIDE,
                                                  duration=2.5, allow=(book_body,)))
+        # aim PLACE_CLEARANCE away from the divider: a book that slipped a little in the fingers
+        # is no longer exactly square, and the slot leaves only 1 mm to the divider
+        target = pos0 + np.array([PLACE_CLEARANCE, 0.0, 0.0])
+        gs = gs + self.in_hand_correction(gs, target, "shelf")
         self.check("insert", r.move_linear(gs + CARRY_UP * UP, z_axis=FWD, y_axis=SIDE, speed=0.04))
-        self.check("set down", r.move_linear(gs + 0.002 * UP, z_axis=FWD, y_axis=SIDE, speed=0.02))
+        self.set_down(SIDE, max_dist=CARRY_UP + 0.02)
         r.release(BOOK)
         r.set_gripper_width(W_OPEN_S, 0.5)
         self.check("withdraw", r.move_linear(gs + 0.002 * UP - 0.15 * FWD, z_axis=FWD, y_axis=SIDE, speed=0.06))
@@ -112,9 +148,9 @@ class Demo:
 
         # ------------------------------------------------------------ take it out again
         self.say("take it out again")
-        self.check("re-approach", r.move_linear(gs + 0.002 * UP, z_axis=FWD, y_axis=SIDE, speed=0.04))
-        r.set_gripper_width(W_HOLD, 0.6)
-        r.attach(BOOK)
+        gs = self.grasp_point("shelf")                 # where the book really stands now
+        self.check("re-approach", r.move_linear(gs, z_axis=FWD, y_axis=SIDE, speed=0.04))
+        self.check_grasp(r.grasp(BOOK))
         self.check("lift off the board", r.move_linear(gs + CARRY_UP * UP, z_axis=FWD, y_axis=SIDE, speed=0.02))
         self.check("pull out", r.move_linear(gs + CARRY_UP * UP - 0.15 * FWD, z_axis=FWD, y_axis=SIDE, speed=0.05))
         self.carry_pose()
@@ -128,8 +164,9 @@ class Demo:
         self.say("lay the book flat behind the table edge, slide it over the spot, set it down")
         self.check("behind the edge, lying flat", r.move_to(gt + LIFT * UP - BACK * FWD, z_axis=FWD, y_axis=UP,
                                                              duration=3.0, allow=(book_body,)))
+        gt = gt + self.in_hand_correction(gt, spot, "table")
         self.check("over the spot", r.move_linear(gt + LIFT * UP, z_axis=FWD, y_axis=UP, speed=0.05))
-        self.check("set down", r.move_linear(gt + 0.002 * UP, z_axis=FWD, y_axis=UP, speed=0.03))
+        self.set_down(UP, max_dist=LIFT + 0.02)
         r.release(BOOK)
         r.set_gripper_width(W_OPEN_T, 0.5)
         self.check("withdraw", r.move_linear(gt + 0.002 * UP - 0.10 * FWD, z_axis=FWD, y_axis=UP, speed=0.06))
@@ -148,7 +185,7 @@ def main():
     speed = float(sys.argv[sys.argv.index("--speed") + 1]) if "--speed" in sys.argv else 1.0
     model = mujoco.MjModel.from_xml_path(str(ROOT / "scene/library.xml"))
     data = mujoco.MjData(model)
-    robot = Robot(model, data, pose_source="true")
+    robot = Robot(model, data, pose_source="true", grasp_mode="weld" if "--weld" in sys.argv else "friction")
     others0 = {model.body(i).name: data.xpos[i].copy() for i in range(model.nbody)
                if model.body(i).name.startswith("book_") and model.body(i).name != f"book_{BOOK}"}
     demo = Demo(robot, say=lambda s: print(f"  - {s}", flush=True))
