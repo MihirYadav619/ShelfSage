@@ -33,7 +33,7 @@ from pathlib import Path
 
 import numpy as np
 
-from skills.interface import SkillResult
+from skills.result import SkillResult
 
 ROOT = Path(__file__).resolve().parent.parent
 META = json.loads((ROOT / "scene/library_meta.json").read_text())
@@ -288,3 +288,171 @@ def pick_from_table_edge(robot, book, table, say=print, log=None):
     lifted = robot.d.body(f"book_{book}").xpos[2] - c[2]
     ok &= check(f"book lifted {lifted * 100:.1f} cm", lifted > LIFT - 0.02)
     return SkillResult(ok, "holding the book" if ok else "pick failed", {"lifted": lifted})
+
+
+# ---------------------------------------------------------------------------- shelf
+SHELF_PRE = 0.15           # pre-grasp / pre-place / pull-out: this far out of the shelf (m)
+SHELF_BACK = 0.10          # the base backs off this far before swinging the book to / from the carry
+                           # pose: 15 cm out, the back edge of the book (15 cm wide) is right at the
+                           # neighbours' spines (they stick out 3 cm) and the swing hit them; the
+                           # arm cannot reach 20 cm out at row A, so the base makes the room
+SHELF_UP = 0.03            # book lifted off the board while sliding in / out
+W_OPEN_SHELF = 0.05
+SET_DOWN_FORCE = 2.5       # N on the surface under the book (its weight is 3.3 N)
+PLACE_CLEARANCE = 0.006    # m: placing in a shelf slot, aim this far off the divider / left neighbour
+SLOT_TOL = 0.03            # a slot is taken if a book's centre is within this of it (along the shelf)
+
+
+def _check(log):
+    def check(name, res):
+        ok = bool(res) if isinstance(res, (bool, np.bool_)) else (
+            res is not None and getattr(res, "success", True))
+        log.append((name, ok))
+        return ok
+    return check
+
+
+def shelf_axes(shelf):
+    """(fwd, side) of a shelf seen from its parking poses: fwd into the shelf, side along it
+    (towards higher slot numbers)."""
+    yaw = META["shelves"][shelf]["parking"]["1"][2]
+    fwd = np.array([math.cos(yaw), math.sin(yaw), 0.0])
+    return fwd, np.array([fwd[1], -fwd[0], 0.0])
+
+
+def locate_book(robot, book):
+    """Where a book is now (ground truth; the detector later): ("table", "B"), ("shelf", "S2-A3"),
+    ("held", None) or ("unknown", None)."""
+    if robot.holding == book:
+        return ("held", None)
+    p = robot.d.body(f"book_{book}").xpos
+    for name, t in META["tables"].items():
+        hx, hy = t["half_size"]
+        if abs(p[0] - t["pos"][0]) < hx and abs(p[1] - t["pos"][1]) < hy and abs(p[2] - t["top_z"]) < 0.06:
+            return ("table", name)
+    for s in META["shelves"].values():
+        for comp, c in s["compartments"].items():
+            xs = [q[0] for q in c["positions"]]
+            if (min(xs) - 0.05 < p[0] < max(xs) + 0.05 and abs(p[1] - c["surface"][1]) < 0.2
+                    and c["surface"][2] < p[2] < c["surface"][2] + BD["length"]):
+                return ("shelf", comp)
+    return ("unknown", None)
+
+
+def books_in(robot, comp):
+    return [b for b in META["books"] if locate_book(robot, b) == ("shelf", comp)]
+
+
+def free_slot(robot, comp, ignore=None):
+    """Index of the leftmost free slot of a compartment (books packed from the left), or None."""
+    shelf = comp.split("-")[0]
+    slots = META["shelves"][shelf]["compartments"][comp]["positions"]
+    xs = [robot.d.body(f"book_{b}").xpos[0] for b in books_in(robot, comp) if b != ignore]
+    for k, s in enumerate(slots):
+        if all(abs(s[0] - x) > SLOT_TOL for x in xs):
+            return k
+    return None
+
+
+def to_carry_pose(robot, book, log):
+    """Book standing above the front of the chassis, for driving."""
+    p, f, left = carry_target(robot)
+    return _check(log)("carry pose", robot.move_to(p, z_axis=f, y_axis=left, duration=2.5,
+                                                   allow=(f"book_{book}",)))
+
+
+def in_hand_correction(robot, book, tcp_nominal, book_nominal):
+    """Horizontal shift of a TCP target that puts the book at book_nominal, given where it really
+    sits in the fingers now (it slips a little in a friction grasp; ground truth now, the wrist
+    camera later). Call it with the hand already in the placing orientation."""
+    now = robot.d.body(f"book_{book}").xpos - robot.d.site_xpos[robot.tcp]
+    c = (np.asarray(book_nominal) - tcp_nominal) - now
+    c[2] = 0.0                                   # height: the guarded set-down takes care of it
+    return c
+
+
+def set_down(robot, book, z_axis, y_axis, max_dist):
+    """Lower the held book until the surface carries SET_DOWN_FORCE of it (wherever it sits in the
+    fingers; a fixed height failed after a few mm of slip)."""
+    return robot.guarded_move(-UP, SET_DOWN_FORCE, z_axis=z_axis, y_axis=y_axis, speed=0.02,
+                              max_dist=max_dist, sense=lambda: robot.object_contact_force(f"book_{book}"))
+
+
+def _base_shift(robot, goal, book, log, name):
+    """Move the base (arm still, book held) to goal; contacts with the held book are fine."""
+    res = robot.go_to(*goal, tol_xy=0.005, tol_yaw=0.005, v_max=0.1, a_max=0.2)
+    hits = [h for h in res.collisions if f"book_{book}" not in h]
+    return _check(log)(name, not hits and res.message != "timeout")
+
+
+def pick_from_shelf(robot, book, comp, say=print, log=None):
+    """Take a standing book out of a shelf compartment, robot at the compartment's column parking:
+    pre-grasp 15 cm out, straight in around the protruding spine, close, lift 3 cm off the board,
+    pull out, base 10 cm back, carry pose."""
+    log = [] if log is None else log
+    check = _check(log)
+    fwd, side = shelf_axes(comp.split("-")[0])
+    b = robot.d.body(f"book_{book}")
+    g = b.xpos - b.xmat.reshape(3, 3)[:, 1] * (BD["width"] / 2 - BD["grip_in"]["shelf"])
+    say(f"take {META['books'][book]['title']} out of {comp}")
+    # no home() here: at the shelf parking the unfolded home pose reaches into the shelf, hits it
+    # and turned the base by 17 deg; from the stow pose straight to the pre-grasp is clear
+    robot.set_gripper_width(W_OPEN_SHELF, 0.3)
+    pose0 = robot.true_pose()
+    if not check("shelf pre-grasp", robot.move_to(g - SHELF_PRE * fwd, z_axis=fwd, y_axis=side, duration=2.5)):
+        return SkillResult(False, "shelf pre-grasp not reachable")
+    if not check("approach", robot.move_linear(g, z_axis=fwd, y_axis=side, speed=0.04)):
+        return SkillResult(False, "approach failed")
+    width, force = robot.grasp(book)
+    if not check(f"grasp: width {width * 100:.1f} cm, squeeze {force:.0f} N", 0.03 < width < 0.045 and force > 20):
+        return SkillResult(False, "fingers did not close on the book")
+    z0 = float(b.xpos[2])
+    check("lift off the board", robot.move_linear(g + SHELF_UP * UP, z_axis=fwd, y_axis=side, speed=0.02))
+    check("pull out", robot.move_linear(g + SHELF_UP * UP - SHELF_PRE * fwd, z_axis=fwd, y_axis=side, speed=0.05))
+    out = bool((b.xpos - g) @ fwd < 0.0 and b.xpos[2] > z0 + 0.01)
+    if not check("book out of the shelf", out):
+        return SkillResult(False, "the book did not come out with the fingers")
+    x, y, yaw = robot.get_pose()
+    _base_shift(robot, (x - SHELF_BACK * fwd[0], y - SHELF_BACK * fwd[1], yaw), book, log, "base backs off")
+    pose0 = robot.true_pose()
+    to_carry_pose(robot, book, log)
+    moved = math.hypot(robot.true_pose()[0] - pose0[0], robot.true_pose()[1] - pose0[1])
+    check(f"base stayed put ({moved * 100:.1f} cm)", moved < 0.02)
+    return SkillResult(True, "holding the book")
+
+
+def place_in_shelf(robot, book, comp, say=print, log=None):
+    """Put the held book into the leftmost free slot of a compartment, robot at the column
+    parking: base 10 cm back, swing to the pre-place, base forward again (book 15 cm out), correct
+    for where the book sits in the fingers, slide in 3 cm above the board, guarded set-down, let
+    go, withdraw, stow."""
+    log = [] if log is None else log
+    check = _check(log)
+    fwd, side = shelf_axes(comp.split("-")[0])
+    k = free_slot(robot, comp, ignore=book)
+    if k is None:
+        return SkillResult(False, f"compartment {comp} is full")
+    pos = np.array(META["shelves"][comp.split("-")[0]]["compartments"][comp]["positions"][k])
+    target = pos + PLACE_CLEARANCE * side            # off the divider / the left neighbour
+    gs = target - fwd * (BD["width"] / 2 - BD["grip_in"]["shelf"])
+    say(f"place {META['books'][book]['title']} in {comp}, slot {k + 1}")
+    park = robot.get_pose()
+    back = (park[0] - SHELF_BACK * fwd[0], park[1] - SHELF_BACK * fwd[1], park[2])
+    _base_shift(robot, back, book, log, "base backs off")
+    if not check("shelf pre-place", robot.move_to(gs + SHELF_UP * UP - (SHELF_PRE + SHELF_BACK) * fwd,
+                                                   z_axis=fwd, y_axis=side, duration=2.5, allow=(f"book_{book}",))):
+        return SkillResult(False, "pre-place not reachable")
+    _base_shift(robot, park, book, log, "base forward to the shelf")
+    shift = in_hand_correction(robot, book, gs, target)
+    say(f"  book sits {np.linalg.norm(shift) * 100:.1f} cm off in the hand, correcting")
+    gs = gs + shift
+    check("insert", robot.move_linear(gs + SHELF_UP * UP, z_axis=fwd, y_axis=side, speed=0.04))
+    g = set_down(robot, book, fwd, side, SHELF_UP + 0.02)
+    check(f"set down ({g.force:.1f} N on the board)", g)
+    robot.release(book)
+    robot.set_gripper_width(W_OPEN_SHELF, 0.5)
+    tcp = robot.fk_world()[:3, 3]
+    check("withdraw", robot.move_linear(tcp - SHELF_PRE * fwd, z_axis=fwd, y_axis=side, speed=0.06))
+    robot.stow()
+    robot.wait(0.5)
+    return SkillResult(True, f"placed in {comp}, slot {k + 1}", {"slot": k})

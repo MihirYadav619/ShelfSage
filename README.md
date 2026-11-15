@@ -191,15 +191,15 @@ python sim\demo_drag_grasp.py              # pull a mid-table book to the edge, 
 
 ## 6. Skill interface
 
-Defined in `skills/interface.py` (stubs written, bodies still `NotImplementedError`):
+Defined in `skills/interface.py` (bind a robot with `bind(robot)`; books by title or id):
 
-| Skill | Purpose | Implemented in phase |
+| Skill | Purpose | Status |
 |---|---|---|
-| `FIND_BOOK(title)` | Look up which table or shelf holds the book (world-state lookup) | 7 |
-| `NAVIGATE(target)` | Drive the base to the parking pose of a table or shelf | 6 |
-| `GRASP(obj)` | Pick up a book with the 2-finger gripper | 5 |
-| `PLACE(obj, shelf)` | Put the held book in a shelf compartment | 5 |
-| `VERIFY(obj, shelf)` | Check with ground truth that the book is inside the compartment | 9 |
+| `FIND_BOOK(title)` | Look up which table or shelf holds the book (world-state lookup) | ground truth (Phase 5); world model in 7 |
+| `NAVIGATE(target)` | Drive the base to the parking pose of a table ("Table B") or shelf ("S2-A3") | fixed lanes + aisle (Phase 5); A* in 6 |
+| `GRASP(obj)` | Pick up a book with the 2-finger gripper (drags it to the table edge first if needed) | done (Phase 5) |
+| `PLACE(obj, shelf)` | Put the held book in a shelf compartment, leftmost free slot | done (Phase 5) |
+| `VERIFY(obj, shelf)` | Check that the book stands inside the compartment | ground truth (Phase 5); camera in 9 |
 
 Every skill returns a `SkillResult(success, message, data)`, so a failure and its reason can be sent to the LLM for replanning. The `SKILLS` dictionary maps action names to functions; the LLM may only call actions in this dictionary.
 
@@ -344,7 +344,10 @@ Design changes found by the Phase 4 test (scene regenerated, all checks re-run):
   - **Carry pose** moved to 0.60 m ahead / 1.20 m up (was 0.45 / 1.15, with joint 5 at its limit). While holding, IK drops solutions within 0.2 rad of a joint limit (`reject_margin`) and arm moves are slowed to 0.8 rad/s peak.
   - **Wrist family switch:** the table grasp (horizontal, 13 cm above the mount, at the edge of the dead band) only has twisted IK solutions, in the other wrist family than the carry pose. So the move to the carry pose still swings joint 5 by ~5 rad; slow, but the book shifts up to ~1 cm. Two things absorb that: **in-hand correction** (before placing, the TCP target is shifted by how far the book sits off in the fingers; ground truth now, wrist camera later) and **guarded set-down** (lower until the surface carries 2.5 N of the book, `robot.object_contact_force`, instead of to a fixed height). Shelf placing aims 6 mm off the divider (`PLACE_CLEARANCE`).
   - **Trade-off:** with the stiff finger contacts, pressing on a cover chatters (the contact keeps breaking), so the base-pull drag now takes 3-4 strokes instead of 1 (still 2.9-3.0 cm overhang). At solref 10 ms the drag took 1 stroke but the ~2 mm creep left in the grasp made the shelf insertion fail. An admittance loop holding 10 N during the pull did keep the force steady but the fingertip still slid over the cover; not kept.
-- [ ] GRASP / PLACE skills in `skills/interface.py` (next free shelf slot), YOLO perception
+- [x] **Skills** (`skills/interface.py`, on top of `skills/manipulation.py` and the new `skills/navigation.py`): `NAVIGATE`, `GRASP`, `PLACE`, plus ground-truth `FIND_BOOK` and `VERIFY`. GRASP handles a book on a table (drag to the edge if needed, edge grasp, carry pose) or in a shelf (pre-grasp 15 cm out, in around the spine, lift 3 cm, pull out, base 10 cm back, carry pose). PLACE takes the leftmost free slot of the compartment, backs the base off 10 cm to swing the book to the pre-place, drives up again, corrects for the book's pose in the fingers, slides in, guarded set-down, withdraws. NAVIGATE drives the three east-west parking lines and the aisle at x = 1.25 m (A* in Phase 6). `SkillResult` moved to `skills/result.py`.
+  - **Done-when test passed** (`sim/test_phase5.py`, ground-truth poses, friction grasp): NAVIGATE(table) -> GRASP -> NAVIGATE(S2-A3) -> PLACE -> VERIFY from the reset scene, **10/10** books from all 6 tables (README asks for 8/10; Calculus and Databases are dragged to the edge first, ~3 min simulated each, the rest ~1.5 min). Also two books one after the other into S2-A3 (slots 1 and 2) and Physics out of S2-A1 into S2-A3; no other book moves more than 1 cm.
+  - Found on the way: `home()` at the shelf parking reaches into the shelf; it hit the shelf and turned the base by 17 deg (the shelf grasp now goes from the stow pose straight to the pre-grasp). Pulled out 15 cm, a book's back edge is right at the neighbours' protruding spines and the swing to the carry pose hit them; the arm cannot reach 20 cm out at row A, so the base backs off 10 cm for that swing instead.
+- [ ] YOLO perception (dataset, detector, poses from the detector in the done-when test)
 
 
 ### Phases 6-10: not started
@@ -391,11 +394,14 @@ ShelfSage/
 │   ├── demo_phase3.py         # watch the robot in the viewer (Phases 3-4)
 │   ├── demo_pick_place.py     # table -> shelf -> table with the attach grasp (Phase 5 preview)
 │   ├── demo_drag_grasp.py     # mid-table book: drag to the edge, grasp, lift (Phase 5)
+│   ├── test_phase5.py         # Phase 5 done-when test: table -> S2-A3 with the skills, 10 books
 │   └── test_robot.py          # Phase 3 done-when test
 ├── skills/
 │   ├── __init__.py
-│   ├── interface.py           # skill stubs + SKILLS dictionary
-│   └── manipulation.py        # drag_to_edge, pick_from_table_edge (Phase 5)
+│   ├── interface.py           # the skills (FIND_BOOK, NAVIGATE, GRASP, PLACE, VERIFY) + SKILLS dictionary
+│   ├── manipulation.py        # drag to edge, table / shelf pick, shelf place (Phase 5)
+│   ├── navigation.py          # parking poses, lanes + aisle (A* in Phase 6)
+│   └── result.py              # SkillResult
 ├── control/                   # occupancy.py, kinematics.py, ik.py (done); rrt.py, astar.py, mcl.py (Phases 5-6)
 ├── perception/                # make_dataset.py, train_yolo.py, detect.py, data/ (Phase 5)
 ├── planner/                   # baseline_planner.py, llm_planner.py, prompts/, schema.json
