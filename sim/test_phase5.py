@@ -12,6 +12,7 @@ Usage (project root, venv active):
     python sim/test_phase5.py              # all trials
     python sim/test_phase5.py dl calculus  # only these books
     python sim/test_phase5.py --weld       # weld grasp instead of friction
+    python sim/test_phase5.py --perception # book poses from the wrist camera + YOLO detector
 """
 import sys
 import time
@@ -25,7 +26,7 @@ COMP = "S2-A3"
 BOOKS = ["ml", "dl", "robotics", "linalg", "calculus", "signals", "python", "algo", "db", "thermo"]
 
 
-def trial(books, weld=False):
+def trial(books, weld=False, perception=False):
     import mujoco
     import numpy as np
     from sim.robot import Robot
@@ -35,6 +36,9 @@ def trial(books, weld=False):
     model = mujoco.MjModel.from_xml_path(str(ROOT / "scene/library.xml"))
     data = mujoco.MjData(model)
     robot = Robot(model, data, pose_source="true", grasp_mode="weld" if weld else "friction")
+    if perception:                               # book poses from the wrist camera + detector
+        from skills.perception import Perception
+        robot.perception = Perception(say=lambda s: None)
     others = [b for b in META["books"] if b not in books]
     p0 = {b: data.body(f"book_{b}").xpos.copy() for b in others}
     lines, log = [], []
@@ -62,14 +66,16 @@ def trial(books, weld=False):
 
 def main():
     weld = "--weld" in sys.argv
+    perception = "--perception" in sys.argv
     picked = [a for a in sys.argv[1:] if not a.startswith("--")]
     jobs = [[b] for b in (picked or BOOKS)]
     if not picked:
         jobs.append(["ml", "robotics"])          # two books into the same compartment
         jobs.append(["physics"])                 # shelf -> shelf
-    print(f"Phase 5 test: {len(jobs)} trials into {COMP}, {'weld' if weld else 'friction'} grasp")
-    with ProcessPoolExecutor(max_workers=6) as ex:
-        results = list(ex.map(trial, jobs, [weld] * len(jobs)))
+    print(f"Phase 5 test: {len(jobs)} trials into {COMP}, {'weld' if weld else 'friction'} grasp, "
+          f"book poses from {'the detector' if perception else 'ground truth'}")
+    with ProcessPoolExecutor(max_workers=4 if perception else 6) as ex:
+        results = list(ex.map(trial, jobs, [weld] * len(jobs), [perception] * len(jobs)))
     for r in results:
         print(f"  {'PASS' if r['ok'] else 'FAIL'}  {' + '.join(r['books']):18s} sim {r['sim_time']:5.0f} s"
               f"{'' if r['ok'] else '   (' + r['failed_at'] + ')'}")

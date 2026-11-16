@@ -94,17 +94,23 @@ def table_parking(robot, table, lateral, clearance):
     return float(p[0]), float(p[1]), yaw
 
 
-def book_state(robot, book):
-    """Ground-truth pose of a lying book: centre, spine direction (unit, world), yaw, flatness."""
+def book_state(robot, book, table=None):
+    """Pose of a lying book: centre, spine direction (unit, world), yaw, flatness. From the wrist
+    camera if a Perception is attached (robot.perception, skills/perception.py; the arm moves to
+    look, None if the book is not seen), else ground truth."""
+    if getattr(robot, "perception", None) is not None and table is not None:
+        return robot.perception.table_book(robot, book, table)
     b = robot.d.body(f"book_{book}")
     R = b.xmat.reshape(3, 3)
     return b.xpos.copy(), -R[:, 1], math.atan2(R[1, 0], R[0, 0]), float(R[2, 2])
 
 
-def spine_overhang(robot, book, table):
-    """How far the spine sticks out past the robot-side edge (m; negative = inside the table)."""
+def spine_overhang(robot, book, table, c=None):
+    """How far the spine sticks out past the robot-side edge (m; negative = inside the table).
+    c: the book centre if already measured."""
     fwd, _, edge, _ = table_frame(table)
-    c, _, _, _ = book_state(robot, book)
+    if c is None:
+        c = book_state(robot, book)[0]
     return edge - (c @ fwd - BD["width"] / 2)
 
 
@@ -146,11 +152,14 @@ def drag_to_edge(robot, book, table, say=print, log=None, method="base"):
         raise ValueError(f"unknown drag method {method}")
     log = [] if log is None else log
     fwd, left, edge, _ = table_frame(table)
-    c, spine, _, flat = book_state(robot, book)
+    st = book_state(robot, book, table)
+    if st is None:
+        return SkillResult(False, "the camera does not see the book on the table")
+    c, spine, _, flat = st
     if flat < 0.98 or spine @ fwd > -0.9:
         return SkillResult(False, "book is not lying flat with its spine towards the robot")
     target = BD["table_overhang"]
-    if spine_overhang(robot, book, table) > target - OVERHANG_TOL:
+    if spine_overhang(robot, book, table, c) > target - OVERHANG_TOL:
         return SkillResult(True, "already at the edge", {"strokes": 0})
     blockers = drag_blockers(robot, book, table)
     if blockers:
@@ -162,8 +171,11 @@ def drag_to_edge(robot, book, table, say=print, log=None, method="base"):
 
     strokes = 0
     for strokes in range(1, MAX_STROKES + 1):
-        c, spine, _, _ = book_state(robot, book)
-        remaining = target - spine_overhang(robot, book, table)
+        st = book_state(robot, book, table) if strokes > 1 else st
+        if st is None:
+            return SkillResult(False, "lost sight of the book while dragging it", {"strokes": strokes})
+        c, spine, _, _ = st
+        remaining = target - spine_overhang(robot, book, table, c)
         if remaining < OVERHANG_TOL:
             strokes -= 1
             break
@@ -187,6 +199,18 @@ def drag_to_edge(robot, book, table, say=print, log=None, method="base"):
             clearance_now = clearance
             robot.home(2.0)
             robot.set_gripper_width(0.0, 0.5)
+            if getattr(robot, "perception", None) is not None:
+                # look again from close by: from the far parking a mid-table book is only partly
+                # in view (centre off by a few cm), from here the camera gets above it
+                st = book_state(robot, book, table)
+                if st is None:
+                    return SkillResult(False, "lost sight of the book", {"strokes": strokes})
+                c, spine, _, _ = st
+                remaining = target - spine_overhang(robot, book, table, c)
+                press = c + spine * (BD["width"] / 2 - PRESS_IN)
+                press[2] = c[2] + BD["thickness"] / 2
+                stroke = (min(remaining * (1 + BASE_SLIP) + SLIP, MAX_BASE_STROKE) if by_base
+                          else min(remaining + SLIP, MAX_STROKE))
 
         # 2. tilt: the first one whose IK reaches both ends of the stroke (base: the arm does not
         #    move along the stroke, so above the book and pressed)
@@ -239,8 +263,11 @@ def drag_to_edge(robot, book, table, say=print, log=None, method="base"):
         robot.hold_base(False)
 
     robot.set_gripper_width(W_OPEN, 0.3)   # closed fingers touch each other (a self-contact)
-    over = spine_overhang(robot, book, table)
-    _, _, yaw, flat = book_state(robot, book)
+    st = book_state(robot, book, table) if strokes > 0 else st
+    if st is None:
+        return SkillResult(False, "lost sight of the book after dragging it", {"strokes": strokes})
+    c, _, yaw, flat = st
+    over = spine_overhang(robot, book, table, c)
     ok = abs(over - target) < OVERHANG_TOL and flat > 0.98
     log.append((f"dragged to the edge: overhang {over * 100:.1f} cm in {strokes} strokes, "
                 f"yaw {math.degrees(yaw):.1f} deg", ok))
@@ -253,10 +280,13 @@ def pick_from_table_edge(robot, book, table, say=print, log=None):
     line with it, fingers around the spine, close (robot.grasp), lift 10 cm, back away 16 cm."""
     log = [] if log is None else log
     fwd, left, _, _ = table_frame(table)
-    over = spine_overhang(robot, book, table)
+    st = book_state(robot, book, table)
+    if st is None:
+        return SkillResult(False, "the camera does not see the book on the table")
+    c, spine, _, _ = st
+    over = spine_overhang(robot, book, table, c)
     if over < BD["table_overhang"] - OVERHANG_TOL:
         return SkillResult(False, f"spine only {over * 100:.1f} cm past the edge, drag it first")
-    c, spine, _, _ = book_state(robot, book)
 
     def check(name, res):
         ok = bool(res) if isinstance(res, (bool, np.bool_)) else (
@@ -270,6 +300,22 @@ def pick_from_table_edge(robot, book, table, say=print, log=None):
                       tol_xy=0.01, tol_yaw=0.01)
     if not check("drive to the grasp parking", res):
         return SkillResult(False, f"drive failed: {res.message} {res.collisions}")
+    if getattr(robot, "perception", None) is not None:
+        # look again from here: in line with the book it is in the middle of the view (from the
+        # table's middle parking a book on a side spot was cut by the image border, its centre
+        # 6 cm off along its length, and the grasp held it so far off-centre that it hit the shelf)
+        st = book_state(robot, book, table)
+        if st is None:
+            return SkillResult(False, "lost sight of the book")
+        c, spine, _, _ = st
+        park = table_parking(robot, table, float(c @ left), META["robot"]["park_clearance"]["table"])
+        if math.hypot(park[0] - robot.get_pose()[0], park[1] - robot.get_pose()[1]) > 0.01:
+            # the first estimate put the base a few cm off the book's line; off-line, the IK chose
+            # a twisted posture for the pre-grasp and the move there knocked the book off
+            robot.home(1.5)
+            res = robot.go_to(*park, tol_xy=0.01, tol_yaw=0.01)
+            if not check("re-park in line with the book", res):
+                return SkillResult(False, f"drive failed: {res.message} {res.collisions}")
 
     g = c + spine * (BD["width"] / 2 - BD["grip_in"]["table"])
     say("pre-grasp, straight in around the spine, close the fingers")
@@ -393,7 +439,13 @@ def pick_from_shelf(robot, book, comp, say=print, log=None):
     check = _check(log)
     fwd, side = shelf_axes(comp.split("-")[0])
     b = robot.d.body(f"book_{book}")
-    g = b.xpos - b.xmat.reshape(3, 3)[:, 1] * (BD["width"] / 2 - BD["grip_in"]["shelf"])
+    if getattr(robot, "perception", None) is not None:
+        centre = robot.perception.shelf_book(robot, book, comp)
+        if centre is None:
+            return SkillResult(False, f"the camera does not see the book in {comp}")
+        g = centre - fwd * (BD["width"] / 2 - BD["grip_in"]["shelf"])     # spine faces the room
+    else:
+        g = b.xpos - b.xmat.reshape(3, 3)[:, 1] * (BD["width"] / 2 - BD["grip_in"]["shelf"])
     say(f"take {META['books'][book]['title']} out of {comp}")
     # no home() here: at the shelf parking the unfolded home pose reaches into the shelf, hits it
     # and turned the base by 17 deg; from the stow pose straight to the pre-grasp is clear

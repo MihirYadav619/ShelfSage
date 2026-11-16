@@ -7,7 +7,8 @@ For each detected book: the mask pixels with depth become 3D points in the world
 camera pose comes from the robot's own estimate (base pose from get_pose() + arm FK + the fixed
 camera mount), not from the simulator, so localisation error shows up here like on a real robot.
 From the points (the visible top cover of a lying book / the spine of a standing one):
-    lying       whether the surface normal points up (cover) or sideways (spine in a shelf)
+    lying       whether the surface normal points up (cover) or sideways (spine in a shelf);
+                a standing book's spine is taken to face the robot (library convention)
     rectangle   smallest rectangle around the points in that surface (cv2.minAreaRect): its
                 centre, its long side = the book's length axis (yaw), its size
     complete    the rectangle is about the book's size (22 x 15 cm cover / 22 x 4 cm spine
@@ -69,7 +70,9 @@ class BookDetector:
             self._T_tcp_cam = np.linalg.inv(T_w_tcp) @ T_w_cam
         return self._T_tcp_cam
 
-    def detect(self, robot, rgb=None, depth=None):
+    def detect(self, robot, rgb=None, depth=None, z_range=None):
+        """Detections in one RGB-D frame. z_range=(lo, hi): use only points at these heights (e.g.
+        just above a table top; at the table edge a mask also catches the floor behind it)."""
         if rgb is None:
             rgb, depth = robot.get_rgbd()
         K = robot.camera_intrinsics()
@@ -90,11 +93,15 @@ class BookDetector:
             z = depth[vs, us]
             pc = np.stack([(us - K[0, 2]) / K[0, 0] * z, -(vs - K[1, 2]) / K[1, 1] * z, -z], axis=1)
             pw = pc @ T[:3, :3].T + T[:3, 3]
-            out.append(self._pose(BOOKS[int(cls)], float(conf), len(us), pw, T[:3, 3]))
+            if z_range is not None:
+                pw = pw[(pw[:, 2] > z_range[0]) & (pw[:, 2] < z_range[1])]
+                if len(pw) < 50:
+                    continue
+            out.append(self._pose(BOOKS[int(cls)], float(conf), len(us), pw, T[:3, 3], robot.get_pose()[2]))
         return out
 
     @staticmethod
-    def _pose(book, conf, n, pw, cam_pos):
+    def _pose(book, conf, n, pw, cam_pos, robot_yaw):
         import cv2
         for _ in range(2):                          # plane fit, then drop points off the plane
             c = np.median(pw, axis=0)
@@ -111,8 +118,13 @@ class BookDetector:
             normal = np.array([0.0, 0.0, 1.0])
             e1, e2 = np.array([1.0, 0, 0]), np.array([0, 1.0, 0])
             expect = (BD["length"], BD["width"])
-        else:                                       # spine: vertical plane facing the camera
-            normal = np.array([normal[0], normal[1], 0.0]) / np.linalg.norm(normal[:2])
+        else:
+            # standing in a shelf: the spine faces the room, i.e. the robot at its shelf poses
+            # (seen obliquely, a book's side cover is bigger than its spine and won the plane fit)
+            normal = -np.array([math.cos(robot_yaw), math.sin(robot_yaw), 0.0])
+            front = pw @ normal
+            pw = pw[front > front.max() - 0.012]    # the spine face only
+            c = pw.mean(axis=0)
             e1, e2 = np.array([-normal[1], normal[0], 0.0]), np.array([0, 0, 1.0])
             expect = (BD["length"], BD["thickness"] + 2 * BD["rib_height"])
         uv = np.stack([(pw - c) @ e1, (pw - c) @ e2], axis=1).astype(np.float32)
