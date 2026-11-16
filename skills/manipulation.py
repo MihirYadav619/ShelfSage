@@ -1,14 +1,28 @@
 """Table manipulation skills (Phase 5): drag a book to the table edge, then pick it up.
 
-Book poses come from simulator ground truth for now; the YOLO detector replaces that later
-(the skills only need the book's position and yaw).
+Book poses come from the wrist camera + detector if robot.perception is set (skills/perception.py),
+else from simulator ground truth. Other books on the table (lane check, push aside) are ground
+truth for now.
 
-Drag to the edge ("pull, then grasp"), for a book lying inside the table. Two ways to pull:
+Drag to the edge ("pull, then grasp"), for a book lying inside the table, anywhere on it, its spine
+turned up to 60 deg away from the robot. Two ways to pull:
 
-  method="base" (default): the arm only presses, the base pulls (whole-body). The arm presses
-  0.50 m ahead of its mount (the middle of its reach) and stays still while the base backs away
-  slowly (4 cm/s) by the whole distance, so one stroke does it, however far in the book lies.
-  A short second stroke corrects what the fingertips slipped.
+  method="base" (default): the arm only presses, the base pulls (whole-body), in one stroke:
+    1. books in the lane to the edge are pushed sideways out of it first (clear_lane: press on the
+       cover's middle, the base drives along the edge; a book in the way of that push is pushed
+       on first)
+    2. the base parks turned half as much as the book, in line with it, the press point 0.50 m
+       ahead of the arm mount (farther for books at the far side of the table: the chassis stops
+       3 cm from the edge); if that is out of reach, square to the table
+    3. closed fingertips press the cover 4 cm in from the spine with 20 N, kept while settling
+    4. the arm keeps its joint targets and the base drives the hand (press_drive) along a straight
+       line to where the press point is when the book lies straight at the edge, turning on the
+       way by the book's angle: the book slides and turns with the hand. The base is PI
+       controlled (the load turned a P-controlled base by 4 deg, 5 cm at the hand) and drives on
+       until its own FK puts the hand on the goal.
+  The book lags the hand by ~1.5 cm (straight) / a few deg (turning), compensated; it ends 2-5 cm
+  past the edge and within 7 deg of straight, almost always after one stroke (else a short
+  second one).
 
   method="arm": the base stands still, the arm pulls, in strokes:
     1. park in line with the book, close enough that the press point is ~0.58 m ahead of the arm
@@ -16,16 +30,16 @@ Drag to the edge ("pull, then grasp"), for a book lying inside the table. Two wa
     2. closed fingertips above the top cover, 4 cm in from the spine, gripper tilted back towards
        the robot: -30 deg if the IK reaches both ends of the stroke, else -15 or 0 deg (the
        tilted hand reaches close to the base, the vertical one far out)
-    3. base station keeping on; guarded move down until the fingers press with 10 N
+    3. base station keeping on; guarded move down until the fingers press with 20 N
     4. pull straight towards the robot (at most 25 cm); the book follows because the rubber pads
        (mu 1.5) grip harder than the paper slides on the wood (mu 0.4): 1.5 F > 0.4 (F + m g)
     5. lift off, station keeping off, measure the book again; repeat until the spine overhangs
        the edge by 3 cm (+-1 cm). A stroke that hits the workspace boundary aborts safely; the
        next one re-parks and starts from a fresh IK solution.
 
-Pick from the edge (as in sim/demo_pick_place.py): normal parking, pre-grasp, straight in around
-the overhanging spine, close the fingers (friction grasp; robot.grasp_mode "weld" adds the attach
-weld), lift, back away.
+Pick from the edge (as in sim/demo_pick_place.py): parking square to the spine at the normal
+distance, pre-grasp, straight in around the overhanging spine, close the fingers (friction grasp;
+robot.grasp_mode "weld" adds the attach weld), lift, back away.
 """
 import json
 import math
@@ -44,17 +58,29 @@ STROKE_START = 0.58        # arm mount -> press point at the start of a stroke (
 MIN_CLEARANCE = 0.03       # closest the chassis front gets to the table edge (its top is 10 cm
                            # below the table top, so it may not go under it)
 PRESS_IN = 0.04            # press point: this far in from the spine (between the head/tail ribs)
-PRESS_FORCE = 10.0         # N
+PRESS_FORCE = 20.0         # N; at 10 N the fingertips crept ~35 % of a long base pull (the soft
+                           # contact kept breaking), at 20 N about 2 %, so one pull does it
 PRESS_TILTS = [math.radians(a) for a in (-30, -15, 0)]   # gripper leans back towards the robot
 MAX_STROKE = 0.25
 SLIP = 0.005               # the fingertips creep ~5 mm per stroke: pull that much further
 MAX_STROKES = 5
 BASE_PRESS_AT = 0.50       # method "base": arm mount -> press point (m, horizontal)
 BASE_PULL_SPEED = 0.04     # m/s, the base backing away with the book
-MAX_BASE_STROKE = 0.60     # longest single pull of the base
-BASE_SLIP = 0.04           # a long base pull leaves the book ~4 % short (fingertip creep + the base
-                           # stopping ~5 mm early under the load): pull that much further
-OVERHANG_TOL = 0.01
+MAX_BASE_STROKE = 0.75     # longest single pull of the base (more than the table is deep)
+BASE_LAG = 0.015           # the book lags the hand by 0.5-2.5 cm whatever the pull length (the
+                           # soft fingertip contact): pull that much further (not when the stroke
+                           # also turns the book: then it follows the hand and ended 1.3 cm too far)
+MAX_YAW = math.radians(60) # method "base": books turned up to this far are turned straight while
+                           # pulled; beyond, the spine is not the side facing the robot
+YAW_TOL = math.radians(7)  # straight enough to grasp (the grasp parks square to the spine, and
+                           # in the hand the book is square to the hand whatever it was on the table)
+ROT_LAG = math.radians(4)  # the book lags the hand's turn by 1-9 deg (the soft fingertip contact
+                           # takes up the first degrees): turn that much further
+OVERHANG_TOL = 0.01        # method "arm": stroke until the overhang is 3 +- 1 cm
+# method "base": aim at 3.5 cm and take 2..5 cm: the book lags the hand by 0-2 cm in a long pull
+# (it varies with the arm posture), and a second stroke of 1-2 cm is not worth it; the grasp needs
+# >= 2 cm under the spine for the lower finger, and the book's centre stays on the table up to 7.5
+OVERHANG_AIM, OVERHANG_MIN, OVERHANG_MAX = 0.035, 0.02, 0.05
 W_OPEN = 0.06
 LIFT, BACK = 0.10, 0.16
 # carry pose for driving (book standing above the front of the chassis): 0.60 m ahead of the base
@@ -70,6 +96,64 @@ def carry_target(robot):
     f = np.array([math.cos(yaw), math.sin(yaw), 0.0])
     return np.array([x, y, 0.0]) + CARRY_FWD * f + np.array([0, 0, CARRY_Z]), f, np.array([-f[1], f[0], 0.0])
 
+
+
+# ---------------------------------------------------------------------------- whole-body press
+def tcp_xy(robot):
+    """Where the hand really is (xy): own FK of the measured joints on the estimated base pose.
+    Under the sideways load of a push the hand lags the base by ~5 cm (base yaw, joint tracking),
+    so the commanded pose is not good enough to know how far the book went."""
+    return robot.fk_world(robot.arm_q())[:2, 3].copy()
+
+
+def press_drive(robot, goal_xy, dyaw=0.0, body=None, speed=BASE_PULL_SPEED, tol=0.005, tries=3):
+    """The arm keeps its joint targets (pressing a book), the base drives so that the hand goes
+    along a straight line to `goal_xy` while the base (and hand) turns by `dyaw`. The base follows
+    the path with feedforward + P control; then, measuring the hand (tcp_xy), it drives on until
+    the hand is within `tol` of the goal (at most `tries` rounds). Returns (error m, collisions)."""
+    from sim.robot import CONTROL_DT, rot2, wrap
+    n_ctrl = int(round(CONTROL_DT / robot.m.opt.timestep))
+    goal_xy = np.asarray(goal_xy, float)[:2]
+    x, y, yaw0 = robot.get_pose()
+    yaw1 = yaw0 + dyaw
+    hits = set()
+    for k in range(tries):
+        x, y, yaw = robot.get_pose()
+        h0 = tcp_xy(robot)
+        off = rot2(yaw).T @ (h0 - (x, y))                   # hand in the base frame
+        dist = float(np.linalg.norm(goal_xy - h0))
+        turn = wrap(yaw1 - yaw)
+        if dist < tol and abs(turn) < 0.01:
+            break
+        T = max(1.0, 1.5 * (dist + 0.3 * abs(turn)) / speed)   # smoothstep peaks at 1.5x the mean
+
+        def pose(t):
+            sm = min(t / T, 1.0)
+            sm = sm * sm * (3 - 2 * sm)
+            yw = yaw + sm * turn
+            h = h0 + sm * (goal_xy - h0)
+            return np.append(h - rot2(yw) @ off, yw)
+
+        # PI: the load on the hand (0.7 m ahead of the base centre) turns the base, and a P loop
+        # on the velocity-controlled base leaves a steady yaw error (4 deg = 5 cm at the hand)
+        t, i_xy, i_yaw = 0.0, np.zeros(2), 0.0
+        while t < T + 1.0:
+            want, nxt = pose(t), pose(t + CONTROL_DT)
+            ff = (nxt - want) / CONTROL_DT
+            px, py, pyaw = robot.get_pose()
+            e_xy, e_yaw = want[:2] - (px, py), wrap(want[2] - pyaw)
+            i_xy = np.clip(i_xy + e_xy * CONTROL_DT, -0.05, 0.05)
+            i_yaw = float(np.clip(i_yaw + e_yaw * CONTROL_DT, -0.1, 0.1))
+            v = ff[:2] + 3.0 * e_xy + 4.0 * i_xy
+            w = ff[2] + 4.0 * e_yaw + 8.0 * i_yaw
+            robot.send_cmd_vel(*(rot2(pyaw).T @ v), float(w))
+            robot.step(n_ctrl)
+            t += CONTROL_DT
+            hits |= {h for h in robot.robot_contacts()
+                     if (body is None or body not in h) and "left_finger <-> panda_right_finger" not in h}
+        robot.stop()
+        robot.wait(0.3)
+    return float(np.linalg.norm(goal_xy - tcp_xy(robot))), sorted(hits)
 
 
 # ---------------------------------------------------------------------------- geometry helpers
@@ -125,49 +209,242 @@ def footprint(robot, body, fwd, left):
     return min(lat), max(lat), min(dep), max(dep)
 
 
-def drag_blockers(robot, book, table, margin=0.01):
-    """Other books lying in the lane the book sweeps on its way to the edge."""
-    fwd, left, edge, _ = table_frame(table)
-    l0, l1, d0, _ = footprint(robot, f"book_{book}", fwd, left)
-    top = META["tables"][table]["top_z"]
+def books_on_table(robot, table, exclude=()):
+    """Ids of the books lying on `table` (ground truth)."""
+    t = META["tables"][table]
     out = []
     for name, info in META["books"].items():
-        if name == book:
+        if name in exclude:
             continue
-        b = robot.d.body(info["body"])
-        if abs(b.xpos[2] - top - BD["rib_height"] - BD["thickness"] / 2) > 0.02:
-            continue                                    # not lying on a table
-        m0, m1, e0, e1 = footprint(robot, info["body"], fwd, left)
-        if m1 > l0 - margin and m0 < l1 + margin and e1 > edge - 0.1 and e0 < d0:
-            out.append(info["title"])
+        p = robot.d.body(info["body"]).xpos
+        if (abs(p[2] - t["top_z"] - BD["rib_height"] - BD["thickness"] / 2) < 0.02
+                and abs(p[0] - t["pos"][0]) < t["half_size"][0] + 0.05
+                and abs(p[1] - t["pos"][1]) < t["half_size"][1] + 0.05):
+            out.append(name)
     return out
 
 
+def lane_blockers(robot, book, table, margin=0.01):
+    """Ids of the other books lying in the lane the book sweeps on its way to the edge."""
+    fwd, left, edge, _ = table_frame(table)
+    l0, l1, d0, _ = footprint(robot, f"book_{book}", fwd, left)
+    out = []
+    for name in books_on_table(robot, table, exclude=(book,)):
+        m0, m1, e0, e1 = footprint(robot, f"book_{name}", fwd, left)
+        if m1 > l0 - margin and m0 < l1 + margin and e1 > edge - 0.1 and e0 < d0:
+            out.append(name)
+    return out
+
+
+def drag_blockers(robot, book, table, margin=0.01):
+    """Titles of the books in the lane (see lane_blockers)."""
+    return [META["books"][b]["title"] for b in lane_blockers(robot, book, table, margin)]
+
+
+SIDE_GAP = 0.03            # a pushed-aside book ends this far beside the lane
+SIDE_CLEAR = 0.02          # ... and this far from other books and the table's side edges
+
+
+def side_pushes(robot, body, table, keep, direction, fixed, depth=2):
+    """Pushes along the table edge that move book `body` out of the lateral band `keep` (lo, hi)
+    towards `direction` (-1 right, +1 left): [(book, shift), ...] in order, or None. A book in the
+    way of the push is pushed on first, the same way (up to `depth` levels); books in `fixed`
+    (the target) may not move."""
+    fwd, left, _, _ = table_frame(table)
+    t = META["tables"][table]
+    centre_lat = float(np.array([*t["pos"], 0.0]) @ left)
+    half_lat = abs(left[0]) * t["half_size"][0] + abs(left[1]) * t["half_size"][1]
+    m0, m1, e0, e1 = footprint(robot, f"book_{body}", fwd, left)
+    sh = (keep[0] - SIDE_GAP - m1) if direction < 0 else (keep[1] + SIDE_GAP - m0)
+    lo, hi = min(m0, m0 + sh), max(m1, m1 + sh)               # swept along the edge
+    if lo < centre_lat - half_lat + SIDE_CLEAR or hi > centre_lat + half_lat - SIDE_CLEAR:
+        return None
+    plan = []
+    in_way = []
+    for b in books_on_table(robot, table, exclude=(body,)):
+        o0, o1, f0, f1 = footprint(robot, f"book_{b}", fwd, left)
+        if o1 > lo - SIDE_CLEAR and o0 < hi + SIDE_CLEAR and f1 > e0 - SIDE_CLEAR and f0 < e1 + SIDE_CLEAR:
+            in_way.append((o0 if direction > 0 else -o1, b))
+    for _, b in sorted(in_way, reverse=True):                 # the farthest one goes first
+        if b in fixed or depth == 0:
+            return None
+        sub = side_pushes(robot, b, table, (lo, hi), direction, fixed | {body}, depth - 1)
+        if sub is None:
+            return None
+        plan += sub
+    return plan + [(body, sh)]
+
+
+def side_shift(robot, blocker, book, table):
+    """Pushes that move `blocker` out of the lane of `book`: the cheaper way (less pushing) of
+    left and right, pushing on books in the way first if needed; None if neither works."""
+    fwd, left, _, _ = table_frame(table)
+    l0, l1, _, _ = footprint(robot, f"book_{book}", fwd, left)
+    plans = [p for p in (side_pushes(robot, blocker, table, (l0, l1), d, {book}) for d in (-1, 1))
+             if p is not None]
+    return min(plans, key=lambda p: (len(p), sum(abs(x) for _, x in p))) if plans else None
+
+
+def push_aside(robot, blocker, table, shift, say=print, log=None):
+    """Press on a lying book and push it `shift` m along the table edge (+ = robot's left): park
+    facing the book, press its cover in the middle with 20 N, the base drives sideways."""
+    log = [] if log is None else log
+    fwd, left, edge, _ = table_frame(table)
+    b = robot.d.body(f"book_{blocker}")
+    c = b.xpos.copy()
+    press = c.copy()
+    press[2] = c[2] + BD["thickness"] / 2
+    mount_behind_front = robot.meta["chassis_half"][0] - robot.meta["mount_x"]
+    clearance = float(np.clip(BASE_PRESS_AT - (press @ fwd - edge) - mount_behind_front,
+                              MIN_CLEARANCE, META["robot"]["park_clearance"]["table"]))
+    name = META["books"][blocker]["title"]
+    say(f"push {name} {abs(shift) * 100:.0f} cm to the {'left' if shift > 0 else 'right'}, out of the way")
+    robot.stow()
+    res = robot.go_to(*table_parking(robot, table, float(c @ left), clearance), tol_xy=0.01, tol_yaw=0.01)
+    log.append((f"park facing {name}", res.success))
+    if not res.success:
+        return SkillResult(False, f"drive failed: {res.message} {res.collisions}")
+    robot.home(2.0)
+    robot.set_gripper_width(0.0, 0.5)
+    for tilt in PRESS_TILTS:
+        z_ax = math.sin(tilt) * fwd - math.cos(tilt) * UP
+        ik = robot.ik(press + 0.04 * UP, z_axis=z_ax, y_axis=left, n_random=4)
+        if ik is not None and ik.success:
+            break
+    else:
+        log.append((f"reach {name}", False))
+        return SkillResult(False, f"cannot reach {name} to push it aside")
+    r = robot.move_to(press + 0.04 * UP, z_axis=z_ax, y_axis=left, duration=2.0)
+    if r is None or not r.success:
+        log.append((f"above {name}", False))
+        return SkillResult(False, f"cannot reach above {name}")
+    robot.hold_base(True)
+    g = robot.guarded_move(-UP, PRESS_FORCE, z_axis=z_ax, y_axis=left, max_dist=0.06,
+                           body=f"book_{blocker}", settle=0.5, hold=True)
+    log.append((f"press on {name}: {g.force:.0f} N", g.success))
+    robot.hold_base(False)
+    if not g.success:
+        return SkillResult(False, f"no contact with {name}")
+    _, hits = press_drive(robot, tcp_xy(robot) + shift * left[:2], body=f"book_{blocker}")
+    robot.hold_base(True)
+    robot.move_linear(robot.fk_world()[:3, 3] + 0.06 * UP, z_axis=z_ax, y_axis=left, speed=0.04)
+    robot.hold_base(False)
+    robot.set_gripper_width(W_OPEN, 0.3)
+    moved = float((b.xpos - c) @ left)
+    ok = not hits and abs(moved - shift) < 0.03
+    log.append((f"pushed {name} {moved * 100:.0f} cm (asked {shift * 100:.0f})", ok))
+    if hits:
+        return SkillResult(False, f"collision while pushing {name}: {hits}")
+    return SkillResult(ok, "pushed aside" if ok else f"{name} moved {moved * 100:.0f} cm only")
+
+
+def clear_lane(robot, book, table, say=print, log=None):
+    """Push every book lying in the lane of `book` sideways out of it (nearest first; a book in
+    the way of that push is pushed on first)."""
+    log = [] if log is None else log
+    fwd, _, _, _ = table_frame(table)
+    for _ in range(4):
+        blockers = lane_blockers(robot, book, table)
+        if not blockers:
+            return SkillResult(True, "lane free")
+        blocker = min(blockers, key=lambda b: robot.d.body(f"book_{b}").xpos @ fwd)
+        plan = side_shift(robot, blocker, book, table)
+        name = META["books"][blocker]["title"]
+        if plan is None:
+            log.append((f"room to push {name} aside", False))
+            return SkillResult(False, f"no room to push {name} out of the lane", {"blockers": blockers})
+        for b, shift in plan:
+            res = push_aside(robot, b, table, shift, say=say, log=log)
+            if not res.success:
+                return res
+    return SkillResult(not lane_blockers(robot, book, table), "lane free")
+
+
 # ---------------------------------------------------------------------------- skills
-def drag_to_edge(robot, book, table, say=print, log=None, method="base"):
+def book_yaw(spine, fwd):
+    """Signed angle (rad, + = counter-clockwise) from "spine facing the robot" (-fwd) to `spine`."""
+    return math.atan2(fwd[1] * spine[0] - fwd[0] * spine[1], -float(spine @ fwd))
+
+
+def base_drag_plan(robot, table, c, spine, target, k=0.5):
+    """One whole-body stroke for a book lying at centre c with its spine along `spine`: the base
+    parks turned k (0.5) times as much as the book, the press point 0.5 m ahead of the
+    arm mount (farther if the chassis would get closer than 3 cm to the edge, nearer if it would be
+    farther than the normal parking); then the hand drags the press point to where it is when the
+    book lies straight with its spine `target` past the edge, while the base turns back square to
+    the table and on by as much, so the book turns with it. Returns (base pose, press point, goal xy, turn,
+    base forward axis, base left axis)."""
+    fwd, left, edge, tyaw = table_frame(table)
+    theta = book_yaw(spine, fwd)
+    yb = tyaw + k * theta          # turned half as much as the book, half the other way at the end:
+                                   # a base turned the full 40 deg had to stay so far from the edge
+                                   # (chassis corner) that the book was out of reach
+    bf = np.array([math.cos(yb), math.sin(yb), 0.0])
+    bl = np.array([-bf[1], bf[0], 0.0])
+    press = c + spine * (BD["width"] / 2 - PRESS_IN)
+    press[2] = c[2] + BD["thickness"] / 2
+    hx, hy = robot.meta["chassis_half"]
+    mx = robot.meta["mount_x"]
+
+    def base_at(dist):
+        b = press - (mx + dist) * bf
+        b[2] = 0.0
+        return b
+
+    dist = BASE_PRESS_AT
+    front = max((base_at(dist) + hx * bf + sg * hy * bl) @ fwd for sg in (-1, 1))
+    too_close = front - (edge - MIN_CLEARANCE)
+    too_far = (edge - META["robot"]["park_clearance"]["table"]) - front
+    if too_close > 0:
+        dist += too_close / (bf @ fwd)
+    elif too_far > 0:
+        dist -= too_far / (bf @ fwd)
+    b = base_at(dist)
+    c_f = float(c @ left) * left + (edge - target + BD["width"] / 2) * fwd
+    goal = c_f - fwd * (BD["width"] / 2 - PRESS_IN)
+    return (float(b[0]), float(b[1]), yb), press, goal[:2], -theta, bf, bl
+
+
+def drag_to_edge(robot, book, table, say=print, log=None, method="base", clear=True):
     """Pull a book lying inside `table` towards the robot until its spine overhangs the edge by
-    the table overhang (3 cm). method "base": the arm presses, the base pulls; "arm": the base
-    stands, the arm pulls in strokes of at most 25 cm. Leaves the robot near the table, arm up."""
+    the table overhang (3 cm). method "base": the arm presses, the base pulls (and turns a book
+    lying askew straight on the way); "arm": the base stands, the arm pulls in strokes of at most
+    25 cm. Books in the lane are pushed aside first (clear=True). Leaves the robot near the table,
+    arm up."""
     if method not in ("base", "arm"):
         raise ValueError(f"unknown drag method {method}")
+    by_base = method == "base"
     log = [] if log is None else log
     fwd, left, edge, _ = table_frame(table)
     st = book_state(robot, book, table)
     if st is None:
         return SkillResult(False, "the camera does not see the book on the table")
     c, spine, _, flat = st
-    if flat < 0.98 or spine @ fwd > -0.9:
-        return SkillResult(False, "book is not lying flat with its spine towards the robot")
-    target = BD["table_overhang"]
-    if spine_overhang(robot, book, table, c) > target - OVERHANG_TOL:
+    max_yaw = MAX_YAW if by_base else math.acos(0.9)
+    if flat < 0.98 or abs(book_yaw(spine, fwd)) > max_yaw:
+        return SkillResult(False, f"book is not lying flat with its spine towards the robot "
+                                  f"(turned {math.degrees(book_yaw(spine, fwd)):.0f} deg)")
+    target = OVERHANG_AIM if by_base else BD["table_overhang"]
+    lo = OVERHANG_MIN if by_base else target - OVERHANG_TOL
+    hi = OVERHANG_MAX if by_base else target + OVERHANG_TOL
+    if spine_overhang(robot, book, table, c) > lo and abs(book_yaw(spine, fwd)) < YAW_TOL:
         return SkillResult(True, "already at the edge", {"strokes": 0})
     blockers = drag_blockers(robot, book, table)
     if blockers:
-        log.append((f"lane to the edge is free (blocked by {', '.join(blockers)})", False))
-        return SkillResult(False, f"blocked by {', '.join(blockers)}", {"blockers": blockers})
+        if not clear:
+            log.append((f"lane to the edge is free (blocked by {', '.join(blockers)})", False))
+            return SkillResult(False, f"blocked by {', '.join(blockers)}", {"blockers": blockers})
+        res = clear_lane(robot, book, table, say=say, log=log)
+        if not res.success:
+            return SkillResult(False, f"blocked by {', '.join(blockers)}: {res.message}", {"blockers": blockers})
+        st = book_state(robot, book, table)
+        if st is None:
+            return SkillResult(False, "lost sight of the book")
+        c, spine, _, _ = st
     lateral = float(c @ left)
     mount_behind_front = robot.meta["chassis_half"][0] - robot.meta["mount_x"]
     clearance_now = None
+    k_turn = 0.5
 
     strokes = 0
     for strokes in range(1, MAX_STROKES + 1):
@@ -176,101 +453,125 @@ def drag_to_edge(robot, book, table, say=print, log=None, method="base"):
             return SkillResult(False, "lost sight of the book while dragging it", {"strokes": strokes})
         c, spine, _, _ = st
         remaining = target - spine_overhang(robot, book, table, c)
-        if remaining < OVERHANG_TOL:
+        if spine_overhang(robot, book, table, c) > lo and (not by_base or abs(book_yaw(spine, fwd)) < YAW_TOL):
             strokes -= 1
             break
-        press = c + spine * (BD["width"] / 2 - PRESS_IN)
-        press[2] = c[2] + BD["thickness"] / 2
-        by_base = method == "base"
-        stroke = (min(remaining * (1 + BASE_SLIP) + SLIP, MAX_BASE_STROKE) if by_base
-                  else min(remaining + SLIP, MAX_STROKE))
 
-        # 1. park so that the press point is STROKE_START (BASE_PRESS_AT) ahead of the arm mount
-        clearance = float(np.clip((BASE_PRESS_AT if by_base else STROKE_START) - (press @ fwd - edge)
-                                  - mount_behind_front,
-                                  MIN_CLEARANCE, META["robot"]["park_clearance"]["table"]))
-        if clearance_now is None or abs(clearance - clearance_now) > 0.01:
-            say(f"park {clearance * 100:.0f} cm from Table {table}, in line with the book")
-            robot.stow()
-            res = robot.go_to(*table_parking(robot, table, lateral, clearance), tol_xy=0.01, tol_yaw=0.01)
-            log.append((f"stroke {strokes}: park {clearance * 100:.0f} cm from the table", res.success))
-            if not res.success:
-                return SkillResult(False, f"drive failed: {res.message} {res.collisions}")
-            clearance_now = clearance
-            robot.home(2.0)
-            robot.set_gripper_width(0.0, 0.5)
-            if getattr(robot, "perception", None) is not None:
-                # look again from close by: from the far parking a mid-table book is only partly
-                # in view (centre off by a few cm), from here the camera gets above it
-                st = book_state(robot, book, table)
-                if st is None:
-                    return SkillResult(False, "lost sight of the book", {"strokes": strokes})
-                c, spine, _, _ = st
-                remaining = target - spine_overhang(robot, book, table, c)
-                press = c + spine * (BD["width"] / 2 - PRESS_IN)
-                press[2] = c[2] + BD["thickness"] / 2
-                stroke = (min(remaining * (1 + BASE_SLIP) + SLIP, MAX_BASE_STROKE) if by_base
-                          else min(remaining + SLIP, MAX_STROKE))
+        if by_base:
+            # 1. park turned like the book, in line with it
+            park, press, goal, turn, bf, bl = base_drag_plan(robot, table, c, spine, target, k_turn)
+            here = robot.get_pose()
+            if (strokes == 1 or math.hypot(park[0] - here[0], park[1] - here[1]) > 0.01
+                    or abs(park[2] - here[2]) > 0.02):
+                say(f"park in line with the book{f', turned {math.degrees(-turn * k_turn):.0f} deg' if abs(turn) > YAW_TOL else ''}")
+                robot.stow()
+                res = robot.go_to(*park, tol_xy=0.01, tol_yaw=0.01)
+                log.append((f"stroke {strokes}: park in line with the book, turned {math.degrees(-turn * k_turn):.0f} deg",
+                            res.success))
+                if not res.success:
+                    return SkillResult(False, f"drive failed: {res.message} {res.collisions}")
+                robot.home(2.0)
+                robot.set_gripper_width(0.0, 0.5)
+                if getattr(robot, "perception", None) is not None:
+                    # look again from close by: from the far parking a mid-table book is only
+                    # partly in view (centre off by a few cm), from here the camera gets above it
+                    st = book_state(robot, book, table)
+                    if st is None:
+                        return SkillResult(False, "lost sight of the book", {"strokes": strokes})
+                    c, spine, _, _ = st
+                    # (the base stays; the turn is what the book still needs, whatever the base yaw)
+                    _, press, goal, turn, _, _ = base_drag_plan(robot, table, c, spine, target, k_turn)
+            # the hand keeps its orientation relative to the base, so the book turns with the base
+            x, y, yaw = robot.get_pose()
+            bf = np.array([math.cos(yaw), math.sin(yaw), 0.0])
+            bl = np.array([-bf[1], bf[0], 0.0])
+            way = goal - press[:2]
+            if np.linalg.norm(way) > MAX_BASE_STROKE:
+                way *= MAX_BASE_STROKE / np.linalg.norm(way)
+            lag = BASE_LAG if abs(turn) < math.radians(1) else 0.0
+            goal_cmd = press[:2] + way * (1 + lag / max(np.linalg.norm(way), 1e-6))
+            z_axes = [math.sin(t) * bf - math.cos(t) * UP for t in PRESS_TILTS]
+            y_ax = bl
+        else:
+            press = c + spine * (BD["width"] / 2 - PRESS_IN)
+            press[2] = c[2] + BD["thickness"] / 2
+            stroke = min(remaining + SLIP, MAX_STROKE)
+            # 1. park so that the press point is STROKE_START ahead of the arm mount
+            clearance = float(np.clip(STROKE_START - (press @ fwd - edge) - mount_behind_front,
+                                      MIN_CLEARANCE, META["robot"]["park_clearance"]["table"]))
+            if clearance_now is None or abs(clearance - clearance_now) > 0.01:
+                say(f"park {clearance * 100:.0f} cm from Table {table}, in line with the book")
+                robot.stow()
+                res = robot.go_to(*table_parking(robot, table, lateral, clearance), tol_xy=0.01, tol_yaw=0.01)
+                log.append((f"stroke {strokes}: park {clearance * 100:.0f} cm from the table", res.success))
+                if not res.success:
+                    return SkillResult(False, f"drive failed: {res.message} {res.collisions}")
+                clearance_now = clearance
+                robot.home(2.0)
+                robot.set_gripper_width(0.0, 0.5)
+            z_axes = [math.sin(t) * fwd - math.cos(t) * UP for t in PRESS_TILTS]
+            y_ax = left
 
         # 2. tilt: the first one whose IK reaches both ends of the stroke (base: the arm does not
         #    move along the stroke, so above the book and pressed)
-        for tilt in PRESS_TILTS:
-            z_ax = math.sin(tilt) * fwd - math.cos(tilt) * UP
+        for z_ax in z_axes:
             end = press if by_base else press - stroke * fwd
-            ends = [robot.ik(p, z_axis=z_ax, y_axis=left, n_random=4, allow=(f"book_{book}",))
+            ends = [robot.ik(p, z_axis=z_ax, y_axis=y_ax, n_random=4, allow=(f"book_{book}",))
                     for p in (press + 0.04 * UP, end)]
             if all(e is not None and e.success for e in ends):
                 break
         else:
             log.append((f"stroke {strokes}: reachable tilt", False))
+            if by_base and k_turn > 0 and abs(turn) > YAW_TOL:
+                # a far book lying askew: the turned chassis keeps too far from the edge; park
+                # square to the table (the chassis 3 cm from it) and turn the whole angle on the way
+                k_turn = 0.0
+                continue
             return SkillResult(False, "stroke not reachable at any tilt", {"strokes": strokes})
-        say(f"stroke {strokes}: press on the cover (tilt {math.degrees(tilt):.0f} deg), "
-            f"{'base' if by_base else 'arm'} pulls {stroke * 100:.0f} cm")
-        r = robot.move_to(press + 0.04 * UP, z_axis=z_ax, y_axis=left, duration=2.0)
+        r = robot.move_to(press + 0.04 * UP, z_axis=z_ax, y_axis=y_ax, duration=2.0)
         if r is None or not r.success:
             log.append((f"stroke {strokes}: above the book", False))
             return SkillResult(False, "cannot reach above the book", {"strokes": strokes})
 
         # 3-5. press, pull, lift
         robot.hold_base(True)
-        g = robot.guarded_move(-UP, PRESS_FORCE, z_axis=z_ax, y_axis=left, max_dist=0.06,
-                               body=f"book_{book}")
+        g = robot.guarded_move(-UP, PRESS_FORCE, z_axis=z_ax, y_axis=y_ax, max_dist=0.06,
+                               body=f"book_{book}", settle=0.5, hold=True)
         log.append((f"stroke {strokes}: press {g.force:.0f} N", g.success))
         if not g.success:
             robot.hold_base(False)
             return SkillResult(False, "no contact with the book", {"strokes": strokes})
         if by_base:
-            # the arm keeps its joint targets, so the pressing fingertips move with the base
+            # the arm keeps its joint targets, so the pressing fingertips move (and turn) with the base
             robot.hold_base(False)
-            x, y, yaw = robot.get_pose()
-            goal = np.array([x, y]) - stroke * fwd[:2]
-            res = robot.go_to(goal[0], goal[1], yaw, tol_xy=0.005, tol_yaw=0.005,
-                              v_max=BASE_PULL_SPEED, a_max=0.1, timeout=60.0)
-            hits = [h for h in res.collisions if f"book_{book}" not in h and
-                    "left_finger <-> panda_right_finger" not in h]
-            log.append((f"stroke {strokes}: base pulled {stroke * 100:.0f} cm "
-                        f"(error {res.final_error_xy * 1000:.0f} mm)", not hits and res.message != "timeout"))
+            say(f"stroke {strokes}: press on the cover, the base pulls {np.linalg.norm(way) * 100:.0f} cm"
+                + (f" and turns {math.degrees(turn):.0f} deg" if abs(turn) > YAW_TOL else ""))
+            turn_cmd = turn + math.copysign(ROT_LAG, turn) if abs(turn) > math.radians(1) else turn
+            err, hits = press_drive(robot, goal_cmd, turn_cmd, body=f"book_{book}")
+            log.append((f"stroke {strokes}: base pulled {np.linalg.norm(way) * 100:.0f} cm, turned "
+                        f"{math.degrees(turn):.0f} deg (hand error {err * 1000:.0f} mm)", not hits))
             if hits:
                 return SkillResult(False, f"collision while pulling: {hits}", {"strokes": strokes})
-            clearance_now += stroke
             robot.hold_base(True)
         else:
+            say(f"stroke {strokes}: press on the cover, the arm pulls {stroke * 100:.0f} cm")
             p = robot.fk_world()[:3, 3]
-            lin = robot.move_linear(p - stroke * fwd, z_axis=z_ax, y_axis=left, speed=0.04)
+            lin = robot.move_linear(p - stroke * fwd, z_axis=z_ax, y_axis=y_ax, speed=0.04)
             if lin.aborted:
                 say("  stopped at the edge of the workspace, will press again")
-        robot.move_linear(robot.fk_world()[:3, 3] + 0.04 * UP, z_axis=z_ax, y_axis=left, speed=0.04)
+        robot.move_linear(robot.fk_world()[:3, 3] + 0.04 * UP, z_axis=z_ax, y_axis=y_ax, speed=0.04)
         robot.hold_base(False)
 
     robot.set_gripper_width(W_OPEN, 0.3)   # closed fingers touch each other (a self-contact)
     st = book_state(robot, book, table) if strokes > 0 else st
     if st is None:
         return SkillResult(False, "lost sight of the book after dragging it", {"strokes": strokes})
-    c, _, yaw, flat = st
+    c, spine, yaw, flat = st
     over = spine_overhang(robot, book, table, c)
-    ok = abs(over - target) < OVERHANG_TOL and flat > 0.98
+    turned = book_yaw(spine, fwd)
+    ok = lo < over < hi and flat > 0.98 and abs(turned) < YAW_TOL
     log.append((f"dragged to the edge: overhang {over * 100:.1f} cm in {strokes} strokes, "
-                f"yaw {math.degrees(yaw):.1f} deg", ok))
+                f"turned {math.degrees(turned):.1f} deg", ok))
     return SkillResult(ok, "at the edge" if ok else "edge not reached",
                        {"overhang": over, "strokes": strokes, "yaw": yaw})
 
@@ -285,7 +586,7 @@ def pick_from_table_edge(robot, book, table, say=print, log=None):
         return SkillResult(False, "the camera does not see the book on the table")
     c, spine, _, _ = st
     over = spine_overhang(robot, book, table, c)
-    if over < BD["table_overhang"] - OVERHANG_TOL:
+    if over < OVERHANG_MIN:
         return SkillResult(False, f"spine only {over * 100:.1f} cm past the edge, drag it first")
 
     def check(name, res):
@@ -294,10 +595,22 @@ def pick_from_table_edge(robot, book, table, say=print, log=None):
         log.append((name, ok))
         return ok
 
+    def parking(c, spine):
+        # square to the spine and straight behind the grasp point, as far from it as at the normal
+        # parking: the drag leaves a book up to 5 deg off; with the base square to the table and
+        # the hand turned, or the base turned but the grasp point 5 cm off its axis, the IK took a
+        # posture near the joint limits and the lift left the workspace
+        g = c + spine * (BD["width"] / 2 - BD["grip_in"]["table"])
+        x, y, yaw = table_parking(robot, table, float(c @ left), META["robot"]["park_clearance"]["table"])
+        dist = float((g - np.array([x, y, 0.0])) @ fwd)
+        a = -spine * np.array([1.0, 1.0, 0.0])
+        a /= np.linalg.norm(a)
+        b = g - dist * a
+        return float(b[0]), float(b[1]), yaw + book_yaw(spine, fwd)
+
     say(f"back off to the normal parking at Table {table}")
     robot.stow()
-    res = robot.go_to(*table_parking(robot, table, float(c @ left), META["robot"]["park_clearance"]["table"]),
-                      tol_xy=0.01, tol_yaw=0.01)
+    res = robot.go_to(*parking(c, spine), tol_xy=0.01, tol_yaw=0.01)
     if not check("drive to the grasp parking", res):
         return SkillResult(False, f"drive failed: {res.message} {res.collisions}")
     if getattr(robot, "perception", None) is not None:
@@ -308,8 +621,9 @@ def pick_from_table_edge(robot, book, table, say=print, log=None):
         if st is None:
             return SkillResult(False, "lost sight of the book")
         c, spine, _, _ = st
-        park = table_parking(robot, table, float(c @ left), META["robot"]["park_clearance"]["table"])
-        if math.hypot(park[0] - robot.get_pose()[0], park[1] - robot.get_pose()[1]) > 0.01:
+        park = parking(c, spine)
+        if (math.hypot(park[0] - robot.get_pose()[0], park[1] - robot.get_pose()[1]) > 0.01
+                or abs(park[2] - robot.get_pose()[2]) > 0.02):
             # the first estimate put the base a few cm off the book's line; off-line, the IK chose
             # a twisted posture for the pre-grasp and the move there knocked the book off
             robot.home(1.5)
@@ -318,19 +632,24 @@ def pick_from_table_edge(robot, book, table, say=print, log=None):
                 return SkillResult(False, f"drive failed: {res.message} {res.collisions}")
 
     g = c + spine * (BD["width"] / 2 - BD["grip_in"]["table"])
+    a = -spine * np.array([1.0, 1.0, 0.0])               # approach square to the spine (a book
+    a /= np.linalg.norm(a)                               # turned by the drag may be a few deg off)
     say("pre-grasp, straight in around the spine, close the fingers")
     robot.home(2.0)
     robot.set_gripper_width(W_OPEN, 0.3)
-    if not check("pre-grasp", robot.move_to(g - 0.10 * fwd, z_axis=fwd, y_axis=UP, duration=2.5)):
+    # reject_margin: with the base a few deg off square, the IK otherwise found a twisted posture
+    # (joint 5 near its limit) from which the lift left the workspace
+    if not check("pre-grasp", robot.move_to(g - 0.10 * a, z_axis=a, y_axis=UP, duration=2.5,
+                                            reject_margin=0.4)):
         return SkillResult(False, "pre-grasp not reachable")
-    if not check("approach", robot.move_linear(g, z_axis=fwd, y_axis=UP, speed=0.04)):
+    if not check("approach", robot.move_linear(g, z_axis=a, y_axis=UP, speed=0.04)):
         return SkillResult(False, "approach failed")
     width, force = robot.grasp(book)
     if not check(f"grasp: width {width * 100:.1f} cm, squeeze {force:.0f} N", 0.03 < width < 0.045 and force > 20):
         return SkillResult(False, "fingers did not close on the book")
     say("lift and back away")
-    ok = check("lift", robot.move_linear(g + LIFT * UP, z_axis=fwd, y_axis=UP, speed=0.05))
-    ok &= check("back off", robot.move_linear(g + LIFT * UP - BACK * fwd, z_axis=fwd, y_axis=UP, speed=0.06))
+    ok = check("lift", robot.move_linear(g + LIFT * UP, z_axis=a, y_axis=UP, speed=0.05))
+    ok &= check("back off", robot.move_linear(g + LIFT * UP - BACK * a, z_axis=a, y_axis=UP, speed=0.06))
     lifted = robot.d.body(f"book_{book}").xpos[2] - c[2]
     ok &= check(f"book lifted {lifted * 100:.1f} cm", lifted > LIFT - 0.02)
     return SkillResult(ok, "holding the book" if ok else "pick failed", {"lifted": lifted})

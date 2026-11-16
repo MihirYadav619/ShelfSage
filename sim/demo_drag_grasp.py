@@ -1,5 +1,6 @@
 """Drag-then-grasp demo (Phase 5): a book lying in the middle of a table is first pulled to the
-edge with the fingertips, then grasped around its overhanging spine and lifted.
+edge with the fingertips (turned straight on the way if it lies askew, books in its way pushed
+aside first), then grasped around its overhanging spine and lifted.
 
 Default: Calculus, 40 cm inside Table A. See skills/manipulation.py for the steps.
 
@@ -7,8 +8,10 @@ Usage (project root, venv active):
     python sim/demo_drag_grasp.py                    # viewer, real time
     python sim/demo_drag_grasp.py --speed 2          # twice as fast
     python sim/demo_drag_grasp.py --book db          # Databases, middle of Table E
-    python sim/demo_drag_grasp.py --book control     # Table C: refuses, Signals and Systems lies
-                                                     # in its lane to the edge
+    python sim/demo_drag_grasp.py --book control     # Table C: Signals and Systems lies in its lane
+                                                     # to the edge, it is pushed aside first
+    python sim/demo_drag_grasp.py --book dl --at 0.1,0.55,35   # put the book first: x (world),
+                                                     # spine 55 cm in from the edge, turned 35 deg
     python sim/demo_drag_grasp.py --method arm       # the arm pulls in strokes (default: base pulls)
     python sim/demo_drag_grasp.py --headless         # no window: run it and print a report
     python sim/demo_drag_grasp.py --weld             # weld (attach) grasp instead of friction only
@@ -76,6 +79,16 @@ def main():
     robot = Robot(model, data, pose_source="true", grasp_mode="weld" if "--weld" in sys.argv else "friction")
     others0 = {model.body(i).name: data.xpos[i].copy() for i in range(model.nbody)
                if model.body(i).name.startswith("book_") and model.body(i).name != f"book_{book}"}
+    if "--at" in sys.argv:
+        x, depth, yaw = (float(v) for v in arg("--at", "").split(","))
+        yaw = math.radians(yaw)
+        fwd, _, edge, _ = table_frame(table)            # all tables: robot side at -y
+        mid = np.array([x, edge + depth])               # middle of the spine
+        c = mid - np.array([math.sin(yaw), -math.cos(yaw)]) * META["book_dims"]["width"] / 2
+        adr = model.jnt_qposadr[model.body(f"book_{book}").jntadr[0]]
+        data.qpos[adr:adr + 2] = c
+        data.qpos[adr + 3:adr + 7] = [math.cos(yaw / 2), 0, 0, math.sin(yaw / 2)]
+        mujoco.mj_forward(model, data)
     p_book0 = data.body(f"book_{book}").xpos.copy()
     log = []
     say = lambda s: print(f"  - {s}", flush=True)  # noqa: E731
@@ -101,8 +114,10 @@ def main():
                 print("viewer closed")
                 return
 
-    moved = max(np.linalg.norm(data.body(n).xpos - p) for n, p in others0.items())
-    log.append(("other books undisturbed (< 1 cm)", moved < 0.01))
+    pushed = {f"book_{b}" for b, info in META["books"].items()
+              if any(s.startswith(f"pushed {info['title']} ") for s, _ in log)}
+    moved = max(np.linalg.norm(data.body(n).xpos - p) for n, p in others0.items() if n not in pushed)
+    log.append(("other books undisturbed (< 1 cm, except those pushed aside)", moved < 0.01))
     print("\nreport:")
     for name, ok in log:
         print(f"  {'ok ' if ok else 'XX '} {name}")

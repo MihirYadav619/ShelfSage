@@ -5,7 +5,7 @@
 
 - **Course:** Robot Manipulators (IIT Mandi), course project
 - **Team:** Chirag, Mihir
-- **Status:** Phases 1-5 of 10 complete (Phase 5 done-when met with detector poses); Phase 5 extensions next, then Phase 6 (see [Progress](#8-progress-tracker))
+- **Status:** Phases 1-5 of 10 complete (Phase 5 done-when met with detector poses, plus extensions: table books picked from any pose); Phase 6 next (see [Progress](#8-progress-tracker))
 - **Note:** This is the *initial* idea. It can be simplified later if parts become too hard (see [Fallbacks](#9-risks-and-fallbacks)).
 
 > This README is written so that the whole project can be resumed from scratch, for example in a new chat with an AI assistant. See [How to resume](#12-how-to-resume-in-a-new-chat).
@@ -315,7 +315,7 @@ Design changes found by the Phase 4 test (scene regenerated, all checks re-run):
 - Table books at an edge spot overhang the edge by 3 cm (was 5 mm inside); shelf books flush with the front (was 2 cm behind).
 - Parking 0.50 m from tables and shelves (was 0.30 m); the KEEP CLEAR zones grew with it.
 
-### Phase 5: Grasp and place skills (done; extensions in progress)
+### Phase 5: Grasp and place skills (done, with extensions)
 
 - [x] First step: **attach (weld) grasp** (the README fallback). One inactive weld hand<->book per book in the scene; `robot.attach(book)` switches it on with the book's current pose relative to the hand, `robot.release(book)` switches it off. `sim/demo_pick_place.py` runs the full round trip with it (Deep Learning: Table B -> shelf S2-B3 -> back to its edge spot), using the Phase 3-4 stack: parking poses, IK, straight-line moves, wrist rotation between lying and standing, a carry pose for driving. Headless run: 30/30 steps ok, the book ends 0.3 cm from its spot, other books move at most 0.11 cm.
 - [x] **Drag to the edge, then grasp** ("kheencho, phir pakdo") for a book lying inside a table: `skills/manipulation.py` (`drag_to_edge`, `pick_from_table_edge`), demo `sim/demo_drag_grasp.py`. In strokes: park in line with the book so the press point is ~0.58 m ahead of the arm mount (3-50 cm from the edge), closed fingertips above the cover 4 cm in from the spine, guarded move down to 10 N, pull straight towards the robot (max 25 cm), lift, measure the book again, repeat until the spine overhangs 3 cm (+-1 cm). Then the normal edge grasp (attach), lift 10 cm, back off, carry pose. Headless: **Calculus** (40 cm in, Table A) and **Databases** (middle of Table E) both reach 3.0 / 3.2 cm overhang in 2 strokes, book yaw < 0.2 deg, lifted 9.9 cm, other books move at most 0.11 cm. **Control Systems** (Table C) is refused up front: Signals and Systems lies in its lane to the edge (`drag_blockers`), it would be pushed off; the planner has to move that one first.
@@ -358,8 +358,22 @@ Design changes found by the Phase 4 test (scene regenerated, all checks re-run):
   - **Done-when test with detector poses passed: `sim/test_phase5.py --perception` 10/10** (plus two books into one compartment and shelf -> shelf); ground-truth mode still 10/10. Looking adds ~5-10 s per grasp.
   - Fixed on the way (all three only showed with the detector): a book on a side spot seen from the table's middle parking was cut by the image border (centre 6 cm off along its length), grasped off-centre and hit the shelf -> look again in line with the book; straight from the stow pose to a look pose the arm knocked an overhanging book off the table -> via home; the base parked on the first (off) estimate made the IK pick a twisted pre-grasp posture that hit the book -> re-park.
   - Still from the world state / ground truth: which table / compartment a book is in (FIND_BOOK), the free slots of a compartment (while placing, the held book is right in front of the wrist camera), the in-hand correction, VERIFY.
-  - Tested only at the scene's book positions (edge spots and three mid-table books); books must lie with the spine towards the robot (+-25 deg), within ~55 cm of the edge, with a free lane to the edge.
-- [ ] Next (Phase 5 extensions): turn a book lying at any angle so its spine faces the robot, then drag and pick; move a book that blocks the lane first; reach far books (far side of the table); drag in one stroke again on the stiff finger contacts.
+- [x] **Extensions: a table book anywhere, at an angle, behind other books, in one stroke.** New test `sim/test_random_pick.py`: each trial moves one table book to a random pose on its table (spine -3..60 cm from the edge, i.e. up to the far side; turned by up to `--yaw` deg; anywhere along the table; `--blocker` also puts another book across its lane), then NAVIGATE + GRASP; pass = held at the carry pose, no other book moved > 1 cm (books pushed aside must stay on the table).
+
+  | run | result | strokes |
+  |---|---|---|
+  | straight, ground truth, 24 trials (seed 0) | **24/24** (3 with a book in the lane) | 1 each |
+  | turned +-45 deg, ground truth, 2 x 24 trials (seeds 2, 7) | **48/48** (19 with books in the lane, 2 needing a chain of two pushes) | 1 (a few far, turned books: 2) |
+  | `--blocker`, ground truth, 11 trials (seed 1) | 10/11 (1: no room, the target lies right behind the blocker) | 1 |
+  | far side (45-60 cm), turned +-30 deg, **detector poses**, 16 trials (seed 11) | **15/16** (1: no room to push the blocker aside) | 1 (3 trials: 2) |
+
+  Every lane-free trial passed. Ends 2.3-4.5 cm past the edge, within 4 deg of straight. `python sim\demo_drag_grasp.py --book dl --at 0.1,0.55,35` shows one (x, spine depth, yaw); `--book control` now pushes Signals and Systems aside first (30 cm), then drags Control Systems 51 cm in one stroke.
+  - **One stroke** (was 3-4 on the stiff finger contacts): the press relaxed from 10 to ~5 N once the arm stopped, and at 5 N the contact chattered and the hand slid 35 % of a base pull over the cover. Now 20 N, held while settling (`guarded_move(..., hold=True)` moves on whenever the force drops below 80 %): ~2 % creep. Also the base was the weak link: under the load on the hand (0.7 m ahead of its centre) the P-controlled base turned by 4 deg, 5 cm at the hand. `press_drive` (skills/manipulation.py) drives the base so the hand follows a straight line (feedforward + PI, the integral holds the yaw) and then drives on until the robot's own FK of the measured joints puts the hand on the goal (within 5 mm). The book still lags the hand by 0.5-2.5 cm (soft fingertip contact): the pull aims at 3.5 cm overhang, 1.5 cm further, and takes 2-5 cm (the grasp needs >= 2 cm under the spine; the centre of mass stays on the table up to 7.5 cm).
+  - **Turned books** (spine up to 60 deg off): the base parks turned half as much as the book, in line with it, presses 4 cm in from the spine, and during the pull turns by the book's angle (`press_drive(goal, dyaw)`): the hand turns with the base and the book with the hand (turning about a point far away needs little torque from the fingertip). Parked turned the full angle, the chassis corner kept it so far from the edge that the book was out of reach; if half is still out of reach, it parks square. The book lags the turn by 1-9 deg: 4 deg extra. The grasp then parks square to the spine, straight behind the grasp point (with the base square to the table and the hand turned, or the grasp point 5 cm off the base axis, the IK took a posture near the joint limits and the lift left the workspace).
+  - **Books in the lane** are pushed sideways out of it first (`clear_lane`, `push_aside`): press on the cover's middle, the base drives along the edge (`press_drive`). `side_pushes` picks left or right (the swept area must stay on the table, 2 cm from other books) and pushes a book in the way of that push on first, up to two levels. Fails when the target lies right behind the blocker (< 2 cm) or both ways are full.
+  - **Far books with the camera:** from the normal parking the first look (31-88 deg below the horizon) missed books ~60 cm into the table: a second set of looks farther out. A book seen only partly whose second look (straight above) is out of reach is looked at from 20 / 35 cm nearer the robot; if none is in reach, the robot drives up to the table (10 cm) and looks again. Centre error 1-2 mm.
+  - Re-run after all of this: `test_phase5.py` 10/10 with ground truth and 10/10 with detector poses (mid-table Calculus / Databases now 2.1-2.3 min instead of ~3), Phase 3 test all passed, Phase 4 test all passed, pick-and-place 32/32.
+  - Still not handled: books turned more than 60 deg (spine facing sideways or away), a target right behind another book, books stacked or standing on a table; other books (lane check, pushing) come from the world state, not the camera.
 
 
 ### Phases 6-10: not started
@@ -406,7 +420,9 @@ ShelfSage/
 │   ├── demo_phase3.py         # watch the robot in the viewer (Phases 3-4)
 │   ├── demo_pick_place.py     # table -> shelf -> table with the attach grasp (Phase 5 preview)
 │   ├── demo_drag_grasp.py     # mid-table book: drag to the edge, grasp, lift (Phase 5)
+│   ├── demo_extensions.py     # far / turned / blocked book, wrist camera + detector shown in the viewer
 │   ├── test_phase5.py         # Phase 5 done-when test: table -> S2-A3 with the skills, 10 books
+│   ├── test_random_pick.py    # table GRASP from random poses (any depth / angle, books in the way)
 │   └── test_robot.py          # Phase 3 done-when test
 ├── skills/
 │   ├── __init__.py
