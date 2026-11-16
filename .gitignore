@@ -4,3 +4,6 @@ assets/mujoco_menagerie/
 venv/
 sim/output/
 MUJOCO_LOG.TXT
+perception/data/
+perception/runs/
+*.pt

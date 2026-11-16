@@ -347,7 +347,14 @@ Design changes found by the Phase 4 test (scene regenerated, all checks re-run):
 - [x] **Skills** (`skills/interface.py`, on top of `skills/manipulation.py` and the new `skills/navigation.py`): `NAVIGATE`, `GRASP`, `PLACE`, plus ground-truth `FIND_BOOK` and `VERIFY`. GRASP handles a book on a table (drag to the edge if needed, edge grasp, carry pose) or in a shelf (pre-grasp 15 cm out, in around the spine, lift 3 cm, pull out, base 10 cm back, carry pose). PLACE takes the leftmost free slot of the compartment, backs the base off 10 cm to swing the book to the pre-place, drives up again, corrects for the book's pose in the fingers, slides in, guarded set-down, withdraws. NAVIGATE drives the three east-west parking lines and the aisle at x = 1.25 m (A* in Phase 6). `SkillResult` moved to `skills/result.py`.
   - **Done-when test passed** (`sim/test_phase5.py`, ground-truth poses, friction grasp): NAVIGATE(table) -> GRASP -> NAVIGATE(S2-A3) -> PLACE -> VERIFY from the reset scene, **10/10** books from all 6 tables (README asks for 8/10; Calculus and Databases are dragged to the edge first, ~3 min simulated each, the rest ~1.5 min). Also two books one after the other into S2-A3 (slots 1 and 2) and Physics out of S2-A1 into S2-A3; no other book moves more than 1 cm.
   - Found on the way: `home()` at the shelf parking reaches into the shelf; it hit the shelf and turned the base by 17 deg (the shelf grasp now goes from the stow pose straight to the pre-grasp). Pulled out 15 cm, a book's back edge is right at the neighbours' protruding spines and the swing to the carry pose hit them; the arm cannot reach 20 cm out at row A, so the base backs off 10 cm for that swing instead.
-- [ ] YOLO perception (dataset, detector, poses from the detector in the done-when test)
+- [x] **Perception: dataset + YOLOv8n-seg detector, 39 classes** (one per book; `perception/`):
+  - `make_dataset.py`: real wrist-camera images (the arm aimed by our IK, robot teleported, no physics), labels from MuJoCo's segmentation render -> YOLO polygons (parts >= 150 px). Table views (60 %): 2-6 random books anywhere on a random table, any yaw, camera 30-50 cm above, tilt <= 25 deg, any roll; base placed so the view is inside the reach. Shelf views (40 %): 1-5 books packed in 1-2 compartments (20 % head down, spine still out), camera 10-30 cm in front. Light intensity and direction randomized. 4000 images (3428 train / 572 val, seeds 0-3, ~10 min in 4 processes), 228-293 labels per book. `perception/data/` is git-ignored (766 MB).
+  - `train_yolo.py`: from COCO-pretrained yolov8n-seg, 60 epochs, imgsz 640, batch 16, left-right flips off (mirrored titles never occur). 55 min on the RTX 4060. **Val: mask mAP50 0.981, mask mAP50-95 0.952, box mAP50 0.982, P 0.973 / R 0.94.** Weights `perception/runs/books/weights/best.pt` (git-ignored; re-train to get them).
+  - `detect.py`: `BookDetector.detect(robot)` -> per book: mask (eroded 3 px, edge pixels see the floor) + depth -> world points, camera pose from the robot's own estimate (base pose + arm FK + camera mount; matches MuJoCo exactly) -> plane fit, off-plane points dropped -> `cv2.minAreaRect` in the cover / spine plane: centre, yaw (long side), size, `complete` (whole face seen). `aim_camera()` puts the wrist camera at a point (corrects for the camera sitting 6 cm beside the TCP).
+  - `check_detect.py` on the real scene (not training data), tables: **11/11 books detected, right class, no false detection.** First look from the parking pose: centre off by 2-4 cm (books cut by the image border or the near part hidden behind the fingers, flagged `complete=False`). **Second look, camera 40 cm straight above the book: centre error <= 0.2 cm, yaw error <= 0.2 deg** for all 8 reachable books. Mid-table books (Calculus, Control, Databases) cannot be looked at from straight above from the normal parking: look again from the closer drag parking.
+  - Setup note: torch from `https://download.pytorch.org/whl/cu126` (driver 560.94 supports CUDA <= 12.6; newest there: torch 2.14.1 / torchvision 0.29.1). `pip install ultralytics` replaced it with the CPU build of torch 2.15, so install ultralytics first, then the CUDA wheels with `--force-reinstall --no-deps`. pip 22.3 cannot resolve the deps from the torch index (typing_extensions name), hence `--no-deps`. On a flaky connection pip's 2.6 GB download kept breaking (hash mismatch): download with `curl -C -` (resumes) and check the sha256 against the index.
+- [ ] Shelf views in `check_detect.py` (the look pose was out of reach; move the camera further back / tilt it)
+- [ ] Skills on detector poses instead of ground truth: GRASP (first look, second look above the book, re-look after each drag stroke), PLACE (free slot from a look at the compartment); in-hand correction stays on ground truth for now. Then `sim/test_phase5.py --perception`, done when >= 8/10.
 
 
 ### Phases 6-10: not started
@@ -403,7 +410,7 @@ ShelfSage/
 │   ├── navigation.py          # parking poses, lanes + aisle (A* in Phase 6)
 │   └── result.py              # SkillResult
 ├── control/                   # occupancy.py, kinematics.py, ik.py (done); rrt.py, astar.py, mcl.py (Phases 5-6)
-├── perception/                # make_dataset.py, train_yolo.py, detect.py, data/ (Phase 5)
+├── perception/                # make_dataset.py, train_yolo.py, detect.py, check_detect.py; data/, runs/ git-ignored
 ├── planner/                   # baseline_planner.py, llm_planner.py, prompts/, schema.json
 ├── benchmark/                 # tasks.json, run_eval.py, logs/
 ├── requirements.txt
@@ -433,6 +440,17 @@ python sim\test_phase4.py
 ```
 
 Expected: `view_scene.py` opens the library with the robot in its home pose; both tests end with `RESULT: all passed`.
+
+Perception (Phase 5, NVIDIA GPU):
+
+```powershell
+pip install ultralytics
+pip install --force-reinstall --no-deps torch==2.14.1+cu126 torchvision==0.29.1+cu126 --index-url https://download.pytorch.org/whl/cu126
+python -c "import torch; print(torch.cuda.is_available())"     # must print True
+python perception\make_dataset.py --n 1000 --seed 0            # run seeds 0-3 for 4000 images
+python perception	rain_yolo.py                                # ~55 min on an RTX 4060
+python perception\check_detect.py                              # detector vs ground truth on the scene
+```
 
 Notes:
 - Run commands from the project root with the venv active (prompt shows `(venv)`).
