@@ -416,6 +416,22 @@ def parking_and_zones(layout, tables_meta, shelves_meta):
     return zones
 
 
+def build_test_obstacles(obstacles):
+    """Movable boxes for the navigation tests (Phase 6): parked outside the room (behind the east
+    wall, so the LiDAR does not see them) and teleported into the robot's path at runtime. Free
+    bodies, so they are not part of the static map."""
+    out = []
+    for o in obstacles:
+        hx, hy, hz = o["half"]
+        x, y = o["park"]
+        out.append("\n".join([f'<body name="{o["name"]}" pos="{vec((x, y, hz + 0.001))}">',
+                              f'  <freejoint name="{o["name"]}_joint"/>',
+                              f'  <geom type="box" size="{vec((hx, hy, hz))}" mass="{o["mass"]}" '
+                              f'rgba="{vec(o["rgba"])}" friction="0.8 0.005 0.0001"/>',
+                              "</body>"]))
+    return out
+
+
 def build_zones(zones, zc):
     """Floor markings: translucent red fill, red tape border, KEEP CLEAR plate near the outer edge.
     Purely visual (no collisions, not in the LiDAR map)."""
@@ -480,6 +496,7 @@ def generate():
     body += table_xml
     body += shelf_geoms
     body += book_xml
+    body += build_test_obstacles(layout.get("test_obstacles", []))
     robot_cfg, start = layout["robot"], layout["robot_start"]
     base_body, base_actuators = robot_model.base_xml(robot_cfg, start)
     body.append(base_body)
@@ -561,6 +578,7 @@ def generate():
         "shelves": shelves_meta,
         "robot_zones": zones,
         "books": books_meta,
+        "test_obstacles": layout.get("test_obstacles", []),
         "book_dims": {"length": BOOK_L, "width": BOOK_W, "thickness": BOOK_T,
                       "rib_height": RIB_H, "rib_width": RIB_W, "mass": BOOK_MASS + 4 * RIB_MASS,
                       "table_overhang": TABLE_OVERHANG, "grip_in": GRIP_IN,

@@ -5,6 +5,10 @@
   "sign": {"center_x": 0.0, "center_z": 1.85, "width": 3.9},
   "window": {"pos": [3.97, 0.0, 1.4], "half_size": [0.02, 1.0, 0.6]},
   "robot_start": [0.0, -3.9, 1.5708],
+  "test_obstacles": [
+    {"name": "obstacle_box", "half": [0.20, 0.20, 0.25], "mass": 4.0, "rgba": [0.72, 0.55, 0.35, 1], "park": [5.5, -4.0]},
+    {"name": "obstacle_cart", "half": [0.25, 0.40, 0.45], "mass": 15.0, "rgba": [0.35, 0.40, 0.48, 1], "park": [5.5, -2.5]}
+  ],
   "robot": {
     "chassis_half": [0.30, 0.25],
     "ground_clearance": 0.05,

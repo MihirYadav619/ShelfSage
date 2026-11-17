@@ -750,6 +750,60 @@ def _base_shift(robot, goal, book, log, name):
     return _check(log)(name, not hits and res.message != "timeout")
 
 
+TOUCH_FORCE = 0.05         # N: a fingertip pushing on the spine (contact normal along the approach;
+                           # a standing book slides away under 0.1-0.3 N, so any touch counts)
+TOUCH_SHIFT = 0.006        # m: shift towards the finger that touched
+TOUCH_TRIES = 2
+
+
+def frontal_touch(robot, book, axis):
+    """Which finger presses on `book` head-on (contact normal along the approach `axis`): the world
+    direction (unit, across the gripper) from the hand's centre to that finger, or None if neither
+    (simulated fingertip force sensing, like finger_force)."""
+    m, d = robot.m, robot.d
+    bid = m.body(f"book_{book}").id
+    tcp = d.site_xpos[robot.tcp]
+    yax = d.site_xmat[robot.tcp].reshape(3, 3)[:, 1]
+    f6 = np.zeros(6)
+    best, side = 0.0, None
+    for i, c in enumerate(d.contact[:d.ncon]):
+        b1, b2 = m.geom_bodyid[c.geom1], m.geom_bodyid[c.geom2]
+        if bid not in (b1, b2):
+            continue
+        fb = b2 if b1 == bid else b1
+        if fb not in robot.finger_bodies:
+            continue
+        mujoco_contact_force(m, d, i, f6)
+        normal = c.frame[:3]
+        if abs(normal @ axis) < 0.7 or f6[0] < TOUCH_FORCE:
+            continue
+        if f6[0] > best:
+            best, side = f6[0], (1.0 if (d.xpos[fb] - tcp) @ yax > 0 else -1.0) * yax
+    return side
+
+
+def mujoco_contact_force(m, d, i, f6):
+    import mujoco
+    mujoco.mj_contactForce(m, d, i, f6)
+
+
+def approach_feeling(robot, g, fwd, side, book, step=0.005):
+    """Straight in to the grasp point in 5 mm steps, stopping if a fingertip runs into the book
+    head-on. Returns (last LinearMoveResult, None or the direction of the finger that touched)."""
+    p0 = robot.fk_world()[:3, 3]
+    n = max(1, int(math.ceil(float((g - p0) @ fwd) / step)))
+    res = None
+    for k in range(1, n + 1):
+        res = robot.move_linear(p0 + (g - p0) * k / n, z_axis=fwd, y_axis=side, speed=0.04,
+                                settle=0.3 if k == n else 0.0)
+        touched = frontal_touch(robot, book, fwd)
+        if touched is not None:
+            return res, touched
+        if not res.success and res.aborted:
+            return res, None
+    return res, None
+
+
 def pick_from_shelf(robot, book, comp, say=print, log=None):
     """Take a standing book out of a shelf compartment, robot at the compartment's column parking:
     pre-grasp 15 cm out, straight in around the protruding spine, close, lift 3 cm off the board,
@@ -772,7 +826,18 @@ def pick_from_shelf(robot, book, comp, say=print, log=None):
     pose0 = robot.true_pose()
     if not check("shelf pre-grasp", robot.move_to(g - SHELF_PRE * fwd, z_axis=fwd, y_axis=side, duration=2.5)):
         return SkillResult(False, "shelf pre-grasp not reachable")
-    if not check("approach", robot.move_linear(g, z_axis=fwd, y_axis=side, speed=0.04)):
+    for attempt in range(TOUCH_TRIES + 1):
+        res, touched = approach_feeling(robot, g, fwd, side, book)
+        if touched is None:
+            break
+        # a fingertip ran into the spine: the book lies further towards that finger (the pose
+        # from the camera was a few mm off; the fingers clear a 4 cm book by only 5 mm a side)
+        say(f"  a fingertip touched the spine, shift {TOUCH_SHIFT * 1000:.0f} mm towards it and try again")
+        log.append((f"approach: fingertip on the spine (try {attempt + 1})", attempt < TOUCH_TRIES))
+        robot.move_linear(g - SHELF_PRE * fwd, z_axis=fwd, y_axis=side, speed=0.04)
+        g = g + TOUCH_SHIFT * touched
+        robot.move_linear(g - SHELF_PRE * fwd, z_axis=fwd, y_axis=side, speed=0.04)
+    if not check("approach", res is not None and res.success and touched is None):
         return SkillResult(False, "approach failed")
     width, force = robot.grasp(book)
     if not check(f"grasp: width {width * 100:.1f} cm, squeeze {force:.0f} N", 0.03 < width < 0.045 and force > 20):

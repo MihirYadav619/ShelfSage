@@ -38,6 +38,8 @@ from control.kinematics import PandaKinematics  # noqa: E402
 META_PATH = ROOT / "scene/library_meta.json"
 
 CONTROL_DT = 0.02          # controller period (50 Hz)
+MCL_DT = 0.1               # MCL update period while driving (s)
+MCL_MIN_MOVE = 0.003       # ... only after the odometry moved this far (m / rad)
 PREFIX_HAND = "panda_hand"
 
 
@@ -96,6 +98,8 @@ class Robot:
         self.grip_act = model.actuator(self.meta["gripper_actuator"]).id
         self.tcp = model.site(self.meta["tcp_site"]).id
         self.lidar_site = model.site(self.meta["lidar_site"]).id
+        rear = self.meta.get("lidar_rear_site")
+        self.lidar_rear_site = model.site(rear).id if rear else None     # Phase 6: second LiDAR
         self.base_body = model.body("base").id
         self.robot_bodies = {b for b in range(model.nbody) if model.body_rootid[b] == self.base_body}
         hand_prefix = self.meta["arm_joints"][0].replace("joint1", "")
@@ -123,6 +127,8 @@ class Robot:
         self.on_sync = None        # optional callback before each viewer sync (e.g. draw rays)
         self._sync = None
         self.hold = None           # base pose (x, y, yaw) held while parked, see hold_base()
+        self.mcl = None            # pose_source "mcl": the particle filter (control/mcl.py)
+        self.mcl_log = []          # (time, true pose, MCL estimate, spread) after every update
         if reset:
             self.reset()
 
@@ -132,6 +138,39 @@ class Robot:
         mujoco.mj_forward(self.m, self.d)
         self.odom = np.array(self.true_pose())   # odometry starts at the known start pose
         self.hold = None
+        if self.pose_source == "mcl":
+            self.start_mcl(self.true_pose())
+
+    def start_mcl(self, pose):
+        """Particle filter around a known pose (the start pose; MCL tracks from there)."""
+        from control.mcl import MCL
+        from control.occupancy import exact_distance_grid
+        if getattr(self, "_mcl_grid", None) is None:
+            meta = json.loads(META_PATH.read_text())
+            hx, hy = (s / 2 for s in meta["room_size"])
+            cx, cy = meta["room_center"]
+            lz = self.d.site_xpos[self.lidar_site][2]
+            self._mcl_grid = exact_distance_grid(
+                self.m, self.d, lz - 0.05, lz + 0.05, res=0.01,
+                bounds=(cx - hx - 0.3, cx + hx + 0.3, cy - hy - 0.3, cy + hy + 0.3), exclude_root=self.base_body)
+        self.mcl = MCL(self._mcl_grid, self.lidar_offset(), pose, seed=int(self.rng.integers(1 << 30)))
+        self._mcl_odom = self.odom.copy()       # odometry at the last MCL update
+        self._mcl_next = self.d.time + MCL_DT
+
+    def _mcl_step(self):
+        """Predict with the odometry increment since the last update, correct with a scan."""
+        if self.d.time < self._mcl_next:
+            return
+        self._mcl_next = self.d.time + MCL_DT
+        d = self.odom - self._mcl_odom
+        c, s = math.cos(self._mcl_odom[2]), math.sin(self._mcl_odom[2])
+        delta = (c * d[0] + s * d[1], -s * d[0] + c * d[1], float(wrap(d[2])))
+        if math.hypot(delta[0], delta[1]) < MCL_MIN_MOVE and abs(delta[2]) < MCL_MIN_MOVE:
+            return                      # standing: no new information, do not grow overconfident
+        self.mcl.predict(delta)
+        self.mcl.update(*self.lidar_scan())
+        self._mcl_odom = self.odom.copy()
+        self.mcl_log.append((self.d.time, self.true_pose(), tuple(self.mcl.est), tuple(self.mcl.spread())))
 
     def true_pose(self):
         """Ground truth (x, y, yaw). For evaluation only, the controller must not use it."""
@@ -143,6 +182,14 @@ class Robot:
             return self.true_pose()
         if self.pose_source == "odom":
             return float(self.odom[0]), float(self.odom[1]), float(wrap(self.odom[2]))
+        if self.pose_source == "mcl":
+            # last MCL estimate + the odometry increment since (as a map -> odom correction)
+            d = self.odom - self._mcl_odom
+            c, s = math.cos(self._mcl_odom[2]), math.sin(self._mcl_odom[2])
+            lx, ly = c * d[0] + s * d[1], -s * d[0] + c * d[1]
+            x, y, yaw = self.mcl.est
+            ce, se = math.cos(yaw), math.sin(yaw)
+            return float(x + ce * lx - se * ly), float(y + se * lx + ce * ly), float(wrap(yaw + d[2]))
         raise ValueError(f"unknown pose source {self.pose_source}")
 
     def tcp_pose(self):
@@ -167,6 +214,8 @@ class Robot:
             meas += self.rng.normal(0, 1, 3) * self.odom_sigma
             self.odom[:2] += rot2(self.odom[2]) @ meas[:2] * dt
             self.odom[2] += meas[2] * dt
+            if self.mcl is not None:
+                self._mcl_step()
             if self.viewer is not None:
                 self._viewer_sync()
 
@@ -397,10 +446,13 @@ class Robot:
             q = r.q
             self.d.ctrl[self.arm_act] = q
             self.step(n_ctrl)
-            p = self.d.site_xpos[self.tcp] - p0              # measured TCP vs the ideal line
+            # measured TCP (own FK of the measured joints on the estimated base pose) vs the ideal
+            # line: the simulator's TCP would add the localization error, which the robot cannot
+            # see and which this move does not cause
+            p = self.fk_world(self.arm_q())[:3, 3] - p0
             dev = max(dev, float(np.linalg.norm(p - (p @ u) * u)))
         self.wait(settle)
-        err = float(np.linalg.norm(self.d.site_xpos[self.tcp] - p1))
+        err = float(np.linalg.norm(self.fk_world(self.arm_q())[:3, 3] - p1))
         return LinearMoveResult(not aborted and err < 0.005, dev, err, fails, aborted)
 
     def finger_force(self, body=None):
@@ -532,9 +584,11 @@ class Robot:
         return out
 
     # ------------------------------------------------------------------ sensors
-    def lidar_scan(self, noise=True):
-        """Return (angles in the robot frame, ranges in m). No return = range max (inf)."""
-        site = self.lidar_site
+    def lidar_scan(self, noise=True, rear=False):
+        """Return (angles in the robot frame, ranges in m). No return = range max (inf).
+        rear: the second LiDAR at the back, looking backwards (angles still in the robot frame,
+        measured from the robot's forward axis, about its own position: see lidar_offset)."""
+        site = self.lidar_rear_site if rear else self.lidar_site
         pnt = self.d.site_xpos[site].copy()
         R = self.d.site_xmat[site].reshape(3, 3)
         dirs_local = np.stack([np.cos(self.lidar_angles), np.sin(self.lidar_angles),
@@ -549,11 +603,14 @@ class Robot:
         if noise:
             hit = np.isfinite(r)
             r[hit] += self.rng.normal(0, self.lidar_noise, hit.sum())
-        return self.lidar_angles.copy(), r
+        ang = self.lidar_angles.copy()
+        if rear:
+            ang = (ang + 2 * math.pi) % (2 * math.pi) - math.pi        # turned by 180 deg
+        return ang, r
 
-    def lidar_offset(self):
+    def lidar_offset(self, rear=False):
         """LiDAR position in the robot frame (x forward)."""
-        return float(self.meta["lidar"]["x"]), 0.0
+        return (-1.0 if rear else 1.0) * float(self.meta["lidar"]["x"]), 0.0
 
     def camera_intrinsics(self):
         cam = self.meta["wrist_cam"]

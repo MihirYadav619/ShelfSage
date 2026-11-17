@@ -5,7 +5,7 @@
 
 - **Course:** Robot Manipulators (IIT Mandi), course project
 - **Team:** Chirag, Mihir
-- **Status:** Phases 1-5 of 10 complete (Phase 5 done-when met with detector poses, plus extensions: table books picked from any pose); Phase 6 next (see [Progress](#8-progress-tracker))
+- **Status:** Phases 1-6 of 10 complete (navigation: A* on the known map, MCL localization, LiDAR obstacle avoidance; the Phase 5 task also passes on the MCL pose with detector book poses); Phase 7 next (see [Progress](#8-progress-tracker))
 - **Note:** This is the *initial* idea. It can be simplified later if parts become too hard (see [Fallbacks](#9-risks-and-fallbacks)).
 
 > This README is written so that the whole project can be resumed from scratch, for example in a new chat with an AI assistant. See [How to resume](#12-how-to-resume-in-a-new-chat).
@@ -196,7 +196,7 @@ Defined in `skills/interface.py` (bind a robot with `bind(robot)`; books by titl
 | Skill | Purpose | Status |
 |---|---|---|
 | `FIND_BOOK(title)` | Look up which table or shelf holds the book (world-state lookup) | ground truth (Phase 5); world model in 7 |
-| `NAVIGATE(target)` | Drive the base to the parking pose of a table ("Table B") or shelf ("S2-A3") | fixed lanes + aisle (Phase 5); A* in 6 |
+| `NAVIGATE(target)` | Drive the base to the parking pose of a table ("Table B") or shelf ("S2-A3") | done (Phase 6): A* + MCL pose + LiDAR obstacle avoidance |
 | `GRASP(obj)` | Pick up a book with the 2-finger gripper (drags it to the table edge first if needed) | done (Phase 5) |
 | `PLACE(obj, shelf)` | Put the held book in a shelf compartment, leftmost free slot | done (Phase 5) |
 | `VERIFY(obj, shelf)` | Check that the book stands inside the compartment | ground truth (Phase 5); camera in 9 |
@@ -291,8 +291,8 @@ Update this section as work proceeds.
 
 - [x] `scene/robot_model.py`: chassis 0.6 x 0.5 m, top (arm mount) at **0.65 m** (was 0.45 m, see reach check), arm 10 cm behind the front edge; base joints `base_x/base_y/base_yaw` (their qpos *is* the world pose, via `ref`) with velocity actuators `base_vx/vy/wz`; Menagerie Panda attached with MjSpec (prefix `panda_`), gravity compensation on, `panda_tcp` site and `panda_wrist_cam` (640x480, fovy 58) on the hand; `home` keyframe; LiDAR site at the front, 0.20 m high. Robot settings live in `layout.json` -> `robot`.
 - [x] `sim/reach_check.py`: numerical IK for every Phase 5 pose (table edge grasp + lift, press-and-drag of the farthest book, shelf A/B grasp + carry) over forward distances 0.20-0.90 m from the arm mount. **Finding:** with the gripper pointing straight ahead the Panda cannot reach 0.27-0.38 m above its mount at any distance (joint 4 / joint 6 limits). At 0.45 m that dead band (0.72-0.83 m) swallowed the table grasp, so the mount went to **0.65 m** (band 0.92-1.03 m) and shelf row B to 1.00 m. Every task is now reachable from about 0.25 to 0.85 m ahead of the mount.
-- [x] `sim/robot.py`: `send_cmd_vel`, noisy `odometry` (2 % scale error + white noise), `lidar_scan` (270 deg, 541 rays, 8 m, 1 cm noise), `get_rgbd` + `camera_intrinsics`, `get_pose` (odom / true; MCL in Phase 6), `true_pose` (evaluation only), `go_to` (P-controller, speed and acceleration limits), `move_arm`, `home`, gripper, `robot_contacts`.
-- [x] `control/occupancy.py`: occupancy grid of static boxes at a height band (the known map for Phase 6).
+- [x] `sim/robot.py`: `send_cmd_vel`, noisy `odometry` (2 % scale error + white noise), `lidar_scan` (270 deg, 541 rays, 8 m, 1 cm noise), `get_rgbd` + `camera_intrinsics`, `get_pose` (odom / true / mcl, the last from Phase 6), `true_pose` (evaluation only), `go_to` (P-controller, speed and acceleration limits), `move_arm`, `home`, gripper, `robot_contacts`.
+- [x] `control/occupancy.py`: occupancy grid of static boxes at a height band (the known map for Phase 6); `exact_distance_grid` for the MCL likelihood field (Phase 6).
 - [x] `sim/test_robot.py`: **all 10 checks pass.** Drive to Table B: 0.4 cm / 0.0 deg error, no overshoot, no collisions; TCP reaches 10 cm above the middle book (error < 1 mm); LiDAR scan 100 % within 4 cm of the map; wrist depth sees the book cover at 15.5 cm and the top ribs at 14.5 cm (as expected); books stable. A combined image is written to `sim/output/phase3/results.png`. Odometry over an 11 m loop drifts about 9 cm and 5 deg, which is what MCL must fix. Images in `sim/output/phase3/` (git-ignored).
 
 Notes for later phases:
@@ -376,7 +376,20 @@ Design changes found by the Phase 4 test (scene regenerated, all checks re-run):
   - Still not handled: books turned more than 60 deg (spine facing sideways or away), a target right behind another book, books stacked or standing on a table; other books (lane check, pushing) come from the world state, not the camera.
 
 
-### Phases 6-10: not started
+### Phase 6: Navigation (done)
+
+- [x] **Test obstacles in the scene** (`layout.json` -> `test_obstacles`): a cardboard box (0.4 x 0.4 x 0.5 m) and a book cart (0.5 x 0.8 x 0.9 m), free bodies parked behind the east wall (the LiDAR does not see them; not part of the static map), teleported into the robot's way by the tests.
+- [x] **Planning** (`control/planner.py`): known map from the model's static boxes at 5 cm, in two height bands, because the robot's footprint depends on the height: floor-0.95 m the chassis (0.60 x 0.50 m; the stowed arm stays inside it, measured), 0.95-1.6 m the chassis or, holding a book in the carry pose, a rectangle reaching 0.76 m ahead of the base centre (hand + book) and 0.35 m to its right (elbow). So a carried book may pass over a table (0.75 m) but not into a shelf. Configuration space at the parking heading (the holonomic base keeps one heading while it drives) = obstacles grown by the footprint + 5 cm margin (OR of shifted grids, numpy only). **A*** 8-connected with a cost for passing within 25 cm of obstacles (prefers the middle of a passage), then line-of-sight shortcutting that keeps >= 10 cm (or what A* had). Plans take 0.02-0.3 s. A start or goal inside the margin (the drag parks the chassis 3 cm from a table; the carried book makes the shelf parking 4.5 cm too close) is joined by a short straight move from / to the nearest free point, backing straight away from the furniture.
+- [x] **MCL** (`control/mcl.py`, `Robot(pose_source="mcl")`): 300 particles from the known start pose; predict with the odometry increment (noise from distance and turn); weight with 90 of the 541 LiDAR rays against a **likelihood field** (Gaussian 2 cm on the distance from each end point to the map, + 10 % random for things not in the map); low-variance resampling when the effective count drops below half; estimate = weighted mean. Updates at 10 Hz while driving, none while standing (repeated scans of one view make the filter overconfident); between updates `get_pose()` adds the odometry increment. ~1 ms per update incl. the scan. The likelihood field is the **exact distance to the static boxes** on a 1 cm grid (`exact_distance_grid`): the distance transform of the rasterised grid put every surface up to a cell nearer, a ~1 cm bias (errors went from 8-15 mm to 4-8 mm).
+- [x] **NAVIGATE** (`skills/navigation.py`): turn to the goal heading, plan, follow the path segment by segment (up to 0.5 m/s, stopping at every corner: following it with pure pursuit the robot overshot a 90 deg corner by 11 cm and the carried book hit a book standing in a shelf), final `go_to` to the parking pose. Every 0.1 s, LiDAR end points > 15 cm from the map (placed with the robot's own pose estimate) are marked as obstacles; if they block the rest of the path the robot stops and plans again (up to 5 times, then NAVIGATE fails with the reason, for the planner). The carried book touching anything but the fingers counts as a collision.
+- [x] **Second LiDAR at the back** (`lidar_rear` site, same 270 deg / 541 rays, looking backwards; `robot.lidar_scan(rear=True)`): the base faces +y wherever it drives, so going from the shelves to the south tables it reverses, with the front LiDAR's 90 deg blind sector ahead. In the demo a box dropped there was not seen and the base hit it. Obstacle detection now uses both LiDARs (a common layout on holonomic bases); MCL still uses the front one.
+- [x] **Done-when test passed** (`sim/test_phase6.py`, MCL pose only): tour of all 6 tables and 2 columns of each shelf, **no collisions, parked <= 1.5 cm from the parking pose**; **arm reaches every work pose from every parking pose** (table edge pre-grasp / grasp, shelf rows A and B pre-grasp / grasp; 36/36 IK solutions on the MCL pose); **MCL error at the parking poses <= 8 mm, on the way <= 10 mm** (mean ~5 mm, yaw <= 0.13 deg; logged to `sim/output/phase6/mcl_log.csv`) while odometry alone drifted 3.3 cm; **a cart in the gap between tables A and B** (Table B -> E) is seen, the robot stops and takes the other gap; **a box dropped onto the path 1.2 m ahead** while driving is seen and driven around; neither obstacle is touched. Paths plotted to `sim/output/phase6/paths.png`. Viewer demo: `python sim\demo_phase6.py` (path, particles, LiDAR rays, obstacle cells, MCL error).
+- [x] **Everything on the MCL pose:** `sim/test_phase5.py --mcl` 10/10 (+ two books into one compartment, shelf -> shelf), with detector book poses too (`--mcl --perception`) 10/10; random table picks (turned up to 45 deg, books in the lane) on the MCL pose 16/16; ground-truth mode still 10/10; Phase 3 and 4 tests all passed; pick-and-place 32/32. A* paths are shorter than the old lanes (a task now ~80 s simulated instead of ~95).
+  - Found on the way: straight-line arm moves judged themselves by the simulator's TCP, so on the MCL pose every approach "failed" by the localization error (7-10 mm > 5 mm). They now use the robot's own FK of the measured joints, as a real robot would. With the detector the remaining error largely cancels (the book is seen from the same estimated pose it is grasped from).
+  - **Feeling for the spine** (`approach_feeling`, `frontal_touch` in skills/manipulation.py): the shelf grasp opens the fingers 5 cm around a 4 cm book, 5 mm to spare a side. With detector poses on the MCL pose, Physics (next to a divider, seen at an angle: 4 mm off along the shelf, plus ~2 mm from MCL) was 6 mm off and a fingertip landed on its spine. The approach now goes in 5 mm steps; a finger contact whose normal points along the approach (simulated fingertip force sensing, any force: a standing book slides away under 0.1-0.3 N) stops it, the hand backs out and shifts 6 mm towards that finger, up to two retries. With the book pose made 8 / 12 mm off on purpose the grasp succeeds after one / two retries.
+  - Not done: global localization (the start pose is known), clearing obstacle cells again when the LiDAR sees through them (the obstacle layer is kept per NAVIGATE call), turning while driving (all parking poses face +y).
+
+### Phases 7-10: not started
 
 ---
 
@@ -423,6 +436,8 @@ ShelfSage/
 │   ├── demo_extensions.py     # far / turned / blocked book, wrist camera + detector shown in the viewer
 │   ├── test_phase5.py         # Phase 5 done-when test: table -> S2-A3 with the skills, 10 books
 │   ├── test_random_pick.py    # table GRASP from random poses (any depth / angle, books in the way)
+│   ├── test_phase6.py         # Phase 6 done-when test: tour on the MCL pose, reach, obstacles
+│   ├── demo_phase6.py         # navigation demo: A* path, MCL particles, LiDAR, obstacle avoidance
 │   └── test_robot.py          # Phase 3 done-when test
 ├── skills/
 │   ├── __init__.py
@@ -430,7 +445,7 @@ ShelfSage/
 │   ├── manipulation.py        # drag to edge, table / shelf pick, shelf place (Phase 5)
 │   ├── navigation.py          # parking poses, lanes + aisle (A* in Phase 6)
 │   └── result.py              # SkillResult
-├── control/                   # occupancy.py, kinematics.py, ik.py (done); rrt.py, astar.py, mcl.py (Phases 5-6)
+├── control/                   # occupancy.py, kinematics.py, ik.py, planner.py (A*), mcl.py (done)
 ├── perception/                # make_dataset.py, train_yolo.py, detect.py, check_detect.py; data/, runs/ git-ignored
 ├── planner/                   # baseline_planner.py, llm_planner.py, prompts/, schema.json
 ├── benchmark/                 # tasks.json, run_eval.py, logs/

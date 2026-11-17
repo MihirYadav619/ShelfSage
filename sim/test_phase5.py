@@ -13,7 +13,9 @@ Usage (project root, venv active):
     python sim/test_phase5.py dl calculus  # only these books
     python sim/test_phase5.py --weld       # weld grasp instead of friction
     python sim/test_phase5.py --perception # book poses from the wrist camera + YOLO detector
+    python sim/test_phase5.py --mcl        # robot pose from MCL (LiDAR + odometry), not ground truth
 """
+import math
 import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
@@ -26,7 +28,7 @@ COMP = "S2-A3"
 BOOKS = ["ml", "dl", "robotics", "linalg", "calculus", "signals", "python", "algo", "db", "thermo"]
 
 
-def trial(books, weld=False, perception=False):
+def trial(books, weld=False, perception=False, mcl=False):
     import mujoco
     import numpy as np
     from sim.robot import Robot
@@ -35,7 +37,7 @@ def trial(books, weld=False, perception=False):
 
     model = mujoco.MjModel.from_xml_path(str(ROOT / "scene/library.xml"))
     data = mujoco.MjData(model)
-    robot = Robot(model, data, pose_source="true", grasp_mode="weld" if weld else "friction")
+    robot = Robot(model, data, pose_source="mcl" if mcl else "true", grasp_mode="weld" if weld else "friction")
     if perception:                               # book poses from the wrist camera + detector
         from skills.perception import Perception
         robot.perception = Perception(say=lambda s: None)
@@ -59,7 +61,8 @@ def trial(books, weld=False, perception=False):
         if not ok_all:
             break
     moved = max(float(np.linalg.norm(data.body(f"book_{b}").xpos - p)) for b, p in p0.items())
-    return {"books": books, "ok": ok_all and moved < 0.01, "failed_at": failed_at or
+    loc = [math.hypot(t[0] - e[0], t[1] - e[1]) for _, t, e, _ in robot.mcl_log]
+    return {"books": books, "ok": ok_all and moved < 0.01, "loc_max": max(loc) if loc else 0.0, "failed_at": failed_at or
             ("" if moved < 0.01 else f"other book moved {moved * 100:.1f} cm"),
             "moved": moved, "lines": lines, "sim_time": data.time, "wall": time.time() - t0}
 
@@ -67,18 +70,21 @@ def trial(books, weld=False, perception=False):
 def main():
     weld = "--weld" in sys.argv
     perception = "--perception" in sys.argv
+    mcl = "--mcl" in sys.argv
     picked = [a for a in sys.argv[1:] if not a.startswith("--")]
     jobs = [[b] for b in (picked or BOOKS)]
     if not picked:
         jobs.append(["ml", "robotics"])          # two books into the same compartment
         jobs.append(["physics"])                 # shelf -> shelf
     print(f"Phase 5 test: {len(jobs)} trials into {COMP}, {'weld' if weld else 'friction'} grasp, "
-          f"book poses from {'the detector' if perception else 'ground truth'}")
+          f"book poses from {'the detector' if perception else 'ground truth'}, robot pose from "
+          f"{'MCL' if mcl else 'ground truth'}")
     with ProcessPoolExecutor(max_workers=4 if perception else 6) as ex:
-        results = list(ex.map(trial, jobs, [weld] * len(jobs), [perception] * len(jobs)))
+        results = list(ex.map(trial, jobs, [weld] * len(jobs), [perception] * len(jobs), [mcl] * len(jobs)))
     for r in results:
         print(f"  {'PASS' if r['ok'] else 'FAIL'}  {' + '.join(r['books']):18s} sim {r['sim_time']:5.0f} s"
-              f"{'' if r['ok'] else '   (' + r['failed_at'] + ')'}")
+              + (f"  MCL max error {r['loc_max'] * 1000:4.1f} mm" if mcl else "")
+              + ("" if r['ok'] else '   (' + r['failed_at'] + ')'))
         for line in r["lines"]:
             print(line)
     single = [r for r in results if len(r["books"]) == 1 and r["books"][0] in BOOKS]

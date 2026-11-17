@@ -108,10 +108,11 @@ def trial(job):
     from skills import interface as sk
     from skills.manipulation import META, books_on_table, lane_blockers
 
-    book, table, c, yaw, depth, perception, extra = job
+    book, table, c, yaw, depth, perception, extra = job[:7]
+    mcl = len(job) > 7 and job[7]
     model = mujoco.MjModel.from_xml_path(str(ROOT / "scene/library.xml"))
     data = mujoco.MjData(model)
-    robot = Robot(model, data, pose_source="true")          # resets to the home keyframe
+    robot = Robot(model, data, pose_source="mcl" if mcl else "true")   # resets to the home keyframe
     put_book(model, data, book, c, yaw)
     if extra is not None:
         put_book(model, data, *extra)
@@ -158,6 +159,7 @@ def main():
     ap.add_argument("--min-depth", type=float, default=-0.03)
     ap.add_argument("--max-depth", type=float, default=0.60)
     ap.add_argument("--perception", action="store_true")
+    ap.add_argument("--mcl", action="store_true", help="robot pose from MCL, not ground truth")
     ap.add_argument("--blocker", action="store_true", help="a second book in front of every target")
     ap.add_argument("--workers", type=int, default=0)
     ap.add_argument("-v", "--verbose", action="store_true", help="print every step of failed trials")
@@ -186,7 +188,7 @@ def main():
             if bp is None:
                 continue
             extra = (b2, bp[0], bp[1])
-        jobs.append((book, s[0], s[1], s[2], s[3], args.perception, extra))
+        jobs.append((book, s[0], s[1], s[2], s[3], args.perception, extra, args.mcl))
 
     print(f"Random table picks: {len(jobs)} trials{' with a blocker' if args.blocker else ''}, "
           f"seed {args.seed}, yaw +-{args.yaw:.0f} deg, "

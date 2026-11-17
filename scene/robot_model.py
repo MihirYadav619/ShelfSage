@@ -89,6 +89,10 @@ def base_xml(cfg, start):
 {wheels}
   <geom name="lidar_puck" type="cylinder" pos="{_v(li['x'], 0, li['z'])}" size="0.04 0.025" rgba="{_v(*DARK)}" {nc} mass="0"/>
   <site name="lidar" pos="{_v(li['x'], 0, li['z'])}" size="0.01" rgba="1 0 0 1"/>
+  <!-- second LiDAR at the back, looking backwards: the base drives in any direction while
+       facing +y, and the front LiDAR's 90 deg blind sector is then ahead when it reverses -->
+  <geom name="lidar_rear_puck" type="cylinder" pos="{_v(-li['x'], 0, li['z'])}" size="0.04 0.025" rgba="{_v(*DARK)}" {nc} mass="0"/>
+  <site name="lidar_rear" pos="{_v(-li['x'], 0, li['z'])}" euler="0 0 3.14159265" size="0.01" rgba="1 0 0 1"/>
   <frame name="arm_mount" pos="{_v(cfg['mount_x'], 0, top)}"/>
 </body>"""
 
@@ -169,6 +173,7 @@ def robot_meta(cfg, start):
         "arm_stow": ARM_STOW,
         "tcp_site": f"{PREFIX}tcp",
         "lidar_site": "lidar",
+        "lidar_rear_site": "lidar_rear",
         "wrist_camera": f"{PREFIX}wrist_cam",
         **cfg,
     }

@@ -1765,6 +1765,46 @@
       ]
     }
   },
+  "test_obstacles": [
+    {
+      "name": "obstacle_box",
+      "half": [
+        0.2,
+        0.2,
+        0.25
+      ],
+      "mass": 4.0,
+      "rgba": [
+        0.72,
+        0.55,
+        0.35,
+        1
+      ],
+      "park": [
+        5.5,
+        -4.0
+      ]
+    },
+    {
+      "name": "obstacle_cart",
+      "half": [
+        0.25,
+        0.4,
+        0.45
+      ],
+      "mass": 15.0,
+      "rgba": [
+        0.35,
+        0.4,
+        0.48,
+        1
+      ],
+      "park": [
+        5.5,
+        -2.5
+      ]
+    }
+  ],
   "book_dims": {
     "length": 0.22,
     "width": 0.15,
@@ -1834,6 +1874,7 @@
     ],
     "tcp_site": "panda_tcp",
     "lidar_site": "lidar",
+    "lidar_rear_site": "lidar_rear",
     "wrist_camera": "panda_wrist_cam",
     "chassis_half": [
       0.3,

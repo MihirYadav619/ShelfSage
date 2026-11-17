@@ -72,3 +72,31 @@ def build_grid(model, data, z_lo, z_hi, res=0.02, bounds=None, exclude_root=None
         lx, ly = cs * dx + sn * dy, -sn * dx + cs * dy
         occ |= (np.abs(lx) <= half[0] + res / 2) & (np.abs(ly) <= half[1] + res / 2)
     return Grid(occ, (xmin, ymin), res)
+
+
+def exact_distance_grid(model, data, z_lo, z_hi, res=0.01, bounds=None, exclude_root=None, max_dist=0.5):
+    """Grid whose `field` is the exact distance (m, up to max_dist) from each cell centre to the
+    nearest static box at [z_lo, z_hi] (0 inside). For the MCL likelihood field: the rasterised
+    grid's distance transform puts every surface up to a cell nearer, a bias of ~1 cm."""
+    boxes = static_boxes(model, data, z_lo, z_hi, exclude_root)
+    xmin, xmax, ymin, ymax = bounds
+    nx, ny = int(np.ceil((xmax - xmin) / res)), int(np.ceil((ymax - ymin) / res))
+    field = np.full((ny, nx), max_dist, dtype=np.float32)
+    for c, half, yaw in boxes:
+        r = float(np.hypot(half[0], half[1])) + max_dist
+        i0, i1 = max(0, int((c[0] - r - xmin) / res)), min(nx, int((c[0] + r - xmin) / res) + 1)
+        j0, j1 = max(0, int((c[1] - r - ymin) / res)), min(ny, int((c[1] + r - ymin) / res) + 1)
+        if i0 >= i1 or j0 >= j1:
+            continue
+        xs = xmin + (np.arange(i0, i1) + 0.5) * res
+        ys = ymin + (np.arange(j0, j1) + 0.5) * res
+        X, Y = np.meshgrid(xs, ys)
+        cs, sn = np.cos(yaw), np.sin(yaw)
+        dx, dy = X - c[0], Y - c[1]
+        qx = np.abs(cs * dx + sn * dy) - half[0]
+        qy = np.abs(-sn * dx + cs * dy) - half[1]
+        d = np.hypot(np.maximum(qx, 0), np.maximum(qy, 0))
+        field[j0:j1, i0:i1] = np.minimum(field[j0:j1, i0:i1], d)
+    g = Grid(field <= 0.0, (xmin, ymin), res)
+    g.field = field
+    return g
