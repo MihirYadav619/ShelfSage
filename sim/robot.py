@@ -489,12 +489,15 @@ class Robot:
         return fn
 
     def guarded_move(self, direction, force, z_axis=None, y_axis=None, R=None, speed=0.01,
-                     max_dist=0.05, body=None, settle=0.3, sense=None, hold=False):
+                     max_dist=0.05, body=None, settle=0.3, sense=None, hold=False, back_off=False):
         """Move the TCP along `direction` (world) until the finger contact force reaches `force` N,
         then hold that position (a guarded move, e.g. pressing down on a book). `sense` replaces the
         finger force with another reading (e.g. object_contact_force of a held book, to set it down).
         hold: keep the force while settling, i.e. move on whenever it drops below 80 % (the press
-        relaxes to about half once the arm stops). Fails if nothing is touched within `max_dist`."""
+        relaxes to about half once the arm stops). back_off: on contact, move the command back to
+        where the arm measurably is, so it does not catch up the tracking lag and press on (setting
+        a lying book down on a table read 11-14 N instead of 2.5 N without it). Fails if nothing is
+        touched within `max_dist`."""
         read = sense if sense is not None else (lambda: self.finger_force(body)[0])
         u = np.asarray(direction, float)
         u = u / np.linalg.norm(u)
@@ -512,6 +515,11 @@ class Robot:
             fn = read()
             if fn >= force:
                 break
+        if back_off and fn >= force:
+            p = self.fk_world(self.arm_q())[:3, 3]
+            q = solve(self.kin, self.make_target(p, z_axis, y_axis, R), q, max_iter=8,
+                      tol_pos=2e-4, tol_ang=2e-3).q
+            self.d.ctrl[self.arm_act] = q
         if hold and fn >= force:
             for _ in range(int(round(settle / CONTROL_DT))):
                 if read() < 0.8 * force and np.linalg.norm(p - p0) < max_dist:

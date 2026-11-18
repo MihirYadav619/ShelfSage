@@ -112,7 +112,8 @@ def grasp(obj: str) -> SkillResult:
 
 def place(obj: str, shelf: str) -> SkillResult:
     """Put the held book into a shelf compartment, e.g. 'S2-A3' (shelf S1/S2/S3, row A/B, column
-    1-4), in its leftmost free slot. The robot must be at that shelf (NAVIGATE)."""
+    1-4), in its leftmost free slot, or lay it on a table ('Table A') at a free edge spot. The
+    robot must be at that shelf / table (NAVIGATE)."""
     r, say, log = _robot(), _ctx["say"], _ctx["log"]
     bid = book_id(obj)
     if bid is None:
@@ -120,8 +121,14 @@ def place(obj: str, shelf: str) -> SkillResult:
     if r.holding != bid:
         return SkillResult(False, f"not holding {mp.META['books'][bid]['title']}: GRASP it first")
     p = nav.parse_target(shelf)
+    if p is not None and p[0] == "table":
+        here = nav.parking_pose(f"Table {p[1]}")
+        if abs(r.get_pose()[1] - here[1]) > 0.6 or abs(r.get_pose()[0] - here[0]) > 1.0:
+            return SkillResult(False, f"not at Table {p[1]}: NAVIGATE there first")
+        say(f"PLACE {mp.META['books'][bid]['title']} on Table {p[1]}")
+        return mp.place_on_table(r, bid, p[1], say=say, log=log)
     if p is None or p[0] != "shelf" or p[2] is None:
-        return SkillResult(False, f"'{shelf}' is not a shelf compartment like 'S2-A3'")
+        return SkillResult(False, f"'{shelf}' is not a shelf compartment like 'S2-A3' or a table like 'Table A'")
     comp = p[2]
     goal = nav.parking_pose(comp)
     if goal is None:
@@ -135,14 +142,22 @@ def place(obj: str, shelf: str) -> SkillResult:
 
 
 def verify(obj: str, shelf: str) -> SkillResult:
-    """Check with simulator ground truth that obj stands inside the shelf compartment."""
+    """Check with simulator ground truth that obj stands inside the shelf compartment (or lies
+    flat on the table, for 'Table A')."""
     r = _robot()
     bid = book_id(obj)
     if bid is None:
         return SkillResult(False, f"no book called '{obj}'")
     p = nav.parse_target(shelf)
-    comp = p[2] if p is not None and p[0] == "shelf" else None
     loc = mp.locate_book(r, bid)
+    if p is not None and p[0] == "table":
+        flat = abs(r.d.body(f"book_{bid}").xmat[8]) > 0.98
+        ok = loc == ("table", p[1]) and flat and r.holding != bid
+        msg = (f"{mp.META['books'][bid]['title']} lies on Table {p[1]}" if ok else
+               f"{mp.META['books'][bid]['title']} is {'held' if loc[0] == 'held' else 'at ' + _where(loc)}"
+               f"{'' if flat else ', not lying flat'}")
+        return SkillResult(bool(ok), msg, {"where": loc[1], "pos": np.round(r.d.body(f'book_{bid}').xpos, 3).tolist()})
+    comp = p[2] if p is not None and p[0] == "shelf" else None
     standing = abs(r.d.body(f"book_{bid}").xmat[8]) < 0.2
     ok = loc == ("shelf", comp) and standing and r.holding != bid
     msg = (f"{mp.META['books'][bid]['title']} stands in {comp}" if ok else

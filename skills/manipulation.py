@@ -655,6 +655,76 @@ def pick_from_table_edge(robot, book, table, say=print, log=None):
     return SkillResult(ok, "holding the book" if ok else "pick failed", {"lifted": lifted})
 
 
+def free_edge_spot(robot, table, near_lateral=None):
+    """Index of a free edge spot of `table` (no book lying within 15 cm of it), the one nearest
+    `near_lateral` (world coordinate along the edge) if given; None if all are taken."""
+    fwd, left, _, _ = table_frame(table)
+    spots = [np.array(p) for p in META["tables"][table]["edge_spots"]]
+    taken = [robot.d.body(f"book_{b}").xpos[:2] for b in books_on_table(robot, table)]
+    free = [k for k, sp in enumerate(spots) if all(np.linalg.norm(sp[:2] - q) > 0.15 for q in taken)]
+    if not free:
+        return None
+    if near_lateral is None:
+        return free[0]
+    return min(free, key=lambda k: abs(float(spots[k] @ left) - near_lateral))
+
+
+def place_on_table(robot, book, table, spot=None, say=print, log=None):
+    """Lay the held book on `table` at an edge spot, spine towards the robot and 3 cm past the
+    edge (where the table grasp picks books up): the reverse of pick_from_table_edge. Park in
+    line with the spot, swing the book from the carry pose to lying, 10 cm above and 16 cm back,
+    correct for where it sits in the fingers, forward and down until the table carries it,
+    let go, slide the fingers straight back off the spine, stow."""
+    log = [] if log is None else log
+    check = _check(log)
+    fwd, left, _, _ = table_frame(table)
+    if spot is None:
+        x, y, _ = robot.get_pose()
+        spot = free_edge_spot(robot, table, near_lateral=float(np.array([x, y, 0.0]) @ left))
+        if spot is None:
+            return SkillResult(False, f"no free edge spot on Table {table}")
+    target = np.array(META["tables"][table]["edge_spots"][spot])        # book centre when placed
+    g = target - fwd * (BD["width"] / 2 - BD["grip_in"]["table"])       # TCP: around the spine
+    say(f"lay {META['books'][book]['title']} on Table {table}, spot {spot + 1}")
+    res = robot.go_to(*table_parking(robot, table, float(target @ left), META["robot"]["park_clearance"]["table"]),
+                      tol_xy=0.01, tol_yaw=0.01, v_max=0.2, a_max=0.3)
+    hits = [h for h in res.collisions if f"book_{book}" not in h]
+    if not check("park in line with the spot", not hits and res.message != "timeout"):
+        return SkillResult(False, f"drive failed: {res.message} {hits}")
+    # The fingers close vertically. Which way up the book ends is fixed by joint 7's range: the
+    # shelf grasp is reachable with one roll of the hand only, and from it only the turn that
+    # lays a shelf book cover-down is reachable at the table (the other needs joints 4/5 at their
+    # limits, in a different wrist family at every point of the move). Spine towards the robot
+    # and over the edge as for a pick; the cover-up way would need a regrasp.
+    R = None
+    above = g + LIFT * UP - BACK * fwd
+    if not check("pre-place (book lying, above and back)",
+                 robot.move_to(above, z_axis=fwd, y_axis=UP, duration=3.0, allow=(f"book_{book}",))):
+        return SkillResult(False, "pre-place not reachable")
+    shift = in_hand_correction(robot, book, g, target)
+    say(f"  book sits {np.linalg.norm(shift) * 100:.1f} cm off in the hand, correcting")
+    g = g + shift
+    check("forward over the table", robot.move_linear(g + LIFT * UP, z_axis=fwd, y_axis=UP, speed=0.05))
+    gd = set_down(robot, book, fwd, UP, LIFT + 0.03)
+    check(f"set down ({gd.force:.1f} N on the table)", gd)
+    robot.release(book)
+    robot.set_gripper_width(W_OPEN, 0.5)
+    tcp = robot.fk_world()[:3, 3]
+    check("slide the fingers back off the spine",
+          robot.move_linear(tcp - BACK * fwd, z_axis=fwd, y_axis=UP, speed=0.05))
+    robot.move_linear(robot.fk_world()[:3, 3] + 0.10 * UP, z_axis=fwd, y_axis=UP, speed=0.05)
+    robot.stow()
+    robot.wait(0.5)
+    b = robot.d.body(f"book_{book}")
+    Rb = b.xmat.reshape(3, 3)
+    flat = abs(float(Rb[2, 2]))                                   # either cover up
+    off = float(np.linalg.norm(b.xpos[:2] - target[:2]))
+    ok = flat > 0.98 and off < 0.03 and abs(b.xpos[2] - target[2]) < 0.02
+    check(f"book lies flat ({'cover up' if Rb[2, 2] > 0 else 'cover down'}), {off * 100:.1f} cm from the spot", ok)
+    return SkillResult(ok, f"laid on Table {table}, spot {spot + 1}" if ok else "the book did not end where it should",
+                       {"spot": spot, "off": off})
+
+
 # ---------------------------------------------------------------------------- shelf
 SHELF_PRE = 0.15           # pre-grasp / pre-place / pull-out: this far out of the shelf (m)
 SHELF_BACK = 0.10          # the base backs off this far before swinging the book to / from the carry
@@ -740,7 +810,8 @@ def set_down(robot, book, z_axis, y_axis, max_dist):
     """Lower the held book until the surface carries SET_DOWN_FORCE of it (wherever it sits in the
     fingers; a fixed height failed after a few mm of slip)."""
     return robot.guarded_move(-UP, SET_DOWN_FORCE, z_axis=z_axis, y_axis=y_axis, speed=0.02,
-                              max_dist=max_dist, sense=lambda: robot.object_contact_force(f"book_{book}"))
+                              max_dist=max_dist, sense=lambda: robot.object_contact_force(f"book_{book}"),
+                              back_off=True)
 
 
 def _base_shift(robot, goal, book, log, name):
