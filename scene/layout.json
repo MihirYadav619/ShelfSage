@@ -2,7 +2,6 @@
   "room": {"size": [8.0, 8.0], "center": [0.0, -1.0], "wall_height": 2.5},
   "robot_zones": {"margin": 0.06, "tape": 0.05, "label_size": [0.90, 0.22],
                   "text": "KEEP CLEAR", "subtext": "ROBOT WORK ZONE"},
-  "sign": {"center_x": 0.0, "center_z": 1.85, "width": 3.9},
   "window": {"pos": [3.97, 0.0, 1.4], "half_size": [0.02, 1.0, 0.6]},
   "robot_start": [0.0, -3.9, 1.5708],
   "test_obstacles": [

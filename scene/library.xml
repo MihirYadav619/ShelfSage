@@ -8,7 +8,7 @@
   <visual>
     <global offwidth="1920" offheight="1080"/>
     <quality offsamples="8"/>
-    <headlight ambient="0.3 0.3 0.3" diffuse="0.3 0.3 0.3" specular="0 0 0"/>
+    <headlight ambient="0.27 0.27 0.27" diffuse="0.24 0.24 0.24" specular="0 0 0"/>
     <map znear="0.001"/>
     <rgba haze="0.75 0.82 0.9 1"/>
   </visual>
@@ -49,9 +49,9 @@
 
   <asset>
     <texture type="skybox" colorspace="auto" builtin="gradient" rgb1="0.62 0.78 0.95" rgb2="0.2 0.25 0.35" width="512" height="3072"/>
-    <texture type="2d" colorspace="linear" name="floor_tex" file="floor_wood.png"/>
-    <texture type="2d" colorspace="linear" name="wood_tex" file="wood.png"/>
-    <texture type="2d" colorspace="linear" name="shelf_tex" file="shelf_wood.png"/>
+    <texture type="2d" colorspace="linear" name="floor_tex" file="floor_laminate.png"/>
+    <texture type="2d" colorspace="linear" name="wood_tex" file="oak_veneer.png"/>
+    <texture type="2d" colorspace="linear" name="shelf_tex" file="oak_veneer.png"/>
     <texture type="2d" colorspace="linear" name="plaster_tex" file="plaster.png"/>
     <texture type="2d" colorspace="linear" name="sign_tex" file="sign_shelfsage.png"/>
     <texture type="2d" colorspace="linear" name="spine_linalg_tex" file="spine_linalg.png"/>
@@ -211,7 +211,22 @@
     <texture type="2d" colorspace="linear" name="cover_materials_head_tex" file="cover_materials_head.png"/>
     <texture type="2d" colorspace="linear" name="cover_materials_tail_tex" file="cover_materials_tail.png"/>
     <texture type="2d" colorspace="linear" name="zone_label_tex" file="zone_label.png"/>
-    <material name="floor_mat" texture="floor_tex" texrepeat="0.5 0.5" texuniform="true" specular="0.35" shininess="0.35" reflectance="0.1"/>
+    <texture type="2d" colorspace="linear" name="decor_oak" file="oak_veneer.png"/>
+    <texture type="2d" colorspace="linear" name="decor_art_0" file="decor/art_0.png"/>
+    <texture type="2d" colorspace="linear" name="decor_art_1" file="decor/art_1.png"/>
+    <texture type="2d" colorspace="linear" name="decor_art_2" file="decor/art_2.png"/>
+    <texture type="2d" colorspace="linear" name="decor_coffee_table_round_01_0" file="decor/coffee_table_round_01_0.png"/>
+    <texture type="2d" colorspace="linear" name="decor_ceramic_vase_03_0" file="decor/ceramic_vase_03_0.png"/>
+    <texture type="2d" colorspace="linear" name="decor_periwinkle_plant_0" file="decor/periwinkle_plant_0.png"/>
+    <texture type="2d" colorspace="linear" name="decor_flower_gazania_0" file="decor/flower_gazania_0.png"/>
+    <texture type="2d" colorspace="linear" name="decor_mid_century_lounge_chair_0" file="decor/mid_century_lounge_chair_0.png"/>
+    <texture type="2d" colorspace="linear" name="decor_modern_arm_chair_01_0" file="decor/modern_arm_chair_01_0.png"/>
+    <texture type="2d" colorspace="linear" name="decor_modern_arm_chair_01_1" file="decor/modern_arm_chair_01_1.png"/>
+    <texture type="2d" colorspace="linear" name="decor_ceramic_vase_01_0" file="decor/ceramic_vase_01_0.png"/>
+    <texture type="2d" colorspace="linear" name="decor_flower_ursinia_0" file="decor/flower_ursinia_0.png"/>
+    <texture type="2d" colorspace="linear" name="decor_ceramic_vase_04_0" file="decor/ceramic_vase_04_0.png"/>
+    <texture type="2d" colorspace="auto" name="decor_ground_tex" builtin="checker" mark="edge" rgb1="0.16 0.24 0.34" rgb2="0.11 0.17 0.26" markrgb="0.42 0.52 0.64" width="512" height="512"/>
+    <material name="floor_mat" texture="floor_tex" texrepeat="0.5 0.5" texuniform="true" specular="0.35" reflectance="0.08"/>
     <material name="wood_mat" texture="wood_tex" texuniform="true" specular="0.25" shininess="0.3"/>
     <material name="shelf_mat" texture="shelf_tex" texuniform="true" specular="0.25" shininess="0.3"/>
     <material name="plaster_mat" texture="plaster_tex" texrepeat="0.5 0.5" texuniform="true" specular="0.05" shininess="0.05"/>
@@ -378,6 +393,41 @@
     <material name="panda_black" class="panda_panda" rgba="0.25 0.25 0.25 1"/>
     <material name="panda_green" class="panda_panda" rgba="0 1 0 1"/>
     <material name="panda_light_blue" class="panda_panda" rgba="0.039216 0.541176 0.780392 1"/>
+    <material name="decor_oak_mat" texture="decor_oak" texrepeat="2 2" texuniform="true" specular="0.2" shininess="0.3"/>
+    <material name="decor_black_mat" specular="0.4" shininess="0.2" rgba="0.08 0.08 0.09 1"/>
+    <material name="decor_led_mat" emission="1" specular="0.15" shininess="0.2" rgba="1 0.98 0.94 1"/>
+    <material name="decor_art_0_mat" texture="decor_art_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_art_1_mat" texture="decor_art_1" specular="0.15" shininess="0.2"/>
+    <material name="decor_art_2_mat" texture="decor_art_2" specular="0.15" shininess="0.2"/>
+    <material name="decor_coffee_table_round_01_0_s50_mat" texture="decor_coffee_table_round_01_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_ceramic_vase_03_0_s100_mat" texture="decor_ceramic_vase_03_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_periwinkle_plant_3_s190_mat" texture="decor_periwinkle_plant_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_flower_gazania_0_s140_mat" texture="decor_flower_gazania_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_flower_gazania_1_s140_mat" texture="decor_flower_gazania_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_flower_gazania_2_s140_mat" texture="decor_flower_gazania_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_flower_gazania_3_s140_mat" texture="decor_flower_gazania_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_flower_gazania_4_s130_mat" texture="decor_flower_gazania_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_flower_gazania_5_s130_mat" texture="decor_flower_gazania_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_mid_century_lounge_chair_0_s100_mat" texture="decor_mid_century_lounge_chair_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_modern_arm_chair_01_0_s100_mat" texture="decor_modern_arm_chair_01_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_modern_arm_chair_01_1_s100_mat" texture="decor_modern_arm_chair_01_1" specular="0.15" shininess="0.2"/>
+    <material name="decor_ceramic_vase_01_0_s100_mat" texture="decor_ceramic_vase_01_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_periwinkle_plant_2_s180_mat" texture="decor_periwinkle_plant_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_periwinkle_plant_5_s180_mat" texture="decor_periwinkle_plant_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_flower_ursinia_3_s150_mat" texture="decor_flower_ursinia_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_flower_ursinia_2_s150_mat" texture="decor_flower_ursinia_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_flower_ursinia_4_s100_mat" texture="decor_flower_ursinia_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_periwinkle_plant_0_s180_mat" texture="decor_periwinkle_plant_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_periwinkle_plant_5_s170_mat" texture="decor_periwinkle_plant_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_flower_ursinia_3_s140_mat" texture="decor_flower_ursinia_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_flower_ursinia_1_s150_mat" texture="decor_flower_ursinia_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_flower_gazania_3_s130_mat" texture="decor_flower_gazania_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_periwinkle_plant_2_s170_mat" texture="decor_periwinkle_plant_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_flower_gazania_3_s150_mat" texture="decor_flower_gazania_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_flower_gazania_4_s140_mat" texture="decor_flower_gazania_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_flower_gazania_0_s130_mat" texture="decor_flower_gazania_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_ceramic_vase_04_0_s100_mat" texture="decor_ceramic_vase_04_0" specular="0.15" shininess="0.2"/>
+    <material name="decor_ground_mat" texture="decor_ground_tex" texrepeat="0.5 0.5" texuniform="true" specular="0.3" shininess="0.4" reflectance="0.15"/>
     <mesh name="panda_link0_c" content_type="model/stl" file="link0.stl"/>
     <mesh name="panda_link1_c" content_type="model/stl" file="link1.stl"/>
     <mesh name="panda_link2_c" content_type="model/stl" file="link2.stl"/>
@@ -445,6 +495,34 @@
     <mesh name="panda_hand_4" content_type="model/obj" file="hand_4.obj"/>
     <mesh name="panda_finger_0" content_type="model/obj" file="finger_0.obj"/>
     <mesh name="panda_finger_1" content_type="model/obj" file="finger_1.obj"/>
+    <mesh name="decor_coffee_table_round_01_0_s50" content_type="model/obj" file="../../../../scene/assets/decor/coffee_table_round_01_0.obj" scale="0.5 0.5 0.5" inertia="shell"/>
+    <mesh name="decor_ceramic_vase_03_0_s100" content_type="model/obj" file="../../../../scene/assets/decor/ceramic_vase_03_0.obj" inertia="shell"/>
+    <mesh name="decor_periwinkle_plant_3_s190" content_type="model/obj" file="../../../../scene/assets/decor/periwinkle_plant_3.obj" scale="1.9 1.9 1.9" inertia="shell"/>
+    <mesh name="decor_flower_gazania_0_s140" content_type="model/obj" file="../../../../scene/assets/decor/flower_gazania_0.obj" scale="1.4 1.4 1.4" inertia="shell"/>
+    <mesh name="decor_flower_gazania_1_s140" content_type="model/obj" file="../../../../scene/assets/decor/flower_gazania_1.obj" scale="1.4 1.4 1.4" inertia="shell"/>
+    <mesh name="decor_flower_gazania_2_s140" content_type="model/obj" file="../../../../scene/assets/decor/flower_gazania_2.obj" scale="1.4 1.4 1.4" inertia="shell"/>
+    <mesh name="decor_flower_gazania_3_s140" content_type="model/obj" file="../../../../scene/assets/decor/flower_gazania_3.obj" scale="1.4 1.4 1.4" inertia="shell"/>
+    <mesh name="decor_flower_gazania_4_s130" content_type="model/obj" file="../../../../scene/assets/decor/flower_gazania_4.obj" scale="1.3 1.3 1.3" inertia="shell"/>
+    <mesh name="decor_flower_gazania_5_s130" content_type="model/obj" file="../../../../scene/assets/decor/flower_gazania_5.obj" scale="1.3 1.3 1.3" inertia="shell"/>
+    <mesh name="decor_mid_century_lounge_chair_0_s100" content_type="model/obj" file="../../../../scene/assets/decor/mid_century_lounge_chair_0.obj" inertia="shell"/>
+    <mesh name="decor_modern_arm_chair_01_0_s100" content_type="model/obj" file="../../../../scene/assets/decor/modern_arm_chair_01_0.obj" inertia="shell"/>
+    <mesh name="decor_modern_arm_chair_01_1_s100" content_type="model/obj" file="../../../../scene/assets/decor/modern_arm_chair_01_1.obj" inertia="shell"/>
+    <mesh name="decor_ceramic_vase_01_0_s100" content_type="model/obj" file="../../../../scene/assets/decor/ceramic_vase_01_0.obj" inertia="shell"/>
+    <mesh name="decor_periwinkle_plant_2_s180" content_type="model/obj" file="../../../../scene/assets/decor/periwinkle_plant_2.obj" scale="1.8 1.8 1.8" inertia="shell"/>
+    <mesh name="decor_periwinkle_plant_5_s180" content_type="model/obj" file="../../../../scene/assets/decor/periwinkle_plant_5.obj" scale="1.8 1.8 1.8" inertia="shell"/>
+    <mesh name="decor_flower_ursinia_3_s150" content_type="model/obj" file="../../../../scene/assets/decor/flower_ursinia_3.obj" scale="1.5 1.5 1.5" inertia="shell"/>
+    <mesh name="decor_flower_ursinia_2_s150" content_type="model/obj" file="../../../../scene/assets/decor/flower_ursinia_2.obj" scale="1.5 1.5 1.5" inertia="shell"/>
+    <mesh name="decor_flower_ursinia_4_s100" content_type="model/obj" file="../../../../scene/assets/decor/flower_ursinia_4.obj" inertia="shell"/>
+    <mesh name="decor_periwinkle_plant_0_s180" content_type="model/obj" file="../../../../scene/assets/decor/periwinkle_plant_0.obj" scale="1.8 1.8 1.8" inertia="shell"/>
+    <mesh name="decor_periwinkle_plant_5_s170" content_type="model/obj" file="../../../../scene/assets/decor/periwinkle_plant_5.obj" scale="1.7 1.7 1.7" inertia="shell"/>
+    <mesh name="decor_flower_ursinia_3_s140" content_type="model/obj" file="../../../../scene/assets/decor/flower_ursinia_3.obj" scale="1.4 1.4 1.4" inertia="shell"/>
+    <mesh name="decor_flower_ursinia_1_s150" content_type="model/obj" file="../../../../scene/assets/decor/flower_ursinia_1.obj" scale="1.5 1.5 1.5" inertia="shell"/>
+    <mesh name="decor_flower_gazania_3_s130" content_type="model/obj" file="../../../../scene/assets/decor/flower_gazania_3.obj" scale="1.3 1.3 1.3" inertia="shell"/>
+    <mesh name="decor_periwinkle_plant_2_s170" content_type="model/obj" file="../../../../scene/assets/decor/periwinkle_plant_2.obj" scale="1.7 1.7 1.7" inertia="shell"/>
+    <mesh name="decor_flower_gazania_3_s150" content_type="model/obj" file="../../../../scene/assets/decor/flower_gazania_3.obj" scale="1.5 1.5 1.5" inertia="shell"/>
+    <mesh name="decor_flower_gazania_4_s140" content_type="model/obj" file="../../../../scene/assets/decor/flower_gazania_4.obj" scale="1.4 1.4 1.4" inertia="shell"/>
+    <mesh name="decor_flower_gazania_0_s130" content_type="model/obj" file="../../../../scene/assets/decor/flower_gazania_0.obj" scale="1.3 1.3 1.3" inertia="shell"/>
+    <mesh name="decor_ceramic_vase_04_0_s100" content_type="model/obj" file="../../../../scene/assets/decor/ceramic_vase_04_0.obj" inertia="shell"/>
   </asset>
 
   <worldbody>
@@ -453,7 +531,7 @@
     <geom name="baseboard_north" size="4 0.01 0.06" pos="0 2.99 0.06" type="box" contype="0" conaffinity="0" rgba="0.35 0.24 0.15 1"/>
     <geom name="wall_s" size="4.05 0.05 1.25" pos="0 -5.05 1.25" type="box" group="4" material="plaster_mat"/>
     <geom name="baseboard_south" size="4 0.01 0.06" pos="0 -4.99 0.06" type="box" contype="0" conaffinity="0" group="4" rgba="0.35 0.24 0.15 1"/>
-    <geom name="wall_e" size="0.05 4.05 1.25" pos="4.05 -1 1.25" type="box" material="plaster_mat"/>
+    <geom name="wall_e" size="0.05 4.05 1.25" pos="4.05 -1 1.25" type="box" group="3" material="plaster_mat"/>
     <geom name="baseboard_east" size="0.01 4 0.06" pos="3.99 -1 0.06" type="box" contype="0" conaffinity="0" rgba="0.35 0.24 0.15 1"/>
     <geom name="wall_w" size="0.05 4.05 1.25" pos="-4.05 -1 1.25" type="box" material="plaster_mat"/>
     <geom name="baseboard_west" size="0.01 4 0.06" pos="-3.99 -1 0.06" type="box" contype="0" conaffinity="0" rgba="0.35 0.24 0.15 1"/>
@@ -519,7 +597,6 @@
     <geom size="0.03 0.015 0.6" pos="3.97 0 1.4" type="box" contype="0" conaffinity="0" rgba="0.95 0.95 0.93 1"/>
     <geom size="0.03 1 0.015" pos="3.97 0 1.4" type="box" contype="0" conaffinity="0" rgba="0.95 0.95 0.93 1"/>
     <geom size="0.08 1.08 0.015" pos="3.92 0 0.75" type="box" contype="0" conaffinity="0" rgba="0.95 0.95 0.93 1"/>
-    <geom name="wall_sign" size="1.95 0.65 0.01" pos="0 2.999 1.85" quat="0.707107 0.707107 0 0" type="plane" contype="0" conaffinity="0" material="sign_mat"/>
     <geom size="0.01 0.175 0.71" pos="-3.41 2.7 0.71" type="box" material="shelf_mat"/>
     <geom size="0.01 0.175 0.71" pos="-1.79 2.7 0.71" type="box" material="shelf_mat"/>
     <geom name="S1_back" size="0.82 0.005 0.71" pos="-2.6 2.88 0.71" type="box" material="shelf_mat"/>
@@ -561,12 +638,12 @@
     <geom size="0.006 0.175 0.2" pos="3 2.7 1.2" type="box" material="shelf_mat"/>
     <camera name="overview" quat="0.844119 0.536156 0 0" pos="0 -2.8 2.3" fovy="80"/>
     <camera name="cutaway" quat="0.857508 0.514471 0 0" pos="0 -9.5 5.3"/>
-    <light name="lamp0" pos="-2.2 -0.8 2.4" cutoff="90" exponent="1" diffuse="0.38 0.36 0.33" specular="0.05 0.05 0.05"/>
-    <light name="lamp1" pos="2.2 -0.8 2.4" cutoff="90" exponent="1" diffuse="0.38 0.36 0.33" specular="0.05 0.05 0.05"/>
-    <light name="lamp2" pos="0 0.8 2.4" cutoff="90" exponent="1" diffuse="0.38 0.36 0.33" specular="0.05 0.05 0.05"/>
-    <light name="lamp3" pos="0 2 2.4" cutoff="90" exponent="1" diffuse="0.38 0.36 0.33" specular="0.05 0.05 0.05"/>
-    <light name="lamp4" pos="-2.2 -3.5 2.4" cutoff="90" exponent="1" diffuse="0.38 0.36 0.33" specular="0.05 0.05 0.05"/>
-    <light name="lamp5" pos="2.2 -3.5 2.4" cutoff="90" exponent="1" diffuse="0.38 0.36 0.33" specular="0.05 0.05 0.05"/>
+    <light name="lamp0" pos="-2.2 -0.8 2.4" cutoff="90" exponent="1" diffuse="0.42 0.42 0.41" specular="0.05 0.05 0.05"/>
+    <light name="lamp1" pos="2.2 -0.8 2.4" cutoff="90" exponent="1" diffuse="0.42 0.42 0.41" specular="0.05 0.05 0.05"/>
+    <light name="lamp2" pos="0 0.8 2.4" cutoff="90" exponent="1" diffuse="0.42 0.42 0.41" specular="0.05 0.05 0.05"/>
+    <light name="lamp3" pos="0 2 2.4" cutoff="90" exponent="1" diffuse="0.42 0.42 0.41" specular="0.05 0.05 0.05"/>
+    <light name="lamp4" pos="-2.2 -3.5 2.4" cutoff="90" exponent="1" diffuse="0.42 0.42 0.41" specular="0.05 0.05 0.05"/>
+    <light name="lamp5" pos="2.2 -3.5 2.4" cutoff="90" exponent="1" diffuse="0.42 0.42 0.41" specular="0.05 0.05 0.05"/>
     <body name="table_A" pos="-2.5 -2 0">
       <geom size="0.6 0.4 0.015" pos="0 0 0.735" type="box" material="wood_mat"/>
       <geom size="0.035 0.035 0.36" pos="-0.54 -0.34 0.36" type="box" material="wood_mat"/>
@@ -1381,6 +1458,213 @@
           </body>
         </body>
       </frame>
+    </body>
+    <body name="decor">
+      <geom size="0.025 0.012 1.25" pos="-3.95 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-3.85 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-3.75 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-3.65 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-3.55 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-3.45 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-3.35 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-3.25 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-3.15 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-3.05 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-2.95 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-2.85 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-2.75 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-2.65 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-2.55 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-2.45 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-2.35 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-2.25 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-2.15 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-2.05 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-1.95 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-1.85 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-1.75 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-1.65 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-1.55 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-1.45 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-1.35 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-1.25 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-1.15 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-1.05 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-0.95 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-0.85 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-0.75 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-0.65 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-0.55 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-0.45 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-0.35 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-0.25 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-0.15 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="-0.05 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="0.05 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="0.15 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="0.25 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="0.35 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="0.45 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="0.55 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="0.65 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="0.75 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="0.85 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="0.95 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="1.05 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="1.15 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="1.25 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="1.35 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="1.45 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="1.55 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="1.65 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="1.75 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="1.85 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="1.95 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="2.05 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="2.15 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="2.25 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="2.35 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="2.45 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="2.55 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="2.65 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="2.75 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="2.85 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="2.95 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="3.05 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="3.15 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="3.25 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="3.35 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="3.45 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="3.55 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="3.65 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="3.75 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="3.85 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.025 0.012 1.25" pos="3.95 2.975 1.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_oak_mat"/>
+      <geom size="0.6 0.03 0.02" pos="-2.5 -2 2.36" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_black_mat"/>
+      <geom size="0.58 0.022 0.004" pos="-2.5 -2 2.338" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_led_mat"/>
+      <geom size="0.003 0.06" pos="-3 -2 2.44" quat="0 1 0 0" type="capsule" contype="0" conaffinity="0" group="2" rgba="0.1 0.1 0.1 1" mass="0"/>
+      <geom size="0.003 0.06" pos="-2 -2 2.44" quat="0 1 0 0" type="capsule" contype="0" conaffinity="0" group="2" rgba="0.1 0.1 0.1 1" mass="0"/>
+      <geom size="0.6 0.03 0.02" pos="2.5 -2 2.36" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_black_mat"/>
+      <geom size="0.58 0.022 0.004" pos="2.5 -2 2.338" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_led_mat"/>
+      <geom size="0.003 0.06" pos="2 -2 2.44" quat="0 1 0 0" type="capsule" contype="0" conaffinity="0" group="2" rgba="0.1 0.1 0.1 1" mass="0"/>
+      <geom size="0.003 0.06" pos="3 -2 2.44" quat="0 1 0 0" type="capsule" contype="0" conaffinity="0" group="2" rgba="0.1 0.1 0.1 1" mass="0"/>
+      <geom size="0.6 0.03 0.02" pos="-2.5 0.5 2.36" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_black_mat"/>
+      <geom size="0.58 0.022 0.004" pos="-2.5 0.5 2.338" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_led_mat"/>
+      <geom size="0.003 0.06" pos="-3 0.5 2.44" quat="0 1 0 0" type="capsule" contype="0" conaffinity="0" group="2" rgba="0.1 0.1 0.1 1" mass="0"/>
+      <geom size="0.003 0.06" pos="-2 0.5 2.44" quat="0 1 0 0" type="capsule" contype="0" conaffinity="0" group="2" rgba="0.1 0.1 0.1 1" mass="0"/>
+      <geom size="0.6 0.03 0.02" pos="2.5 0.5 2.36" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_black_mat"/>
+      <geom size="0.58 0.022 0.004" pos="2.5 0.5 2.338" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_led_mat"/>
+      <geom size="0.003 0.06" pos="2 0.5 2.44" quat="0 1 0 0" type="capsule" contype="0" conaffinity="0" group="2" rgba="0.1 0.1 0.1 1" mass="0"/>
+      <geom size="0.003 0.06" pos="3 0.5 2.44" quat="0 1 0 0" type="capsule" contype="0" conaffinity="0" group="2" rgba="0.1 0.1 0.1 1" mass="0"/>
+      <geom size="0.85 0.62 0.004" pos="-3.05 -4.35 0.004" type="box" contype="0" conaffinity="0" group="2" rgba="0.78 0.78 0.76 1" mass="0"/>
+      <geom size="0.65 0.4 0.13" pos="-3.57 -4.3 0.25" quat="0.707107 0 0 -0.707107" type="box" contype="0" conaffinity="0" group="2" rgba="0.45 0.47 0.5 1" mass="0"/>
+      <geom size="0.65 0.09 0.2" pos="-3.88 -4.3 0.55" quat="0.707107 0 0 -0.707107" type="box" contype="0" conaffinity="0" group="2" rgba="0.45 0.47 0.5 1" mass="0"/>
+      <geom size="0.08 0.4 0.08" pos="-3.57 -3.73 0.42" quat="0.707107 0 0 -0.707107" type="box" contype="0" conaffinity="0" group="2" rgba="0.45 0.47 0.5 1" mass="0"/>
+      <geom size="0.225 0.23 0.05" pos="-3.51 -4.055 0.42" quat="0.707107 0 0 -0.707107" type="box" contype="0" conaffinity="0" group="2" rgba="0.55 0.57 0.6 1" mass="0"/>
+      <geom size="0.015 0.015 0.06" pos="-3.87 -3.75 0.06" quat="0.707107 0 0 -0.707107" type="box" contype="0" conaffinity="0" group="2" rgba="0.08 0.08 0.09 1" mass="0"/>
+      <geom size="0.015 0.015 0.06" pos="-3.27 -3.75 0.06" quat="0.707107 0 0 -0.707107" type="box" contype="0" conaffinity="0" group="2" rgba="0.08 0.08 0.09 1" mass="0"/>
+      <geom size="0.08 0.4 0.08" pos="-3.57 -4.87 0.42" quat="0.707107 0 0 -0.707107" type="box" contype="0" conaffinity="0" group="2" rgba="0.45 0.47 0.5 1" mass="0"/>
+      <geom size="0.225 0.23 0.05" pos="-3.51 -4.545 0.42" quat="0.707107 0 0 -0.707107" type="box" contype="0" conaffinity="0" group="2" rgba="0.55 0.57 0.6 1" mass="0"/>
+      <geom size="0.015 0.015 0.06" pos="-3.87 -4.85 0.06" quat="0.707107 0 0 -0.707107" type="box" contype="0" conaffinity="0" group="2" rgba="0.08 0.08 0.09 1" mass="0"/>
+      <geom size="0.015 0.015 0.06" pos="-3.27 -4.85 0.06" quat="0.707107 0 0 -0.707107" type="box" contype="0" conaffinity="0" group="2" rgba="0.08 0.08 0.09 1" mass="0"/>
+      <geom name="decor_proxy_0" size="0.65 0.4 0.375" pos="-3.57 -4.3 0.375" quat="0.707107 0 0 -0.707107" type="box" group="3" rgba="0.5 0.5 0.5 0.3"/>
+      <geom pos="-2.75 -4.35 0.0005" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_coffee_table_round_01_0_s50_mat" mesh="decor_coffee_table_round_01_0_s50"/>
+      <geom name="decor_proxy_1" size="0.3255 0.3255 0.12275" pos="-2.75 -4.35 0.12275" type="box" group="3" rgba="0.5 0.5 0.5 0.3"/>
+      <geom pos="-2.65 -4.35 0.245" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_ceramic_vase_03_0_s100_mat" mesh="decor_ceramic_vase_03_0_s100"/>
+      <geom size="0.2 0.21" pos="-1.75 -4.7 0.21" type="cylinder" contype="0" conaffinity="0" group="2" rgba="0.96 0.96 0.95 1" mass="0"/>
+      <geom size="0.185 0.005" pos="-1.75 -4.7 0.4" type="cylinder" contype="0" conaffinity="0" group="2" rgba="0.22 0.15 0.1 1" mass="0"/>
+      <geom pos="-1.72416 -4.68105 0.390046" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_periwinkle_plant_3_s190_mat" mesh="decor_periwinkle_plant_3_s190"/>
+      <geom pos="-1.51506 -3.76539 0.39707" quat="0.659983 0 0 0.75128" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_0_s140_mat" mesh="decor_flower_gazania_0_s140"/>
+      <geom pos="-2.20831 -4.43214 0.393197" quat="-0.128844 0 0 0.991665" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_1_s140_mat" mesh="decor_flower_gazania_1_s140"/>
+      <geom pos="-2.10006 -4.42814 0.39528" quat="-0.830054 0 0 0.557684" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_2_s140_mat" mesh="decor_flower_gazania_2_s140"/>
+      <geom pos="-2.31238 -5.47256 0.398883" quat="-0.966798 0 0 -0.255541" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_3_s140_mat" mesh="decor_flower_gazania_3_s140"/>
+      <geom pos="-1.57743 -5.57427 0.393382" quat="-0.446087 0 0 -0.894989" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_4_s130_mat" mesh="decor_flower_gazania_4_s130"/>
+      <geom pos="-1.26338 -4.83283 0.390305" quat="0.377978 0 0 -0.925815" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_5_s130_mat" mesh="decor_flower_gazania_5_s130"/>
+      <geom name="decor_proxy_2" size="0.2 0.2 0.21" pos="-1.75 -4.7 0.21" type="box" group="3" rgba="0.5 0.5 0.5 0.3"/>
+      <geom size="0.012 0.58 0.405" pos="-3.983 -4.3 1.55" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_black_mat"/>
+      <geom size="0.003 0.55 0.375" pos="-3.969 -4.3 1.55" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_art_0_mat"/>
+      <geom size="0.9 0.6 0.004" pos="3.05 -4.35 0.004" type="box" contype="0" conaffinity="0" group="2" rgba="0.32 0.36 0.4 1" mass="0"/>
+      <geom pos="3.3 -4.3 0" quat="0 0 0 1" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_mid_century_lounge_chair_0_s100_mat" mesh="decor_mid_century_lounge_chair_0_s100"/>
+      <geom name="decor_proxy_3" size="0.504 0.595 0.5845" pos="3.3 -4.366 0.5845" quat="0 0 0 1" type="box" group="3" rgba="0.5 0.5 0.5 0.3"/>
+      <geom pos="2.1 -4.42 0" quat="-0.156434 0 0 0.987688" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_modern_arm_chair_01_0_s100_mat" mesh="decor_modern_arm_chair_01_0_s100"/>
+      <geom pos="2.1 -4.42 0" quat="-0.156434 0 0 0.987688" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_modern_arm_chair_01_1_s100_mat" mesh="decor_modern_arm_chair_01_1_s100"/>
+      <geom name="decor_proxy_4" size="0.4105 0.493 0.5115" pos="2.12201 -4.49907 0.5115" quat="-0.156434 0 0 0.987688" type="box" group="3" rgba="0.5 0.5 0.5 0.3"/>
+      <geom size="0.12 0.12 0.225" pos="2.68 -4.78 0.225" type="box" contype="0" conaffinity="0" group="2" rgba="0.95 0.95 0.94 1" mass="0"/>
+      <geom name="decor_proxy_5" size="0.12 0.12 0.225" pos="2.68 -4.78 0.225" type="box" group="3" rgba="0.5 0.5 0.5 0.3"/>
+      <geom pos="2.68 -4.78 0.449" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_ceramic_vase_01_0_s100_mat" mesh="decor_ceramic_vase_01_0_s100"/>
+      <geom size="0.2 0.21" pos="3.7 -3.42 0.21" type="cylinder" contype="0" conaffinity="0" group="2" rgba="0.96 0.96 0.95 1" mass="0"/>
+      <geom size="0.185 0.005" pos="3.7 -3.42 0.4" type="cylinder" contype="0" conaffinity="0" group="2" rgba="0.22 0.15 0.1 1" mass="0"/>
+      <geom pos="3.2562 -3.42189 0.390013" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_periwinkle_plant_2_s180_mat" mesh="decor_periwinkle_plant_2_s180"/>
+      <geom pos="3.60392 -3.00673 0.390043" quat="0.659983 0 0 0.75128" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_periwinkle_plant_5_s180_mat" mesh="decor_periwinkle_plant_5_s180"/>
+      <geom pos="3.07412 -3.63787 0.393367" quat="-0.128844 0 0 0.991665" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_ursinia_3_s150_mat" mesh="decor_flower_ursinia_3_s150"/>
+      <geom pos="3.56425 -3.49241 0.392655" quat="-0.830054 0 0 0.557684" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_ursinia_2_s150_mat" mesh="decor_flower_ursinia_2_s150"/>
+      <geom pos="3.13762 -3.93256 0.398883" quat="-0.966798 0 0 -0.255541" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_3_s140_mat" mesh="decor_flower_gazania_3_s140"/>
+      <geom pos="3.81308 -3.15066 0.393197" quat="-0.446087 0 0 -0.894989" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_1_s140_mat" mesh="decor_flower_gazania_1_s140"/>
+      <geom pos="2.86399 -4.10427 0.391836" quat="0.377978 0 0 -0.925815" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_ursinia_4_s100_mat" mesh="decor_flower_ursinia_4_s100"/>
+      <geom name="decor_proxy_6" size="0.2 0.2 0.21" pos="3.7 -3.42 0.21" type="box" group="3" rgba="0.5 0.5 0.5 0.3"/>
+      <geom size="0.012 0.63 0.43" pos="-3.983 -0.4 1.55" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_black_mat"/>
+      <geom size="0.003 0.6 0.4" pos="-3.969 -0.4 1.55" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_art_1_mat"/>
+      <geom size="0.012 0.63 0.43" pos="3.983 -2.6 1.55" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_black_mat"/>
+      <geom size="0.003 0.6 0.4" pos="3.969 -2.6 1.55" type="box" contype="0" conaffinity="0" group="2" mass="0" material="decor_art_2_mat"/>
+      <geom size="0.2 0.21" pos="3.62 0.9 0.21" type="cylinder" contype="0" conaffinity="0" group="2" rgba="0.96 0.96 0.95 1" mass="0"/>
+      <geom size="0.185 0.005" pos="3.62 0.9 0.4" type="cylinder" contype="0" conaffinity="0" group="2" rgba="0.22 0.15 0.1 1" mass="0"/>
+      <geom pos="2.61925 0.866313 0.389857" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_periwinkle_plant_0_s180_mat" mesh="decor_periwinkle_plant_0_s180"/>
+      <geom pos="3.60703 1.20309 0.390041" quat="0.659983 0 0 0.75128" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_periwinkle_plant_5_s170_mat" mesh="decor_periwinkle_plant_5_s170"/>
+      <geom pos="3.69006 0.962367 0.392655" quat="-0.128844 0 0 0.991665" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_ursinia_2_s150_mat" mesh="decor_flower_ursinia_2_s150"/>
+      <geom pos="3.81912 0.259459 0.393142" quat="-0.830054 0 0 0.557684" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_ursinia_3_s140_mat" mesh="decor_flower_ursinia_3_s140"/>
+      <geom pos="3.0456 0.663823 0.391731" quat="-0.966798 0 0 -0.255541" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_ursinia_1_s150_mat" mesh="decor_flower_ursinia_1_s150"/>
+      <geom pos="4.27897 0.329017 0.398248" quat="-0.446087 0 0 -0.894989" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_3_s130_mat" mesh="decor_flower_gazania_3_s130"/>
+      <geom name="decor_proxy_7" size="0.2 0.2 0.21" pos="3.62 0.9 0.21" type="box" group="3" rgba="0.5 0.5 0.5 0.3"/>
+      <geom size="0.2 0.21" pos="3.62 -1.35 0.21" type="cylinder" contype="0" conaffinity="0" group="2" rgba="0.96 0.96 0.95 1" mass="0"/>
+      <geom size="0.185 0.005" pos="3.62 -1.35 0.4" type="cylinder" contype="0" conaffinity="0" group="2" rgba="0.22 0.15 0.1 1" mass="0"/>
+      <geom pos="2.63925 -1.37369 0.389857" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_periwinkle_plant_0_s180_mat" mesh="decor_periwinkle_plant_0_s180"/>
+      <geom pos="3.64821 -1.82415 0.390012" quat="0.659983 0 0 0.75128" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_periwinkle_plant_2_s170_mat" mesh="decor_periwinkle_plant_2_s170"/>
+      <geom pos="4.49847 -0.838381 0.399517" quat="-0.128844 0 0 0.991665" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_3_s150_mat" mesh="decor_flower_gazania_3_s150"/>
+      <geom pos="3.31763 -1.67485 0.393197" quat="-0.830054 0 0 0.557684" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_1_s140_mat" mesh="decor_flower_gazania_1_s140"/>
+      <geom pos="3.527 -1.60525 0.39528" quat="-0.966798 0 0 -0.255541" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_2_s140_mat" mesh="decor_flower_gazania_2_s140"/>
+      <geom pos="3.93353 -2.3246 0.393642" quat="-0.446087 0 0 -0.894989" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_4_s140_mat" mesh="decor_flower_gazania_4_s140"/>
+      <geom pos="2.79985 -1.85928 0.396565" quat="0.377978 0 0 -0.925815" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_0_s130_mat" mesh="decor_flower_gazania_0_s130"/>
+      <geom name="decor_proxy_8" size="0.2 0.2 0.21" pos="3.62 -1.35 0.21" type="box" group="3" rgba="0.5 0.5 0.5 0.3"/>
+      <geom size="0.2 0.21" pos="-3.62 0.9 0.21" type="cylinder" contype="0" conaffinity="0" group="2" rgba="0.96 0.96 0.95 1" mass="0"/>
+      <geom size="0.185 0.005" pos="-3.62 0.9 0.4" type="cylinder" contype="0" conaffinity="0" group="2" rgba="0.22 0.15 0.1 1" mass="0"/>
+      <geom pos="-4.60075 0.876313 0.389857" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_periwinkle_plant_0_s180_mat" mesh="decor_periwinkle_plant_0_s180"/>
+      <geom pos="-3.59179 0.425847 0.390012" quat="0.659983 0 0 0.75128" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_periwinkle_plant_2_s170_mat" mesh="decor_periwinkle_plant_2_s170"/>
+      <geom pos="-2.74153 1.41162 0.399517" quat="-0.128844 0 0 0.991665" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_3_s150_mat" mesh="decor_flower_gazania_3_s150"/>
+      <geom pos="-3.92237 0.575153 0.393197" quat="-0.830054 0 0 0.557684" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_1_s140_mat" mesh="decor_flower_gazania_1_s140"/>
+      <geom pos="-3.713 0.64475 0.39528" quat="-0.966798 0 0 -0.255541" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_2_s140_mat" mesh="decor_flower_gazania_2_s140"/>
+      <geom pos="-3.30647 -0.074597 0.393642" quat="-0.446087 0 0 -0.894989" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_4_s140_mat" mesh="decor_flower_gazania_4_s140"/>
+      <geom pos="-4.44015 0.390715 0.396565" quat="0.377978 0 0 -0.925815" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_0_s130_mat" mesh="decor_flower_gazania_0_s130"/>
+      <geom name="decor_proxy_9" size="0.2 0.2 0.21" pos="-3.62 0.9 0.21" type="box" group="3" rgba="0.5 0.5 0.5 0.3"/>
+      <geom size="0.16 0.16 0.45" pos="-1.3 2.72 0.45" type="box" contype="0" conaffinity="0" group="2" rgba="0.95 0.95 0.94 1" mass="0"/>
+      <geom name="decor_proxy_10" size="0.16 0.16 0.45" pos="-1.3 2.72 0.45" type="box" group="3" rgba="0.5 0.5 0.5 0.3"/>
+      <geom pos="-1.3 2.72 0.899" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_ceramic_vase_04_0_s100_mat" mesh="decor_ceramic_vase_04_0_s100"/>
+      <geom size="0.16 0.16 0.45" pos="1.3 2.72 0.45" type="box" contype="0" conaffinity="0" group="2" rgba="0.95 0.95 0.94 1" mass="0"/>
+      <geom name="decor_proxy_11" size="0.16 0.16 0.45" pos="1.3 2.72 0.45" type="box" group="3" rgba="0.5 0.5 0.5 0.3"/>
+      <geom pos="1.3 2.72 0.899" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_ceramic_vase_01_0_s100_mat" mesh="decor_ceramic_vase_01_0_s100"/>
+      <geom size="0.2 0.275" pos="-3.77 2.6 0.275" type="cylinder" contype="0" conaffinity="0" group="2" rgba="0.96 0.96 0.95 1" mass="0"/>
+      <geom size="0.185 0.005" pos="-3.77 2.6 0.53" type="cylinder" contype="0" conaffinity="0" group="2" rgba="0.22 0.15 0.1 1" mass="0"/>
+      <geom pos="-4.77075 2.56631 0.519857" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_periwinkle_plant_0_s180_mat" mesh="decor_periwinkle_plant_0_s180"/>
+      <geom pos="-3.78297 2.90309 0.520041" quat="0.659983 0 0 0.75128" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_periwinkle_plant_5_s170_mat" mesh="decor_periwinkle_plant_5_s170"/>
+      <geom pos="-3.69994 2.66237 0.522655" quat="-0.128844 0 0 0.991665" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_ursinia_2_s150_mat" mesh="decor_flower_ursinia_2_s150"/>
+      <geom pos="-3.57088 1.95946 0.523142" quat="-0.830054 0 0 0.557684" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_ursinia_3_s140_mat" mesh="decor_flower_ursinia_3_s140"/>
+      <geom pos="-4.3444 2.36382 0.521731" quat="-0.966798 0 0 -0.255541" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_ursinia_1_s150_mat" mesh="decor_flower_ursinia_1_s150"/>
+      <geom pos="-3.11103 2.02902 0.528248" quat="-0.446087 0 0 -0.894989" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_3_s130_mat" mesh="decor_flower_gazania_3_s130"/>
+      <geom name="decor_proxy_12" size="0.2 0.2 0.275" pos="-3.77 2.6 0.275" type="box" group="3" rgba="0.5 0.5 0.5 0.3"/>
+      <geom size="0.2 0.275" pos="3.77 2.6 0.275" type="cylinder" contype="0" conaffinity="0" group="2" rgba="0.96 0.96 0.95 1" mass="0"/>
+      <geom size="0.185 0.005" pos="3.77 2.6 0.53" type="cylinder" contype="0" conaffinity="0" group="2" rgba="0.22 0.15 0.1 1" mass="0"/>
+      <geom pos="3.79584 2.61895 0.520046" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_periwinkle_plant_3_s190_mat" mesh="decor_periwinkle_plant_3_s190"/>
+      <geom pos="4.00494 3.53461 0.52707" quat="0.659983 0 0 0.75128" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_0_s140_mat" mesh="decor_flower_gazania_0_s140"/>
+      <geom pos="3.31169 2.86786 0.523197" quat="-0.128844 0 0 0.991665" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_1_s140_mat" mesh="decor_flower_gazania_1_s140"/>
+      <geom pos="3.41994 2.87186 0.52528" quat="-0.830054 0 0 0.557684" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_2_s140_mat" mesh="decor_flower_gazania_2_s140"/>
+      <geom pos="3.20762 1.82744 0.528883" quat="-0.966798 0 0 -0.255541" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_3_s140_mat" mesh="decor_flower_gazania_3_s140"/>
+      <geom pos="3.94257 1.72573 0.523382" quat="-0.446087 0 0 -0.894989" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_4_s130_mat" mesh="decor_flower_gazania_4_s130"/>
+      <geom pos="4.25662 2.46717 0.520305" quat="0.377978 0 0 -0.925815" type="mesh" contype="0" conaffinity="0" group="2" mass="0" material="decor_flower_gazania_5_s130_mat" mesh="decor_flower_gazania_5_s130"/>
+      <geom name="decor_proxy_13" size="0.2 0.2 0.275" pos="3.77 2.6 0.275" type="box" group="3" rgba="0.5 0.5 0.5 0.3"/>
+      <geom size="40 40 0.1" pos="0 -1 -0.01" type="plane" contype="0" conaffinity="0" group="2" material="decor_ground_mat"/>
+      <geom size="0.05 4.05 0.4" pos="4.05 -1 0.4" type="box" contype="0" conaffinity="0" group="2" mass="0" material="plaster_mat"/>
+      <geom size="0.05 4.05 0.25" pos="4.05 -1 2.25" type="box" contype="0" conaffinity="0" group="2" mass="0" material="plaster_mat"/>
+      <geom size="0.05 2.025 0.6" pos="4.05 -3.025 1.4" type="box" contype="0" conaffinity="0" group="2" mass="0" material="plaster_mat"/>
+      <geom size="0.05 1.025 0.6" pos="4.05 2.025 1.4" type="box" contype="0" conaffinity="0" group="2" mass="0" material="plaster_mat"/>
     </body>
   </worldbody>
 

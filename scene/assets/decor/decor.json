@@ -1,0 +1,388 @@
+{
+ "coffee_table_round_01": {
+  "parts": [
+   {
+    "obj": "coffee_table_round_01_0.obj",
+    "png": "coffee_table_round_01_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   }
+  ],
+  "lo": [
+   -0.651,
+   -0.651,
+   -0.001
+  ],
+  "hi": [
+   0.651,
+   0.651,
+   0.49
+  ]
+ },
+ "ceramic_vase_01": {
+  "parts": [
+   {
+    "obj": "ceramic_vase_01_0.obj",
+    "png": "ceramic_vase_01_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   }
+  ],
+  "lo": [
+   -0.102,
+   -0.102,
+   0.001
+  ],
+  "hi": [
+   0.102,
+   0.102,
+   0.401
+  ]
+ },
+ "ceramic_vase_03": {
+  "parts": [
+   {
+    "obj": "ceramic_vase_03_0.obj",
+    "png": "ceramic_vase_03_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   }
+  ],
+  "lo": [
+   -0.056,
+   -0.056,
+   0.0
+  ],
+  "hi": [
+   0.056,
+   0.056,
+   0.414
+  ]
+ },
+ "ceramic_vase_04": {
+  "parts": [
+   {
+    "obj": "ceramic_vase_04_0.obj",
+    "png": "ceramic_vase_04_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   }
+  ],
+  "lo": [
+   -0.091,
+   -0.091,
+   0.001
+  ],
+  "hi": [
+   0.091,
+   0.091,
+   0.342
+  ]
+ },
+ "mid_century_lounge_chair": {
+  "parts": [
+   {
+    "obj": "mid_century_lounge_chair_0.obj",
+    "png": "mid_century_lounge_chair_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   }
+  ],
+  "lo": [
+   -0.504,
+   -0.529,
+   -0.0
+  ],
+  "hi": [
+   0.504,
+   0.661,
+   1.169
+  ]
+ },
+ "modern_arm_chair_01": {
+  "parts": [
+   {
+    "obj": "modern_arm_chair_01_0.obj",
+    "png": "modern_arm_chair_01_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   },
+   {
+    "obj": "modern_arm_chair_01_1.obj",
+    "png": "modern_arm_chair_01_1.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   }
+  ],
+  "lo": [
+   -0.407,
+   -0.411,
+   0.0
+  ],
+  "hi": [
+   0.414,
+   0.575,
+   1.023
+  ]
+ },
+ "flower_gazania": {
+  "parts": [
+   {
+    "obj": "flower_gazania_0.obj",
+    "png": "flower_gazania_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   },
+   {
+    "obj": "flower_gazania_1.obj",
+    "png": "flower_gazania_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   },
+   {
+    "obj": "flower_gazania_2.obj",
+    "png": "flower_gazania_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   },
+   {
+    "obj": "flower_gazania_3.obj",
+    "png": "flower_gazania_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   },
+   {
+    "obj": "flower_gazania_4.obj",
+    "png": "flower_gazania_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   },
+   {
+    "obj": "flower_gazania_5.obj",
+    "png": "flower_gazania_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   },
+   {
+    "obj": "flower_gazania_6.obj",
+    "png": "flower_gazania_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   },
+   {
+    "obj": "flower_gazania_7.obj",
+    "png": "flower_gazania_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   }
+  ],
+  "lo": [
+   -0.736,
+   -0.33,
+   -0.006
+  ],
+  "hi": [
+   0.745,
+   0.373,
+   0.159
+  ]
+ },
+ "flower_ursinia": {
+  "parts": [
+   {
+    "obj": "flower_ursinia_0.obj",
+    "png": "flower_ursinia_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   },
+   {
+    "obj": "flower_ursinia_1.obj",
+    "png": "flower_ursinia_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   },
+   {
+    "obj": "flower_ursinia_2.obj",
+    "png": "flower_ursinia_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   },
+   {
+    "obj": "flower_ursinia_3.obj",
+    "png": "flower_ursinia_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   },
+   {
+    "obj": "flower_ursinia_4.obj",
+    "png": "flower_ursinia_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   }
+  ],
+  "lo": [
+   -1.302,
+   -0.203,
+   -0.009
+  ],
+  "hi": [
+   0.892,
+   0.141,
+   0.162
+  ]
+ },
+ "periwinkle_plant": {
+  "parts": [
+   {
+    "obj": "periwinkle_plant_0.obj",
+    "png": "periwinkle_plant_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   },
+   {
+    "obj": "periwinkle_plant_1.obj",
+    "png": "periwinkle_plant_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   },
+   {
+    "obj": "periwinkle_plant_2.obj",
+    "png": "periwinkle_plant_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   },
+   {
+    "obj": "periwinkle_plant_3.obj",
+    "png": "periwinkle_plant_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   },
+   {
+    "obj": "periwinkle_plant_4.obj",
+    "png": "periwinkle_plant_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   },
+   {
+    "obj": "periwinkle_plant_5.obj",
+    "png": "periwinkle_plant_0.png",
+    "rgba": [
+     0.7,
+     0.7,
+     0.7,
+     1.0
+    ]
+   }
+  ],
+  "lo": [
+   -0.56,
+   -0.131,
+   -0.0
+  ],
+  "hi": [
+   0.675,
+   0.19,
+   0.411
+  ]
+ }
+}

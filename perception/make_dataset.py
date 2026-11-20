@@ -167,9 +167,11 @@ class Generator:
         self.ren.update_scene(self.d, camera=self.cam)
         rgb = self.ren.render().copy()
         self.ren.enable_segmentation_rendering()
-        self.ren.update_scene(self.d, camera=self.cam)
-        seg = self.ren.render()[..., 0].copy()
-        self.ren.disable_segmentation_rendering()
+        try:
+            self.ren.update_scene(self.d, camera=self.cam)
+            seg = self.ren.render()[..., 0].copy()
+        finally:
+            self.ren.disable_segmentation_rendering()
         return rgb, self.geom_class[seg]          # -1 background / not a book
 
     @staticmethod
@@ -204,7 +206,10 @@ class Generator:
         if not ok:
             return None
         mujoco.mj_forward(self.m, self.d)
-        rgb, cls_img = self.render()
+        try:
+            rgb, cls_img = self.render()
+        except IndexError:        # MuJoCo's segmentation render now and then returns a seg id past
+            return None           # the scene's geoms (a blended pixel); skip that view
         lines = self.polygons(cls_img)
         return (rgb, lines, kind, cls_img) if lines else None
 

@@ -503,7 +503,7 @@ def generate():
     body_text = "\n".join("    " + line.replace("\n", "\n    ") for line in body)
 
     lamps = "\n".join(
-        f'    <light name="lamp{i}" pos="{x} {y} 2.4" dir="0 0 -1" diffuse="0.38 0.36 0.33" '
+        f'    <light name="lamp{i}" pos="{x} {y} 2.4" dir="0 0 -1" diffuse="0.42 0.42 0.41" '
         f'specular="0.05 0.05 0.05" cutoff="90" exponent="1" castshadow="true"/>'
         for i, (x, y) in enumerate([(-2.2, -0.8), (2.2, -0.8), (0.0, 0.8), (0.0, 2.0),
                                     (-2.2, cy - hy + 1.5), (2.2, cy - hy + 1.5)]))
@@ -522,16 +522,16 @@ def generate():
          sees books close up (the default 0.01 clipped everything nearer than 16.6 cm) -->
     <map znear="0.001"/>
     <quality shadowsize="4096" offsamples="8"/>
-    <headlight diffuse="0.30 0.30 0.30" ambient="0.30 0.30 0.30" specular="0 0 0"/>
+    <headlight diffuse="0.24 0.24 0.24" ambient="0.27 0.27 0.27" specular="0 0 0"/>
     <rgba haze="0.75 0.82 0.9 1"/>
   </visual>
   <asset>
     <texture type="skybox" builtin="gradient" rgb1="0.62 0.78 0.95" rgb2="0.20 0.25 0.35" width="512" height="512"/>
-    <texture name="floor_tex" type="2d" file="floor_wood.png"/>
-    <texture name="wood_tex" type="2d" file="wood.png"/>
-    <texture name="shelf_tex" type="2d" file="shelf_wood.png"/>
+    <texture name="floor_tex" type="2d" file="floor_laminate.png"/>
+    <texture name="wood_tex" type="2d" file="oak_veneer.png"/>
+    <texture name="shelf_tex" type="2d" file="oak_veneer.png"/>
     <texture name="plaster_tex" type="2d" file="plaster.png"/>
-    <material name="floor_mat" texture="floor_tex" texuniform="true" texrepeat="0.5 0.5" specular="0.35" shininess="0.35" reflectance="0.10"/>
+    <material name="floor_mat" texture="floor_tex" texuniform="true" texrepeat="0.5 0.5" specular="0.35" shininess="0.5" reflectance="0.08"/>
     <material name="wood_mat" texture="wood_tex" texuniform="true" texrepeat="1 1" specular="0.25" shininess="0.30"/>
     <material name="shelf_mat" texture="shelf_tex" texuniform="true" texrepeat="1 1" specular="0.25" shininess="0.30"/>
     <material name="plaster_mat" texture="plaster_tex" texuniform="true" texrepeat="0.5 0.5" specular="0.05" shininess="0.05"/>
@@ -564,7 +564,10 @@ def generate():
         e = spec.add_equality()
         e.name, e.type, e.objtype = f"grasp_{b['id']}", mujoco.mjtEq.mjEQ_WELD, mujoco.mjtObj.mjOBJ_BODY
         e.name1, e.name2, e.active = f"{robot_model.PREFIX}hand", f"book_{b['id']}", False
+    import decor
+    decor.add_decor(spec, layout, zones)
     robot_model.save_xml(spec, XML_PATH)
+    decor.relative_mesh_paths(XML_PATH, HERE / robot_model.PANDA_ASSETS_REL)
     model = mujoco.MjModel.from_xml_path(str(XML_PATH))   # make sure the saved file loads
 
     meta = {
