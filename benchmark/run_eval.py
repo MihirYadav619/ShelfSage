@@ -53,14 +53,34 @@ def baseline_planner(command, world):
 _LLM = {}
 
 
+CACHE = ROOT / "sim/output/llm_cache"        # git-ignored: one file per answered request
+
+
 def llm_planner(command, world):
+    """LLM plan, cached: a command already answered for the same world by the same backend /
+    model / effort is not asked again (free-tier daily limits). API errors are not cached."""
+    import hashlib
+    from planner import plan as P
     from planner.llm import LLMPlanner
     if "p" not in _LLM:
         _LLM["p"] = LLMPlanner(effort=os.environ.get("SHELFSAGE_EFFORT", "medium"))
+    b = _LLM["p"].backend
+    from planner.llm import SYSTEM
+    key = json.dumps([b.name, b.model, b.effort, hashlib.sha1(SYSTEM.encode()).hexdigest(), command,
+                      world["books"], world["robot"]], sort_keys=True)
+    f = CACHE / (hashlib.sha1(key.encode()).hexdigest()[:20] + ".json")
+    if f.exists():
+        c = json.loads(f.read_text())
+        plan = P.from_json(c["plan"]) if c["plan"] is not None else None
+        return plan, c["message"], {**c["extra"], "cached": True}
     r = _LLM["p"].plan(command, world)
-    return r.plan, r.message, {"llm_status": r.status, "backend": r.backend, "model": r.model,
-                               "attempts": r.attempts, "latency": r.latency,
-                               "usage": r.usage, "transcript": r.transcript}
+    extra = {"llm_status": r.status, "backend": r.backend, "model": r.model, "attempts": r.attempts,
+             "latency": r.latency, "usage": r.usage, "transcript": r.transcript}
+    if r.status != "error":
+        CACHE.mkdir(parents=True, exist_ok=True)
+        f.write_text(json.dumps({"command": command, "plan": P.to_json(r.plan) if r.plan else None,
+                                 "message": r.message, "extra": extra}, indent=1))
+    return r.plan, r.message, extra
 
 
 PLANNERS = {"baseline": baseline_planner, "llm": llm_planner}
@@ -146,7 +166,11 @@ def run_exec(task, planner, perception, truth):
     from planner.executor import Executor
     robot, w0 = make_world_and_robot(perception, truth)
     t0 = time.time()
-    plan, msg, extra = PLANNERS[planner](task["command"], w0)
+    try:
+        plan, msg, extra = PLANNERS[planner](task["command"], w0)
+    except Exception as e:                       # e.g. the free tier's daily quota
+        return {"plan": [], "valid": False, "success": False, "executed": False,
+                "reason": f"planner failed: {type(e).__name__}: {e}"}
     plan_time = time.time() - t0
     out = score_plan(task, plan, msg, w0)          # plan-level result first
     out["plan_time"] = round(plan_time, 4)

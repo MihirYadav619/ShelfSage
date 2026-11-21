@@ -139,14 +139,21 @@ def live(world, effort):
     spec = json.loads((ROOT / "benchmark/tasks.json").read_text())
     tasks = [t for t in spec["tasks"] if t["category"] != "failure"]
     rows = []
+    from planner.llm import QuotaExhausted
     for t in tasks:
         b = score_plan(t, *baseline_planner(t["command"], world)[:2], world)
-        plan, msg, extra = llm_planner(t["command"], world)
+        try:
+            plan, msg, extra = llm_planner(t["command"], world)
+        except QuotaExhausted as e:
+            print(f"\n  STOPPED at {t['id']}: {e}. {len(rows)}/{len(tasks)} tasks done; the answers are "
+                  "cached (sim/output/llm_cache), run again when the quota resets to continue.")
+            return [(f"benchmark incomplete ({len(rows)}/{len(tasks)}): daily quota", False)]
         lres = score_plan(t, plan, msg, world)
         lres.update(extra)
         rows.append((t, b, lres))
         print(f"  {t['id']}  baseline {'ok' if b['success'] else '--'}  llm {'ok' if lres['success'] else 'XX'}"
-              f"  {extra['latency']:5.1f} s  {extra['attempts']}x  {t['command'][:60]}", flush=True)
+              f"  {extra['latency']:5.1f} s  {extra['attempts']}x{' (cached)' if extra.get('cached') else ''}"
+              f"  {t['command'][:60]}", flush=True)
         if not lres["success"]:
             print(f"        {lres['reason'][:150]}")
             print(f"        plan: {' -> '.join(lres['plan'])[:200]}")
@@ -200,7 +207,7 @@ def main():
         if not os.environ.get(key):
             print(f"\n2. live checks skipped: no {key} (environment or .env)")
         else:
-            model = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash") if backend == "gemini" else "claude-opus-5-5"
+            model = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite") if backend == "gemini" else "claude-opus-5-5"
             print(f"\n2. live checks ({backend}: {model}, effort {a.effort})")
             t0 = time.time()
             res = live(world, a.effort)

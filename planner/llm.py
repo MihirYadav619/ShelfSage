@@ -8,7 +8,7 @@
 
 Two backends, same prompt, schema and retry loop:
     gemini   Google Gemini API, free tier (key from aistudio.google.com): GEMINI_API_KEY,
-             model GEMINI_MODEL (default gemini-3.8-flash). REST generateContent with
+             model GEMINI_MODEL (default gemini-3.5-flash-lite). REST generateContent with
              responseMimeType application/json + responseJsonSchema. Free-tier requests may be
              used by Google to improve its products (only library commands are sent).
     claude   Anthropic Claude API (paid): ANTHROPIC_API_KEY, model claude-opus-5-5, structured
@@ -38,7 +38,7 @@ ROOT = HERE.parent
 SYSTEM = (HERE / "prompts/system.md").read_text(encoding="utf-8")
 SCHEMA = json.loads((HERE / "schema.json").read_text())
 CLAUDE_MODEL = "claude-opus-5-5"
-GEMINI_MODEL = "gemini-3.8-flash"
+GEMINI_MODEL = "gemini-3.5-flash-lite"
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 GEMINI_THINKING = {"low": "LOW", "medium": "MEDIUM", "high": "HIGH", "xhigh": "XHIGH", "max": "XHIGH"}
 
@@ -77,6 +77,10 @@ class LLMResult:
 
 
 # ---------------------------------------------------------------------------- backends
+class QuotaExhausted(RuntimeError):
+    """The free tier's daily request limit for this model is used up (resets after a day)."""
+
+
 class Reply:
     def __init__(self, text, usage, refused=False, history_item=None):
         self.text, self.usage, self.refused, self.history_item = text, usage, refused, history_item
@@ -150,6 +154,8 @@ class GeminiBackend:
                 self.thinking = False            # an older model without thinkingLevel
                 body["generationConfig"].pop("thinkingConfig", None)
                 continue
+            if r.status_code == 429 and "PerDay" in r.text:
+                raise QuotaExhausted(f"{self.model}: free-tier requests per day used up")
             if r.status_code in (429, 500, 503):
                 time.sleep(float(r.headers.get("retry-after", 20)))
                 continue
@@ -193,6 +199,8 @@ class LLMPlanner:
             out.attempts = attempt
             try:
                 reply = b.ask(conv)
+            except QuotaExhausted:
+                raise                                    # the caller decides (stop the run)
             except Exception as e:                       # API / network error: no plan
                 out.status, out.message = "error", f"{type(e).__name__}: {e}"
                 break

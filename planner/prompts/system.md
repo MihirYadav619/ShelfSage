@@ -34,9 +34,13 @@ Command: "Could you carry the networks book over to table E?" (Computer Networks
  {"action": "GRASP", "args": ["Computer Networks"]}, {"action": "NAVIGATE", "args": ["Table E"]},
  {"action": "PLACE", "args": ["Computer Networks", "Table E"]}, {"action": "VERIFY", "args": ["Computer Networks", "Table E"]}]}
 
-Command: "Is Quantum Computing on the bottom row of the east shelf?" (the east shelf is S3; Quantum Computing is in S3-B2)
-{"status": "plan", "reason": "A question: look the book up; it is in S3-B2 (top row), and the answer comes from FIND_BOOK.", "plan": [
+Command: "Where would I find the quantum computing book?" (Quantum Computing is in S3-B2)
+{"status": "plan", "reason": "A question about where a book is: look it up.", "plan": [
  {"action": "FIND_BOOK", "args": ["Quantum Computing"]}]}
+
+Command: "Does S3-B2 hold Quantum Computing?"
+{"status": "plan", "reason": "A yes / no question about one book and one compartment: check it.", "plan": [
+ {"action": "VERIFY", "args": ["Quantum Computing", "S3-B2"]}]}
 
 Command: "Put the Heat Transfer book on the windowsill"
 {"status": "refuse", "reason": "The windowsill is not a table or a shelf compartment the robot can place books on.", "plan": []}
