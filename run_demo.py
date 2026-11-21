@@ -6,6 +6,7 @@ executed by the robot in the MuJoCo viewer, with optional failure injection and 
     python run_demo.py --task F03                    # a benchmark task, its failure injected
     python run_demo.py --task X01 --speed 3
     python run_demo.py "Where is Statistics?" --headless
+    python run_demo.py                               # interactive: type commands one after another
 
 The robot pose comes from MCL (LiDAR + odometry); book poses from simulator ground truth
 (--perception: from the wrist camera + detector). The viewer shows the command, the plan, the
@@ -38,8 +39,7 @@ def main():
         if task is None:
             sys.exit(f"no task {a.task} in benchmark/tasks.json")
     command = a.command or (task["command"] if task else None)
-    if not command:
-        sys.exit("give a command or --task")
+    interactive = command is None
 
     from benchmark.run_eval import PLANNERS, goal_holds
     from planner import world as W
@@ -74,6 +74,10 @@ def main():
 
     def run():
         rec = run_with_replanning(command, planner, robot, max_replans=a.replans, on_step=on_step)
+        if interactive:
+            lines["step"] = ("SUCCESS" if rec.success else "FAILED") + f" - {rec.message}"
+            print(f"\n{lines['step']}")
+            return rec
         w = W.snapshot(robot)
         verdict = "SUCCESS" if rec.success else "FAILED"
         if task and task.get("goal"):
@@ -83,7 +87,10 @@ def main():
         print(f"\n{lines['step']}")
         return rec
 
-    print(f"ShelfSage: \"{command}\"  ({a.planner} planner)")
+    if not interactive:
+        print(f"ShelfSage: \"{command}\"  ({a.planner} planner)")
+    if a.headless and interactive:
+        sys.exit("--headless needs a command")
     if a.headless:
         run()
         return
@@ -102,8 +109,22 @@ def main():
 
         robot.viewer, robot.speed, robot.on_sync = viewer, a.speed, on_sync
         try:
-            run()
-            while viewer.is_running():
+            if not interactive:
+                run()
+            else:
+                print(f"ShelfSage interactive ({a.planner} planner). Type a command and press Enter; "
+                      "empty line or 'quit' to stop. The library keeps its state between commands.")
+                while viewer.is_running():
+                    lines.update(plan="", step="waiting for a command (type it in the terminal)", note="")
+                    robot.wait(0.05)
+                    try:
+                        command = input("\ncommand> ").strip()
+                    except EOFError:
+                        break
+                    if not command or command.lower() in ("quit", "exit", "q"):
+                        break
+                    run()
+            while viewer.is_running() and not interactive:
                 robot.wait(0.1)
         except KeyboardInterrupt:
             print("viewer closed")
