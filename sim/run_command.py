@@ -6,6 +6,7 @@ Usage (project root, venv active):
     python sim/run_command.py "Move Physics to Table A" --viewer           # watch it (+ --speed 2)
     python sim/run_command.py "Return Linear Algebra to the shelf" --perception   # camera book poses
     python sim/run_command.py "Where is Statistics?" --plan-only           # parse + validate only
+    python sim/run_command.py "Put away Linear Algebra" --planner llm      # Claude plans (Phase 8)
 
 The robot pose comes from MCL (--truth: ground truth). The log goes to
 sim/output/phase7/logs/<time>_<command>.json.
@@ -38,27 +39,41 @@ def make_robot(truth=False, perception=False):
     return robot
 
 
-def run(command, robot, say=print, on_step=None, plan_only=False):
-    """Plan the command with the baseline and execute it; returns the ExecutionResult (plan only:
+class _Parsed:
+    def __init__(self, plan, reason):
+        self.plan, self.reason = plan, reason
+
+    @property
+    def ok(self):
+        return self.plan is not None
+
+
+def run(command, robot, say=print, on_step=None, plan_only=False, planner="baseline"):
+    """Plan the command (baseline or llm) and execute it; returns the ExecutionResult (plan only:
     executes nothing; the result says whether the plan is valid)."""
     ex = Executor(robot, say=say)
     world = ex.world()
     t0 = time.time()
-    pr = baseline.parse(command, world)
+    if planner == "llm":
+        from planner.llm import LLMPlanner
+        r = LLMPlanner().plan(command, world)
+        pr = _Parsed(r.plan, r.message)
+    else:
+        pr = baseline.parse(command, world)
     plan_time = time.time() - t0
     if not pr.ok:
         from planner.executor import ExecutionResult
-        res = ExecutionResult(command, "baseline", [], False, [pr.reason], False,
+        res = ExecutionResult(command, planner, [], False, [pr.reason], False,
                               f"not understood: {pr.reason}", [], 0.0, 0.0, plan_time)
         return res
     if pr.reason:
-        say(f"resolved: {pr.reason}")
+        say(f"[planner] {pr.reason}")
     if plan_only:
         from planner.executor import ExecutionResult
         v = P.validate(pr.plan, world)
-        return ExecutionResult(command, "baseline", [str(a) for a in pr.plan], v.ok, v.errors, v.ok,
+        return ExecutionResult(command, planner, [str(a) for a in pr.plan], v.ok, v.errors, v.ok,
                                "plan only" if v.ok else "invalid plan", [], 0.0, 0.0, plan_time)
-    res = ex.run(pr.plan, command=command, planner="baseline", on_step=on_step)
+    res = ex.run(pr.plan, command=command, planner=planner, on_step=on_step)
     res.plan_time = round(plan_time, 4)
     return res
 
@@ -76,11 +91,12 @@ def main():
     ap.add_argument("--truth", action="store_true", help="ground-truth robot pose instead of MCL")
     ap.add_argument("--perception", action="store_true", help="book poses from the wrist camera")
     ap.add_argument("--plan-only", action="store_true")
+    ap.add_argument("--planner", default="baseline", choices=["baseline", "llm"])
     a = ap.parse_args()
     robot = make_robot(a.truth, a.perception)
     if not a.viewer:
         res = run(a.command, robot, say=lambda s: print("  " + s) if s.startswith("[") else None,
-                  plan_only=a.plan_only)
+                  plan_only=a.plan_only, planner=a.planner)
     else:
         import mujoco.viewer
         with mujoco.viewer.launch_passive(robot.m, robot.d) as viewer:
@@ -99,7 +115,7 @@ def main():
 
             try:
                 res = run(a.command, robot, say=lambda s: print("  " + s) if s.startswith("[") else None,
-                          on_step=on_step, plan_only=a.plan_only)
+                          on_step=on_step, plan_only=a.plan_only, planner=a.planner)
                 state["step"] = ("SUCCESS" if res.success else "FAILED") + " - close the window to exit"
                 while viewer.is_running():
                     robot.wait(0.1)

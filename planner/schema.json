@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "properties": {
+    "status": {"type": "string", "enum": ["plan", "refuse"]},
+    "reason": {"type": "string"},
+    "plan": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action": {"type": "string", "enum": ["FIND_BOOK", "NAVIGATE", "GRASP", "PLACE", "VERIFY"]},
+          "args": {"type": "array", "items": {"type": "string"}}
+        },
+        "required": ["action", "args"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["status", "reason", "plan"],
+  "additionalProperties": false
+}

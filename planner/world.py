@@ -118,3 +118,60 @@ def distance(world, a, b):
     """Floor distance (m) between the parking poses of two targets ('Table B', 'S2-A3')."""
     pa, pb = parking_of(a), parking_of(b)
     return math.hypot(pa[0] - pb[0], pa[1] - pb[1])
+
+
+# ---------------------------------------------------------------------------- view for the LLM
+def _side(x):
+    return "west" if x < -1.0 else ("east" if x > 1.0 else "middle")
+
+
+def llm_view(world):
+    """The world state as the LLM planner sees it: names, contents and pre-computed spatial facts
+    (distances in metres on the floor, rows, neighbours), so the model does not have to do
+    geometry. JSON-ready and deterministic (same world -> same text, for prompt caching)."""
+    win = world["window"]
+    books = world["books"]
+
+    def d(p, q):
+        return round(math.hypot(p[0] - q[0], p[1] - q[1]), 2)
+
+    tables = {}
+    for t, s in sorted(world["tables"].items()):
+        p = s["pos"]
+        tables[f"Table {t}"] = {
+            "books": [books[b]["title"] for b in sorted(s["books"])],
+            "free_edge_spots": s["free_edge_spots"],
+            "row": "back (north, nearer the shelves)" if p[1] > -1.0 else "front (south)",
+            "side": _side(p[0]),
+            "distance_to_window_m": d(p, win)}
+    comps = {}
+    for c, s in world["compartments"].items():
+        order = sorted(s["books"], key=lambda b: books[b]["pos"][0])
+        comps[c] = {
+            "shelf": s["shelf"], "row": "A (bottom)" if s["row"] == "A" else "B (top)", "column": s["column"],
+            "books_left_to_right": [books[b]["title"] for b in order],
+            "free_slots": s["free_slots"], "capacity": s["capacity"],
+            "distance_to_window_m": d(s["pos"], win)}
+    shelves = {}
+    for name, sh in sorted(META["shelves"].items()):
+        shelves[name] = {"side": _side(sh["pos"][0]), "distance_to_window_m": d(sh["pos"], win),
+                         "compartments": sorted(c for c in comps if c.startswith(name + "-"))}
+    book_list = {}
+    for b, s in sorted(books.items(), key=lambda kv: kv[1]["title"]):
+        e = {"id": b, "at": s["at"]}
+        if s["kind"] == "shelf":
+            row = comps[s["where"]]["books_left_to_right"]
+            i = row.index(s["title"])
+            e["left_neighbour"] = row[i - 1] if i > 0 else None
+            e["right_neighbour"] = row[i + 1] if i + 1 < len(row) else None
+        e["distance_to_tables_m"] = {t: d(s["pos"], world["tables"][t]["pos"]) for t in sorted(world["tables"])}
+        book_list[s["title"]] = e
+    r = world["robot"]
+    return {
+        "layout": "Room 8 x 8 m. Three bookshelves on the north wall: S1 (west), S2 (middle), S3 (east); "
+                  "each has row A (bottom) and row B (top), columns 1-4 from west to east; compartment "
+                  "names are <shelf>-<row><column>, e.g. S2-A3. Six tables: front row A, B, C (west to "
+                  "east), back row D, E, F (west to east). The window is on the east wall.",
+        "robot": {"at": r["at"] or "start position (not at a table or shelf)",
+                  "holding": books[r["holding"]]["title"] if r["holding"] else None},
+        "shelves": shelves, "compartments": comps, "tables": tables, "books": book_list}

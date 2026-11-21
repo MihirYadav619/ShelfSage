@@ -22,11 +22,14 @@ Usage (project root, venv active):
     python benchmark/run_eval.py --level exec             # baseline, executed in the simulator
     python benchmark/run_eval.py --tasks S01 X01 --level exec -v
     python benchmark/run_eval.py --category spatial
+    python benchmark/run_eval.py --planner llm            # Claude (ANTHROPIC_API_KEY), plan level
+    python benchmark/run_eval.py --planner llm --level exec --effort high
 
 Results: benchmark/results/<planner>_<level>.json (one record per task) + a table per category.
 """
 import argparse
 import json
+import os
 import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
@@ -41,13 +44,25 @@ MOVES = ("GRASP", "PLACE")
 
 # ---------------------------------------------------------------------------- planners
 def baseline_planner(command, world):
-    """-> (plan or None, message)"""
+    """-> (plan or None, message, extra info for the record)"""
     from planner import baseline
     pr = baseline.parse(command, world)
-    return pr.plan, pr.reason
+    return pr.plan, pr.reason, {}
 
 
-PLANNERS = {"baseline": baseline_planner}        # the LLM planner is added in Phase 8
+_LLM = {}
+
+
+def llm_planner(command, world):
+    from planner.llm import LLMPlanner
+    if "p" not in _LLM:
+        _LLM["p"] = LLMPlanner(effort=os.environ.get("SHELFSAGE_EFFORT", "medium"))
+    r = _LLM["p"].plan(command, world)
+    return r.plan, r.message, {"llm_status": r.status, "attempts": r.attempts, "latency": r.latency,
+                               "usage": r.usage, "transcript": r.transcript}
+
+
+PLANNERS = {"baseline": baseline_planner, "llm": llm_planner}
 
 
 # ---------------------------------------------------------------------------- scoring
@@ -130,10 +145,11 @@ def run_exec(task, planner, perception, truth):
     from planner.executor import Executor
     robot, w0 = make_world_and_robot(perception, truth)
     t0 = time.time()
-    plan, msg = PLANNERS[planner](task["command"], w0)
+    plan, msg, extra = PLANNERS[planner](task["command"], w0)
     plan_time = time.time() - t0
     out = score_plan(task, plan, msg, w0)          # plan-level result first
     out["plan_time"] = round(plan_time, 4)
+    out.update(extra)
     e = task.get("expect", {})
     if plan is None or (not out["valid"] and "verify" not in e):
         out["executed"] = False
@@ -172,8 +188,10 @@ def main():
     ap.add_argument("--perception", action="store_true", help="exec: book poses from the wrist camera")
     ap.add_argument("--truth", action="store_true", help="exec: ground-truth robot pose instead of MCL")
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--effort", default="medium", help="llm: low | medium | high | xhigh | max")
     ap.add_argument("-v", "--verbose", action="store_true")
     a = ap.parse_args()
+    os.environ["SHELFSAGE_EFFORT"] = a.effort
 
     spec = json.loads(TASKS.read_text())
     tasks = [t for t in spec["tasks"] if (not a.tasks or t["id"] in a.tasks)
@@ -187,10 +205,13 @@ def main():
         results = []
         for t in run:
             s = time.time()
-            plan, msg = PLANNERS[a.planner](t["command"], w0)
+            plan, msg, extra = PLANNERS[a.planner](t["command"], w0)
             r = score_plan(t, plan, msg, w0)
             r["plan_time"] = round(time.time() - s, 4)
+            r.update(extra)
             results.append(r)
+            if a.planner != "baseline":
+                print(f"  {t['id']} {'ok ' if r['success'] else 'XX '} {r['plan_time']:.1f} s", flush=True)
     else:
         with ProcessPoolExecutor(max_workers=a.workers) as ex:
             results = list(ex.map(run_exec, run, [a.planner] * len(run), [a.perception] * len(run),
@@ -223,10 +244,19 @@ def main():
     print(f"  {'all':12s} {tot[0]:5d} {tot[1]:5d} {tot[2]:5d}/{tot[0]:<2d} ({100 * tot[2] / max(tot[0], 1):3.0f} %)"
           f"   ['plan' = a plan was produced]")
     RESULTS.mkdir(parents=True, exist_ok=True)
-    out = RESULTS / f"{a.planner}_{a.level}{'_perception' if a.perception else ''}.json"
+    tag = f"_{a.effort}" if a.planner == "llm" else ""
+    out = RESULTS / f"{a.planner}{tag}_{a.level}{'_perception' if a.perception else ''}.json"
     if a.tasks or a.category:
         out = out.with_name(out.stem + "_subset.json")
-    out.write_text(json.dumps({"planner": a.planner, "level": a.level, "perception": a.perception,
+    llm = [r for r in records if r.get("latency") is not None]
+    if llm:
+        lat = sorted(r["latency"] for r in llm)
+        tok_in = sum(r["usage"]["input"] + r["usage"]["cache_read"] + r["usage"]["cache_write"] for r in llm)
+        print(f"\n  LLM: latency median {lat[len(lat) // 2]:.1f} s, max {lat[-1]:.1f} s; "
+              f"{sum(r['attempts'] > 1 for r in llm)} tasks needed a retry; "
+              f"tokens in {tok_in} (cache read {sum(r['usage']['cache_read'] for r in llm)}), "
+              f"out {sum(r['usage']['output'] for r in llm)}")
+    out.write_text(json.dumps({"planner": a.planner, "level": a.level, "effort": a.effort if a.planner == "llm" else None, "perception": a.perception,
                                "robot_pose": "true" if a.truth else "mcl", "date": time.strftime("%Y-%m-%d %H:%M"),
                                "tasks_version": spec["version"], "wall_time": round(time.time() - t0, 1),
                                "results": records}, indent=1))
