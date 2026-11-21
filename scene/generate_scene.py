@@ -115,17 +115,6 @@ def build_walls(room, hidden):
     return out
 
 
-def build_sign(room, sign):
-    """Graffiti 'ShelfSage' tag painted on the north wall: a textured, non-colliding plane
-    1 mm in front of the wall, facing the room. Texture aspect is 3:1 (see make_textures.py)."""
-    cx, cy, hx, hy = room_frame(room)
-    w = sign["width"]
-    pos = (sign["center_x"], cy + hy - 0.001, sign["center_z"])
-    # rotate 90 deg about x: plane normal (+z) -> -y (into the room), plane +y -> world +z (up)
-    return [f'<geom name="wall_sign" type="plane" pos="{vec(pos)}" quat="0.7071068 0.7071068 0 0" '
-            f'size="{w / 2:.4f} {w / 6:.4f} 0.01" material="sign_mat" contype="0" conaffinity="0"/>']
-
-
 def build_window(win):
     """Window on the east or west wall (thin along x): glass, frame, sill."""
     x, y, z = win["pos"]
@@ -457,8 +446,10 @@ def build_zones(zones, zc):
 
 # -------------------------------------------------------------------------- generate
 def ensure_textures():
-    needed = ["floor_wood.png", "wood.png", "shelf_wood.png", "plaster.png", "sign_shelfsage.png"]
-    if all((TEXTURE_DIR / n).exists() for n in needed):
+    for n in ("floor_laminate.png", "oak_veneer.png"):                # photo textures, in the repo
+        if not (TEXTURE_DIR / n).exists():
+            raise FileNotFoundError(f"scene/textures/{n} is missing (part of the repository)")
+    if (TEXTURE_DIR / "plaster.png").exists():
         return
     print("Textures missing, generating them first ...")
     import make_textures
@@ -491,8 +482,6 @@ def generate():
     body += build_walls(room, hidden)
     body += build_zones(zones, zc)
     body += build_window(win)
-    if "sign" in layout:
-        body += build_sign(room, layout["sign"])
     body += table_xml
     body += shelf_geoms
     body += book_xml
@@ -535,8 +524,6 @@ def generate():
     <material name="wood_mat" texture="wood_tex" texuniform="true" texrepeat="1 1" specular="0.25" shininess="0.30"/>
     <material name="shelf_mat" texture="shelf_tex" texuniform="true" texrepeat="1 1" specular="0.25" shininess="0.30"/>
     <material name="plaster_mat" texture="plaster_tex" texuniform="true" texrepeat="0.5 0.5" specular="0.05" shininess="0.05"/>
-    <texture name="sign_tex" type="2d" file="sign_shelfsage.png"/>
-    <material name="sign_mat" texture="sign_tex" specular="0.05" shininess="0.05"/>
     {spine_assets}
     <texture name="zone_label_tex" type="2d" file="zone_label.png"/>
     <material name="zone_label_mat" texture="zone_label_tex" specular="0.1" shininess="0.1"/>

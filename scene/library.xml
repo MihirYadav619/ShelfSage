@@ -53,7 +53,6 @@
     <texture type="2d" colorspace="linear" name="wood_tex" file="oak_veneer.png"/>
     <texture type="2d" colorspace="linear" name="shelf_tex" file="oak_veneer.png"/>
     <texture type="2d" colorspace="linear" name="plaster_tex" file="plaster.png"/>
-    <texture type="2d" colorspace="linear" name="sign_tex" file="sign_shelfsage.png"/>
     <texture type="2d" colorspace="linear" name="spine_linalg_tex" file="spine_linalg.png"/>
     <texture type="2d" colorspace="linear" name="cover_linalg_tex" file="cover_linalg.png"/>
     <texture type="2d" colorspace="linear" name="cover_linalg_head_tex" file="cover_linalg_head.png"/>
@@ -230,7 +229,6 @@
     <material name="wood_mat" texture="wood_tex" texuniform="true" specular="0.25" shininess="0.3"/>
     <material name="shelf_mat" texture="shelf_tex" texuniform="true" specular="0.25" shininess="0.3"/>
     <material name="plaster_mat" texture="plaster_tex" texrepeat="0.5 0.5" texuniform="true" specular="0.05" shininess="0.05"/>
-    <material name="sign_mat" texture="sign_tex" specular="0.05" shininess="0.05"/>
     <material name="spine_linalg_mat" texture="spine_linalg_tex" specular="0.2" shininess="0.3"/>
     <material name="cover_linalg_mat" texture="cover_linalg_tex" specular="0.15" shininess="0.3"/>
     <material name="cover_linalg_head_mat" texture="cover_linalg_head_tex" specular="0.15" shininess="0.3"/>
