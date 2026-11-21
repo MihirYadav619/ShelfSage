@@ -1,0 +1,1245 @@
+{
+ "planner": "llm",
+ "level": "plan",
+ "repeat": 2,
+ "effort": "medium",
+ "perception": false,
+ "robot_pose": "mcl",
+ "date": "2026-11-22 04:06",
+ "tasks_version": 1,
+ "wall_time": 147.6,
+ "results": [
+  {
+   "id": "S01",
+   "category": "single",
+   "command": "Put Machine Learning in S2-A3",
+   "plan": [
+    "FIND_BOOK(Machine Learning)",
+    "NAVIGATE(Table B)",
+    "GRASP(Machine Learning)",
+    "NAVIGATE(S2-A3)",
+    "PLACE(Machine Learning, S2-A3)",
+    "VERIFY(Machine Learning, S2-A3)"
+   ],
+   "planner_message": "Machine Learning is currently at Table B, and S2-A3 has 5 free slots available.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 2.462,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.36,
+   "usage": {
+    "input": 2516,
+    "output": 616,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"Machine Learning is currently at Table B, and S2-A3 has 5 free slots available.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Machine Learning\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table B\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Machine Learning\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Machine Learning\",\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Machine Learning\",\n        \"S2-A3\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "S02",
+   "category": "single",
+   "command": "Move Physics to Table A",
+   "plan": [
+    "FIND_BOOK(Physics)",
+    "NAVIGATE(S2-A1)",
+    "GRASP(Physics)",
+    "NAVIGATE(Table A)",
+    "PLACE(Physics, Table A)",
+    "VERIFY(Physics, Table A)"
+   ],
+   "planner_message": "Physics is located in S2-A1, and Table A has 2 free edge spots available.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 2.6352,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.63,
+   "usage": {
+    "input": 2512,
+    "output": 597,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"Physics is located in S2-A1, and Table A has 2 free edge spots available.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Physics\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S2-A1\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Physics\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table A\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Physics\",\n        \"Table A\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Physics\",\n        \"Table A\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "S03",
+   "category": "single",
+   "command": "Place Calculus on Table C",
+   "plan": [
+    "FIND_BOOK(Calculus)",
+    "NAVIGATE(Table A)",
+    "GRASP(Calculus)",
+    "NAVIGATE(Table C)",
+    "PLACE(Calculus, Table C)",
+    "VERIFY(Calculus, Table C)"
+   ],
+   "planner_message": "'Calculus' is at Table A, and Table C has free edge spots available.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 2.1843,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.18,
+   "usage": {
+    "input": 2512,
+    "output": 468,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\"status\": \"plan\", \"reason\": \"'Calculus' is at Table A, and Table C has free edge spots available.\", \"plan\": [{\"action\": \"FIND_BOOK\", \"args\": [\"Calculus\"]}, {\"action\": \"NAVIGATE\", \"args\": [\"Table A\"]}, {\"action\": \"GRASP\", \"args\": [\"Calculus\"]}, {\"action\": \"NAVIGATE\", \"args\": [\"Table C\"]}, {\"action\": \"PLACE\", \"args\": [\"Calculus\", \"Table C\"]}, {\"action\": \"VERIFY\", \"args\": [\"Calculus\", \"Table C\"]}]}"
+   ]
+  },
+  {
+   "id": "S04",
+   "category": "single",
+   "command": "Move Kinematics to S3-B2",
+   "plan": [
+    "FIND_BOOK(Kinematics)",
+    "NAVIGATE(S2-A1)",
+    "GRASP(Kinematics)",
+    "NAVIGATE(S3-B2)",
+    "PLACE(Kinematics, S3-B2)",
+    "VERIFY(Kinematics, S3-B2)"
+   ],
+   "planner_message": "'Kinematics' is currently in S2-A1 and S3-B2 has free slots available.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 22.6646,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 22.66,
+   "usage": {
+    "input": 2517,
+    "output": 389,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\"status\": \"plan\", \"reason\": \"'Kinematics' is currently in S2-A1 and S3-B2 has free slots available.\", \"plan\": [{\"action\": \"FIND_BOOK\", \"args\": [\"Kinematics\"]}, {\"action\": \"NAVIGATE\", \"args\": [\"S2-A1\"]}, {\"action\": \"GRASP\", \"args\": [\"Kinematics\"]}, {\"action\": \"NAVIGATE\", \"args\": [\"S3-B2\"]}, {\"action\": \"PLACE\", \"args\": [\"Kinematics\", \"S3-B2\"]}, {\"action\": \"VERIFY\", \"args\": [\"Kinematics\", \"S3-B2\"]}]}"
+   ]
+  },
+  {
+   "id": "S05",
+   "category": "single",
+   "command": "Bring Databases to Table D",
+   "plan": [
+    "FIND_BOOK(Databases)",
+    "NAVIGATE(Table E)",
+    "GRASP(Databases)",
+    "NAVIGATE(Table D)",
+    "PLACE(Databases, Table D)",
+    "VERIFY(Databases, Table D)"
+   ],
+   "planner_message": "Databases is currently at Table E and Table D has available edge spots.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 2.8685,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.86,
+   "usage": {
+    "input": 2512,
+    "output": 536,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"Databases is currently at Table E and Table D has available edge spots.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Databases\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table E\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Databases\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table D\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Databases\",\n        \"Table D\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Databases\",\n        \"Table D\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "S06",
+   "category": "single",
+   "command": "Put Thermodynamics on shelf S1",
+   "plan": [
+    "FIND_BOOK(Thermodynamics)",
+    "NAVIGATE(Table F)",
+    "GRASP(Thermodynamics)",
+    "NAVIGATE(S1-A1)",
+    "PLACE(Thermodynamics, S1-A1)",
+    "VERIFY(Thermodynamics, S1-A1)"
+   ],
+   "planner_message": "Thermodynamics is on Table F. Shelf S1's first available compartment with free slots is S1-A1.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 2.7447,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.74,
+   "usage": {
+    "input": 2513,
+    "output": 748,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"Thermodynamics is on Table F. Shelf S1's first available compartment with free slots is S1-A1.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Thermodynamics\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table F\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Thermodynamics\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S1-A1\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Thermodynamics\",\n        \"S1-A1\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Thermodynamics\",\n        \"S1-A1\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "S07",
+   "category": "single",
+   "command": "Return Linear Algebra to the shelf",
+   "plan": [
+    "FIND_BOOK(Linear Algebra)",
+    "NAVIGATE(Table A)",
+    "GRASP(Linear Algebra)",
+    "NAVIGATE(S1-A1)",
+    "PLACE(Linear Algebra, S1-A1)",
+    "VERIFY(Linear Algebra, S1-A1)"
+   ],
+   "planner_message": "Linear Algebra is at Table A. The nearest shelf is S1 on the west side, and S1-A1 is the first compartment with available free slots.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 4.7248,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 4.72,
+   "usage": {
+    "input": 2513,
+    "output": 1552,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"Linear Algebra is at Table A. The nearest shelf is S1 on the west side, and S1-A1 is the first compartment with available free slots.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Linear Algebra\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table A\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Linear Algebra\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S1-A1\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Linear Algebra\",\n        \"S1-A1\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Linear Algebra\",\n        \"S1-A1\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "S08",
+   "category": "single",
+   "command": "Put Control Systems in S2-B3",
+   "plan": [
+    "FIND_BOOK(Control Systems)",
+    "NAVIGATE(Table C)",
+    "GRASP(Control Systems)",
+    "NAVIGATE(S2-B3)",
+    "PLACE(Control Systems, S2-B3)",
+    "VERIFY(Control Systems, S2-B3)"
+   ],
+   "planner_message": "Control Systems is at Table C, and S2-B3 has free slots available.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 2.2884,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.28,
+   "usage": {
+    "input": 2516,
+    "output": 570,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"Control Systems is at Table C, and S2-B3 has free slots available.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Control Systems\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table C\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Control Systems\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S2-B3\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Control Systems\",\n        \"S2-B3\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Control Systems\",\n        \"S2-B3\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "M01",
+   "category": "multi",
+   "command": "Put Deep Learning and Robotics into S2-A3",
+   "plan": [
+    "FIND_BOOK(Deep Learning)",
+    "NAVIGATE(Table B)",
+    "GRASP(Deep Learning)",
+    "NAVIGATE(S2-A3)",
+    "PLACE(Deep Learning, S2-A3)",
+    "VERIFY(Deep Learning, S2-A3)",
+    "FIND_BOOK(Robotics)",
+    "NAVIGATE(Table B)",
+    "GRASP(Robotics)",
+    "NAVIGATE(S2-A3)",
+    "PLACE(Robotics, S2-A3)",
+    "VERIFY(Robotics, S2-A3)"
+   ],
+   "planner_message": "Deep Learning and Robotics are both on Table B, and S2-A3 has enough free slots to hold them.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 3.3244,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 3.31,
+   "usage": {
+    "input": 2518,
+    "output": 991,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"Deep Learning and Robotics are both on Table B, and S2-A3 has enough free slots to hold them.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Deep Learning\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table B\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Deep Learning\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Deep Learning\",\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Deep Learning\",\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Robotics\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table B\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Robotics\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Robotics\",\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Robotics\",\n        \"S2-A3\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "M02",
+   "category": "multi",
+   "command": "Move Algorithms to S2-A3 and then move Databases to S2-A3",
+   "plan": [
+    "FIND_BOOK(Algorithms)",
+    "NAVIGATE(Table E)",
+    "GRASP(Algorithms)",
+    "NAVIGATE(S2-A3)",
+    "PLACE(Algorithms, S2-A3)",
+    "VERIFY(Algorithms, S2-A3)",
+    "FIND_BOOK(Databases)",
+    "NAVIGATE(Table E)",
+    "GRASP(Databases)",
+    "NAVIGATE(S2-A3)",
+    "PLACE(Databases, S2-A3)",
+    "VERIFY(Databases, S2-A3)"
+   ],
+   "planner_message": "Algorithms and Databases are both located at Table E, and compartment S2-A3 has 5 free slots, which is enough to hold both books.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 4.8163,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 4.81,
+   "usage": {
+    "input": 2525,
+    "output": 1053,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"Algorithms and Databases are both located at Table E, and compartment S2-A3 has 5 free slots, which is enough to hold both books.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Algorithms\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table E\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Algorithms\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Algorithms\",\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Algorithms\",\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Databases\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table E\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Databases\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Databases\",\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Databases\",\n        \"S2-A3\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "M03",
+   "category": "multi",
+   "command": "Put Python Programming on Table A, then put Statistics in S2-A3",
+   "plan": [
+    "FIND_BOOK(Python Programming)",
+    "NAVIGATE(Table D)",
+    "GRASP(Python Programming)",
+    "NAVIGATE(Table A)",
+    "PLACE(Python Programming, Table A)",
+    "VERIFY(Python Programming, Table A)",
+    "FIND_BOOK(Statistics)",
+    "NAVIGATE(S2-B2)",
+    "GRASP(Statistics)",
+    "NAVIGATE(S2-A3)",
+    "PLACE(Statistics, S2-A3)",
+    "VERIFY(Statistics, S2-A3)"
+   ],
+   "planner_message": "Python Programming is at Table D and will be placed on Table A (which has free edge spots). Statistics is at S2-B2 and will be placed in S2-A3 (which has free slots).",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 2.7933,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.78,
+   "usage": {
+    "input": 2523,
+    "output": 837,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"Python Programming is at Table D and will be placed on Table A (which has free edge spots). Statistics is at S2-B2 and will be placed in S2-A3 (which has free slots).\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Python Programming\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table D\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Python Programming\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table A\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Python Programming\",\n        \"Table A\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Python Programming\",\n        \"Table A\"\n      ]\n    },\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Statistics\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S2-B2\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Statistics\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Statistics\",\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Statistics\",\n        \"S2-A3\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "M04",
+   "category": "multi",
+   "command": "Swap Physics and Linear Algebra",
+   "plan": [
+    "FIND_BOOK(Linear Algebra)",
+    "NAVIGATE(Table A)",
+    "GRASP(Linear Algebra)",
+    "NAVIGATE(S2-A1)",
+    "PLACE(Linear Algebra, S2-A1)",
+    "VERIFY(Linear Algebra, S2-A1)",
+    "FIND_BOOK(Physics)",
+    "NAVIGATE(S2-A1)",
+    "GRASP(Physics)",
+    "NAVIGATE(Table A)",
+    "PLACE(Physics, Table A)",
+    "VERIFY(Physics, Table A)"
+   ],
+   "planner_message": "Physics is at S2-A1 and Linear Algebra is at Table A. Swapped them by moving Linear Algebra to S2-A1 and Physics to Table A, verifying both.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 5.252,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 5.24,
+   "usage": {
+    "input": 2512,
+    "output": 1993,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"Physics is at S2-A1 and Linear Algebra is at Table A. Swapped them by moving Linear Algebra to S2-A1 and Physics to Table A, verifying both.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Linear Algebra\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table A\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Linear Algebra\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S2-A1\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Linear Algebra\",\n        \"S2-A1\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Linear Algebra\",\n        \"S2-A1\"\n      ]\n    },\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Physics\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S2-A1\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Physics\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table A\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Physics\",\n        \"Table A\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Physics\",\n        \"Table A\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "M05",
+   "category": "multi",
+   "command": "Put all the books from Table B into S2-A3",
+   "plan": [
+    "FIND_BOOK(Deep Learning)",
+    "NAVIGATE(Table B)",
+    "GRASP(Deep Learning)",
+    "NAVIGATE(S2-A3)",
+    "PLACE(Deep Learning, S2-A3)",
+    "VERIFY(Deep Learning, S2-A3)",
+    "FIND_BOOK(Machine Learning)",
+    "NAVIGATE(Table B)",
+    "GRASP(Machine Learning)",
+    "NAVIGATE(S2-A3)",
+    "PLACE(Machine Learning, S2-A3)",
+    "VERIFY(Machine Learning, S2-A3)",
+    "FIND_BOOK(Robotics)",
+    "NAVIGATE(Table B)",
+    "GRASP(Robotics)",
+    "NAVIGATE(S2-A3)",
+    "PLACE(Robotics, S2-A3)",
+    "VERIFY(Robotics, S2-A3)"
+   ],
+   "planner_message": "Table B contains Deep Learning, Machine Learning, and Robotics, and S2-A3 has 5 free slots, which is enough for all 3 books.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 2.7805,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.77,
+   "usage": {
+    "input": 2520,
+    "output": 870,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\"status\": \"plan\", \"reason\": \"Table B contains Deep Learning, Machine Learning, and Robotics, and S2-A3 has 5 free slots, which is enough for all 3 books.\", \"plan\": [{\"action\": \"FIND_BOOK\", \"args\": [\"Deep Learning\"]}, {\"action\": \"NAVIGATE\", \"args\": [\"Table B\"]}, {\"action\": \"GRASP\", \"args\": [\"Deep Learning\"]}, {\"action\": \"NAVIGATE\", \"args\": [\"S2-A3\"]}, {\"action\": \"PLACE\", \"args\": [\"Deep Learning\", \"S2-A3\"]}, {\"action\": \"VERIFY\", \"args\": [\"Deep Learning\", \"S2-A3\"]}, {\"action\": \"FIND_BOOK\", \"args\": [\"Machine Learning\"]}, {\"action\": \"NAVIGATE\", \"args\": [\"Table B\"]}, {\"action\": \"GRASP\", \"args\": [\"Machine Learning\"]}, {\"action\": \"NAVIGATE\", \"args\": [\"S2-A3\"]}, {\"action\": \"PLACE\", \"args\": [\"Machine Learning\", \"S2-A3\"]}, {\"action\": \"VERIFY\", \"args\": [\"Machine Learning\", \"S2-A3\"]}, {\"action\": \"FIND_BOOK\", \"args\": [\"Robotics\"]}, {\"action\": \"NAVIGATE\", \"args\": [\"Table B\"]}, {\"action\": \"GRASP\", \"args\": [\"Robotics\"]}, {\"action\": \"NAVIGATE\", \"args\": [\"S2-A3\"]}, {\"action\": \"PLACE\", \"args\": [\"Robotics\", \"S2-A3\"]}, {\"action\": \"VERIFY\", \"args\": [\"Robotics\", \"S2-A3\"]}]}"
+   ]
+  },
+  {
+   "id": "M06",
+   "category": "multi",
+   "command": "Clear Table E",
+   "plan": [],
+   "planner_message": "The command 'Clear Table E' does not specify a target location where the books should be moved.",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: The command 'Clear Table E' does not specify a target location where the books should be moved.",
+   "plan_time": 4.2053,
+   "llm_status": "refuse",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 4.2,
+   "usage": {
+    "input": 2510,
+    "output": 1133,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"refuse\",\n  \"reason\": \"The command 'Clear Table E' does not specify a target location where the books should be moved.\",\n  \"plan\": []\n}"
+   ]
+  },
+  {
+   "id": "P01",
+   "category": "phrasing",
+   "command": "Could you shelve the Machine Learning book in compartment A3 of the middle shelf?",
+   "plan": [
+    "FIND_BOOK(Machine Learning)",
+    "NAVIGATE(Table B)",
+    "GRASP(Machine Learning)",
+    "NAVIGATE(S2-A3)",
+    "PLACE(Machine Learning, S2-A3)",
+    "VERIFY(Machine Learning, S2-A3)"
+   ],
+   "planner_message": "Machine Learning is currently at Table B, and the middle shelf compartment A3 is S2-A3, which has 5 free slots.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 2.317,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.31,
+   "usage": {
+    "input": 2524,
+    "output": 656,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"Machine Learning is currently at Table B, and the middle shelf compartment A3 is S2-A3, which has 5 free slots.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Machine Learning\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table B\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Machine Learning\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Machine Learning\",\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Machine Learning\",\n        \"S2-A3\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "P02",
+   "category": "phrasing",
+   "command": "I need the physics textbook on table A, please",
+   "plan": [
+    "FIND_BOOK(Physics)",
+    "NAVIGATE(S2-A1)",
+    "GRASP(Physics)",
+    "NAVIGATE(Table A)",
+    "PLACE(Physics, Table A)",
+    "VERIFY(Physics, Table A)"
+   ],
+   "planner_message": "'the physics textbook' is Physics, currently in S2-A1. Table A has free edge spots.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 2.1577,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.15,
+   "usage": {
+    "input": 2517,
+    "output": 438,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"'the physics textbook' is Physics, currently in S2-A1. Table A has free edge spots.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Physics\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S2-A1\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Physics\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table A\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Physics\",\n        \"Table A\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Physics\",\n        \"Table A\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "P03",
+   "category": "phrasing",
+   "command": "The ML book belongs in S2-A3",
+   "plan": [
+    "FIND_BOOK(Machine Learning)",
+    "NAVIGATE(Table B)",
+    "GRASP(Machine Learning)",
+    "NAVIGATE(S2-A3)",
+    "PLACE(Machine Learning, S2-A3)",
+    "VERIFY(Machine Learning, S2-A3)"
+   ],
+   "planner_message": "The ML book is Machine Learning, currently at Table B, and S2-A3 has free slots.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 2.4389,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.43,
+   "usage": {
+    "input": 2517,
+    "output": 507,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"The ML book is Machine Learning, currently at Table B, and S2-A3 has free slots.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Machine Learning\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table B\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Machine Learning\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Machine Learning\",\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Machine Learning\",\n        \"S2-A3\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "P04",
+   "category": "phrasing",
+   "command": "Grab deep learning from table B and drop it into the middle shelf, bottom row, third compartment",
+   "plan": [
+    "FIND_BOOK(Deep Learning)",
+    "NAVIGATE(Table B)",
+    "GRASP(Deep Learning)",
+    "NAVIGATE(S2-A3)",
+    "PLACE(Deep Learning, S2-A3)",
+    "VERIFY(Deep Learning, S2-A3)"
+   ],
+   "planner_message": "Deep Learning is on Table B, and the middle shelf bottom row third compartment is S2-A3, which has free slots.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 2.319,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.31,
+   "usage": {
+    "input": 2526,
+    "output": 546,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"Deep Learning is on Table B, and the middle shelf bottom row third compartment is S2-A3, which has free slots.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Deep Learning\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table B\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Deep Learning\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Deep Learning\",\n        \"S2-A3\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Deep Learning\",\n        \"S2-A3\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "P05",
+   "category": "phrasing",
+   "command": "Kinematics should go to the top row of shelf S3, second compartment",
+   "plan": [
+    "FIND_BOOK(Kinematics)",
+    "NAVIGATE(S2-A1)",
+    "GRASP(Kinematics)",
+    "NAVIGATE(S3-B2)",
+    "PLACE(Kinematics, S3-B2)",
+    "VERIFY(Kinematics, S3-B2)"
+   ],
+   "planner_message": "Kinematics is currently in S2-A1 and needs to be moved to S3-B2 (the second compartment of the top row of shelf S3).",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 2.5944,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.59,
+   "usage": {
+    "input": 2523,
+    "output": 614,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"Kinematics is currently in S2-A1 and needs to be moved to S3-B2 (the second compartment of the top row of shelf S3).\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Kinematics\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S2-A1\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Kinematics\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S3-B2\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Kinematics\",\n        \"S3-B2\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Kinematics\",\n        \"S3-B2\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "P06",
+   "category": "phrasing",
+   "command": "Put away Linear Algebra",
+   "plan": [],
+   "planner_message": "The command 'Put away Linear Algebra' does not specify a target shelf or compartment, making the destination ambiguous.",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: The command 'Put away Linear Algebra' does not specify a target shelf or compartment, making the destination ambiguous.",
+   "plan_time": 4.9068,
+   "llm_status": "refuse",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 4.9,
+   "usage": {
+    "input": 2511,
+    "output": 1049,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"refuse\",\n  \"reason\": \"The command 'Put away Linear Algebra' does not specify a target shelf or compartment, making the destination ambiguous.\",\n  \"plan\": []\n}"
+   ]
+  },
+  {
+   "id": "P07",
+   "category": "phrasing",
+   "command": "Can the robot take the databases book to table D?",
+   "plan": [
+    "FIND_BOOK(Databases)",
+    "NAVIGATE(Table E)",
+    "GRASP(Databases)",
+    "NAVIGATE(Table D)",
+    "PLACE(Databases, Table D)",
+    "VERIFY(Databases, Table D)"
+   ],
+   "planner_message": "Databases is currently at Table E. Find it, pick it up, navigate to Table D (which has free edge spots), place it there, and verify.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 2.4719,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.47,
+   "usage": {
+    "input": 2518,
+    "output": 611,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"Databases is currently at Table E. Find it, pick it up, navigate to Table D (which has free edge spots), place it there, and verify.\",\n  \"plan\": [\n    {\"action\": \"FIND_BOOK\", \"args\": [\"Databases\"]},\n    {\"action\": \"NAVIGATE\", \"args\": [\"Table E\"]},\n    {\"action\": \"GRASP\", \"args\": [\"Databases\"]},\n    {\"action\": \"NAVIGATE\", \"args\": [\"Table D\"]},\n    {\"action\": \"PLACE\", \"args\": [\"Databases\", \"Table D\"]},\n    {\"action\": \"VERIFY\", \"args\": [\"Databases\", \"Table D\"]}\n  ]\n}"
+   ]
+  },
+  {
+   "id": "P08",
+   "category": "phrasing",
+   "command": "Thermodynamics goes on the first shelf",
+   "plan": [
+    "FIND_BOOK(Thermodynamics)",
+    "NAVIGATE(Table F)",
+    "GRASP(Thermodynamics)",
+    "NAVIGATE(S1-A1)",
+    "PLACE(Thermodynamics, S1-A1)",
+    "VERIFY(Thermodynamics, S1-A1)"
+   ],
+   "planner_message": "Thermodynamics is at Table F, and the first shelf is S1; S1-A1 is the first compartment with available capacity.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 2.8269,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.82,
+   "usage": {
+    "input": 2513,
+    "output": 685,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"Thermodynamics is at Table F, and the first shelf is S1; S1-A1 is the first compartment with available capacity.\",\n  \"plan\": [\n    {\"action\": \"FIND_BOOK\", \"args\": [\"Thermodynamics\"]},\n    {\"action\": \"NAVIGATE\", \"args\": [\"Table F\"]},\n    {\"action\": \"GRASP\", \"args\": [\"Thermodynamics\"]},\n    {\"action\": \"NAVIGATE\", \"args\": [\"S1-A1\"]},\n    {\"action\": \"PLACE\", \"args\": [\"Thermodynamics\", \"S1-A1\"]},\n    {\"action\": \"VERIFY\", \"args\": [\"Thermodynamics\", \"S1-A1\"]}\n  ]\n}"
+   ]
+  },
+  {
+   "id": "X01",
+   "category": "spatial",
+   "command": "Take the book on Table D and put it in the empty compartment nearest to the window",
+   "plan": [
+    "FIND_BOOK(Python Programming)",
+    "NAVIGATE(Table D)",
+    "GRASP(Python Programming)",
+    "NAVIGATE(S3-A4)",
+    "PLACE(Python Programming, S3-A4)",
+    "VERIFY(Python Programming, S3-A4)"
+   ],
+   "planner_message": "The book on Table D is Python Programming. The empty compartment nearest to the window is S3-A4 with a distance of 2.69 m.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 3.1743,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 3.17,
+   "usage": {
+    "input": 6396,
+    "output": 1138,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\"status\": \"plan\", \"reason\": \"The book on Table D is Python Programming. The empty compartment nearest to the window is S3-A4 with a distance of 2.69 m.\", \"plan\": [{\"action\": \"FIND_BOOK\", \"args\": [\"Python Programming\"]}, {\"action\": \"NAVIGATE\", \"args\": [\"Table D\"]}, {\"action\": \"GRASP\", \"args\": [\"Python Programming\"]}, {\"action\": \"NAVIGATE\", \"args\": [\"S3-A4\"]}, {\"action\": \"PLACE\", \"args\": [\"Python Programming\", \"S3-A4\"]}, {\"action\": \"VERIFY\", \"args\": [\"Python Programming\", \"S3-A4\"]}]}"
+   ]
+  },
+  {
+   "id": "X02",
+   "category": "spatial",
+   "command": "Put the book on Table F on the shelf closest to it",
+   "plan": [
+    "FIND_BOOK(Thermodynamics)",
+    "NAVIGATE(Table F)",
+    "GRASP(Thermodynamics)",
+    "NAVIGATE(S3-A1)",
+    "PLACE(Thermodynamics, S3-A1)",
+    "VERIFY(Thermodynamics, S3-A1)"
+   ],
+   "planner_message": "The book on Table F is Thermodynamics. The closest shelf is S3, and S3-A1 is the first compartment of S3 with free slots.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 3.8118,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 3.8,
+   "usage": {
+    "input": 2519,
+    "output": 1247,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"The book on Table F is Thermodynamics. The closest shelf is S3, and S3-A1 is the first compartment of S3 with free slots.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Thermodynamics\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table F\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Thermodynamics\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S3-A1\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Thermodynamics\",\n        \"S3-A1\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Thermodynamics\",\n        \"S3-A1\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "X03",
+   "category": "spatial",
+   "command": "Put the book standing next to Physics in S2-A1 on Table C",
+   "plan": [
+    "FIND_BOOK(Kinematics)",
+    "NAVIGATE(S2-A1)",
+    "GRASP(Kinematics)",
+    "NAVIGATE(Table C)",
+    "PLACE(Kinematics, Table C)",
+    "VERIFY(Kinematics, Table C)"
+   ],
+   "planner_message": "The book next to Physics in S2-A1 is Kinematics, located in S2-A1.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 2.8975,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.89,
+   "usage": {
+    "input": 2523,
+    "output": 770,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\"status\": \"plan\", \"reason\": \"The book next to Physics in S2-A1 is Kinematics, located in S2-A1.\", \"plan\": [{\"action\": \"FIND_BOOK\", \"args\": [\"Kinematics\"]}, {\"action\": \"NAVIGATE\", \"args\": [\"S2-A1\"]}, {\"action\": \"GRASP\", \"args\": [\"Kinematics\"]}, {\"action\": \"NAVIGATE\", \"args\": [\"Table C\"]}, {\"action\": \"PLACE\", \"args\": [\"Kinematics\", \"Table C\"]}, {\"action\": \"VERIFY\", \"args\": [\"Kinematics\", \"Table C\"]}]}"
+   ]
+  },
+  {
+   "id": "X04",
+   "category": "spatial",
+   "command": "Bring the book from the compartment above S2-A4 to Table E",
+   "plan": [
+    "FIND_BOOK(Power Electronics)",
+    "NAVIGATE(S2-B4)",
+    "GRASP(Power Electronics)",
+    "NAVIGATE(Table E)",
+    "PLACE(Power Electronics, Table E)",
+    "VERIFY(Power Electronics, Table E)"
+   ],
+   "planner_message": "The compartment above S2-A4 is S2-B4, which holds Power Electronics. Table E has free edge spots.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 2.5934,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.59,
+   "usage": {
+    "input": 2522,
+    "output": 496,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\"status\": \"plan\", \"reason\": \"The compartment above S2-A4 is S2-B4, which holds Power Electronics. Table E has free edge spots.\", \"plan\": [{\"action\": \"FIND_BOOK\", \"args\": [\"Power Electronics\"]}, {\"action\": \"NAVIGATE\", \"args\": [\"S2-B4\"]}, {\"action\": \"GRASP\", \"args\": [\"Power Electronics\"]}, {\"action\": \"NAVIGATE\", \"args\": [\"Table E\"]}, {\"action\": \"PLACE\", \"args\": [\"Power Electronics\", \"Table E\"]}, {\"action\": \"VERIFY\", \"args\": [\"Power Electronics\", \"Table E\"]}]}"
+   ]
+  },
+  {
+   "id": "X05",
+   "category": "spatial",
+   "command": "Move the only book in S3-A3 to an empty compartment next to it",
+   "plan": [
+    "FIND_BOOK(Artificial Intelligence)",
+    "NAVIGATE(S3-A3)",
+    "GRASP(Artificial Intelligence)",
+    "NAVIGATE(S3-A2)",
+    "PLACE(Artificial Intelligence, S3-A2)",
+    "VERIFY(Artificial Intelligence, S3-A2)"
+   ],
+   "planner_message": "The only book in S3-A3 is Artificial Intelligence. The empty adjacent compartments are S3-A2 and S3-A4, and S3-A2 is chosen as it comes first.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 3.1004,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 3.09,
+   "usage": {
+    "input": 2524,
+    "output": 944,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"The only book in S3-A3 is Artificial Intelligence. The empty adjacent compartments are S3-A2 and S3-A4, and S3-A2 is chosen as it comes first.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Artificial Intelligence\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S3-A3\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Artificial Intelligence\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S3-A2\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Artificial Intelligence\",\n        \"S3-A2\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Artificial Intelligence\",\n        \"S3-A2\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "X06",
+   "category": "spatial",
+   "command": "Put the book from the table nearest the window into S3-B3",
+   "plan": [
+    "FIND_BOOK(Thermodynamics)",
+    "NAVIGATE(Table F)",
+    "GRASP(Thermodynamics)",
+    "NAVIGATE(S3-B3)",
+    "PLACE(Thermodynamics, S3-B3)",
+    "VERIFY(Thermodynamics, S3-B3)"
+   ],
+   "planner_message": "Table F is the table nearest the window (1.55 m away) and holds Thermodynamics. S3-B3 is the target compartment with free slots.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 3.0877,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 3.08,
+   "usage": {
+    "input": 2522,
+    "output": 842,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"Table F is the table nearest the window (1.55 m away) and holds Thermodynamics. S3-B3 is the target compartment with free slots.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Thermodynamics\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table F\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Thermodynamics\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"S3-B3\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Thermodynamics\",\n        \"S3-B3\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Thermodynamics\",\n        \"S3-B3\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "X07",
+   "category": "spatial",
+   "command": "Move Deep Learning to the table with the fewest books",
+   "plan": [
+    "FIND_BOOK(Deep Learning)",
+    "NAVIGATE(Table B)",
+    "GRASP(Deep Learning)",
+    "NAVIGATE(Table D)",
+    "PLACE(Deep Learning, Table D)",
+    "VERIFY(Deep Learning, Table D)"
+   ],
+   "planner_message": "'Deep Learning' is at Table B. Table D and Table F both have the fewest books (1 book each); selecting Table D.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 4.0361,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 4.03,
+   "usage": {
+    "input": 2517,
+    "output": 1252,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"'Deep Learning' is at Table B. Table D and Table F both have the fewest books (1 book each); selecting Table D.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Deep Learning\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table B\"\n      ]\n    },\n    {\n      \"action\": \"GRASP\",\n      \"args\": [\n        \"Deep Learning\"\n      ]\n    },\n    {\n      \"action\": \"NAVIGATE\",\n      \"args\": [\n        \"Table D\"\n      ]\n    },\n    {\n      \"action\": \"PLACE\",\n      \"args\": [\n        \"Deep Learning\",\n        \"Table D\"\n      ]\n    },\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Deep Learning\",\n        \"Table D\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "X08",
+   "category": "spatial",
+   "command": "Put Graph Theory in an empty compartment of the shelf nearest the window",
+   "plan": [
+    "FIND_BOOK(Graph Theory)",
+    "NAVIGATE(S1-A4)",
+    "GRASP(Graph Theory)",
+    "NAVIGATE(S3-A2)",
+    "PLACE(Graph Theory, S3-A2)",
+    "VERIFY(Graph Theory, S3-A2)"
+   ],
+   "planner_message": "Graph Theory is in S1-A4. The shelf nearest to the window is S3, and its first empty compartment is S3-A2.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 2.7847,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.78,
+   "usage": {
+    "input": 2520,
+    "output": 768,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"Graph Theory is in S1-A4. The shelf nearest to the window is S3, and its first empty compartment is S3-A2.\",\n  \"plan\": [\n    {\"action\": \"FIND_BOOK\", \"args\": [\"Graph Theory\"]},\n    {\"action\": \"NAVIGATE\", \"args\": [\"S1-A4\"]},\n    {\"action\": \"GRASP\", \"args\": [\"Graph Theory\"]},\n    {\"action\": \"NAVIGATE\", \"args\": [\"S3-A2\"]},\n    {\"action\": \"PLACE\", \"args\": [\"Graph Theory\", \"S3-A2\"]},\n    {\"action\": \"VERIFY\", \"args\": [\"Graph Theory\", \"S3-A2\"]}\n  ]\n}"
+   ]
+  },
+  {
+   "id": "Q01",
+   "category": "query",
+   "command": "Where is Statistics?",
+   "plan": [
+    "FIND_BOOK(Statistics)"
+   ],
+   "planner_message": "Statistics is located in compartment S2-B2.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "looks it up",
+   "plan_time": 1.6183,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 1.61,
+   "usage": {
+    "input": 2511,
+    "output": 198,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"Statistics is located in compartment S2-B2.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Statistics\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "Q02",
+   "category": "query",
+   "command": "Which compartment holds the cryptography book?",
+   "plan": [
+    "FIND_BOOK(Cryptography)"
+   ],
+   "planner_message": "A question about which compartment holds Cryptography: look it up with FIND_BOOK.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "looks it up",
+   "plan_time": 1.7436,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 1.74,
+   "usage": {
+    "input": 2514,
+    "output": 198,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"A question about which compartment holds Cryptography: look it up with FIND_BOOK.\",\n  \"plan\": [\n    {\n      \"action\": \"FIND_BOOK\",\n      \"args\": [\n        \"Cryptography\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "Q03",
+   "category": "query",
+   "command": "Check that Physics is in S2-A1",
+   "plan": [
+    "VERIFY(Physics, S2-A1)"
+   ],
+   "planner_message": "A verification check about Physics being in S2-A1.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "checks it",
+   "plan_time": 2.0617,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.06,
+   "usage": {
+    "input": 2517,
+    "output": 408,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"A verification check about Physics being in S2-A1.\",\n  \"plan\": [\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Physics\",\n        \"S2-A1\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "Q04",
+   "category": "query",
+   "command": "Is Machine Learning in S2-A3?",
+   "plan": [
+    "VERIFY(Machine Learning, S2-A3)"
+   ],
+   "planner_message": "A question about whether Machine Learning is in S2-A3: verify it.",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "checks it",
+   "plan_time": 1.9119,
+   "llm_status": "plan",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 1.91,
+   "usage": {
+    "input": 2517,
+    "output": 327,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"plan\",\n  \"reason\": \"A question about whether Machine Learning is in S2-A3: verify it.\",\n  \"plan\": [\n    {\n      \"action\": \"VERIFY\",\n      \"args\": [\n        \"Machine Learning\",\n        \"S2-A3\"\n      ]\n    }\n  ]\n}"
+   ]
+  },
+  {
+   "id": "I01",
+   "category": "infeasible",
+   "command": "Put Harry Potter in S2-A3",
+   "plan": [],
+   "planner_message": "Harry Potter is not in the world state and cannot be found or moved.",
+   "valid": false,
+   "success": true,
+   "reason": "no plan: Harry Potter is not in the world state and cannot be found or moved.",
+   "plan_time": 22.4988,
+   "llm_status": "refuse",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 22.49,
+   "usage": {
+    "input": 2516,
+    "output": 296,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\"status\": \"refuse\", \"reason\": \"Harry Potter is not in the world state and cannot be found or moved.\", \"plan\": []}"
+   ]
+  },
+  {
+   "id": "I02",
+   "category": "infeasible",
+   "command": "Put Calculus on Table B",
+   "plan": [],
+   "planner_message": "Table B has 0 free edge spots, so Calculus cannot be placed there.",
+   "valid": false,
+   "success": true,
+   "reason": "no plan: Table B has 0 free edge spots, so Calculus cannot be placed there.",
+   "plan_time": 2.137,
+   "llm_status": "refuse",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 2.13,
+   "usage": {
+    "input": 2512,
+    "output": 383,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\n  \"status\": \"refuse\",\n  \"reason\": \"Table B has 0 free edge spots, so Calculus cannot be placed there.\",\n  \"plan\": []\n}"
+   ]
+  },
+  {
+   "id": "I03",
+   "category": "infeasible",
+   "command": "Put Machine Learning in S9-A1",
+   "plan": [],
+   "planner_message": "S9-A1 is not a valid compartment because shelf S9 does not exist in the library.",
+   "valid": false,
+   "success": true,
+   "reason": "no plan: S9-A1 is not a valid compartment because shelf S9 does not exist in the library.",
+   "plan_time": 1.7185,
+   "llm_status": "refuse",
+   "backend": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "attempts": 1,
+   "latency": 1.71,
+   "usage": {
+    "input": 2516,
+    "output": 184,
+    "cache_read": 3872,
+    "cache_write": 0
+   },
+   "transcript": [
+    "{\"status\": \"refuse\", \"reason\": \"S9-A1 is not a valid compartment because shelf S9 does not exist in the library.\", \"plan\": []}"
+   ]
+  },
+  {
+   "id": "F01",
+   "category": "failure",
+   "command": "Put Machine Learning in S2-A3",
+   "success": null,
+   "reason": "skipped: failure tasks run at exec level only"
+  },
+  {
+   "id": "F02",
+   "category": "failure",
+   "command": "Put Algorithms in S2-A3",
+   "success": null,
+   "reason": "skipped: failure tasks run at exec level only"
+  },
+  {
+   "id": "F03",
+   "category": "failure",
+   "command": "Bring Databases to Table D",
+   "success": null,
+   "reason": "skipped: failure tasks run at exec level only"
+  },
+  {
+   "id": "F04",
+   "category": "failure",
+   "command": "Move Physics to Table A",
+   "success": null,
+   "reason": "skipped: failure tasks run at exec level only"
+  },
+  {
+   "id": "F05",
+   "category": "failure",
+   "command": "Move Kinematics to S3-B2",
+   "success": null,
+   "reason": "skipped: failure tasks run at exec level only"
+  }
+ ]
+}

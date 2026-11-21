@@ -1,11 +1,13 @@
 {
  "planner": "baseline",
  "level": "plan",
+ "repeat": 1,
+ "effort": null,
  "perception": false,
  "robot_pose": "mcl",
- "date": "2026-11-22 00:55",
+ "date": "2026-11-22 04:02",
  "tasks_version": 1,
- "wall_time": 1.0,
+ "wall_time": 0.6,
  "results": [
   {
    "id": "S01",
@@ -24,7 +26,7 @@
    "validation": [],
    "success": true,
    "reason": "goal holds",
-   "plan_time": 0.0028
+   "plan_time": 0.0033
   },
   {
    "id": "S02",
@@ -43,7 +45,7 @@
    "validation": [],
    "success": true,
    "reason": "goal holds",
-   "plan_time": 0.002
+   "plan_time": 0.0025
   },
   {
    "id": "S03",
@@ -62,7 +64,7 @@
    "validation": [],
    "success": true,
    "reason": "goal holds",
-   "plan_time": 0.0
+   "plan_time": 0.0025
   },
   {
    "id": "S04",
@@ -81,7 +83,7 @@
    "validation": [],
    "success": true,
    "reason": "goal holds",
-   "plan_time": 0.002
+   "plan_time": 0.0027
   },
   {
    "id": "S05",
@@ -100,7 +102,7 @@
    "validation": [],
    "success": true,
    "reason": "goal holds",
-   "plan_time": 0.0029
+   "plan_time": 0.0018
   },
   {
    "id": "S06",
@@ -157,7 +159,7 @@
    "validation": [],
    "success": true,
    "reason": "goal holds",
-   "plan_time": 0.002
+   "plan_time": 0.0025
   },
   {
    "id": "M01",
@@ -182,7 +184,7 @@
    "validation": [],
    "success": true,
    "reason": "goal holds",
-   "plan_time": 0.0035
+   "plan_time": 0.002
   },
   {
    "id": "M02",
@@ -347,7 +349,7 @@
    "valid": false,
    "success": false,
    "reason": "no plan: no book called 'the book' (the baseline needs the exact title)",
-   "plan_time": 0.0
+   "plan_time": 0.002
   },
   {
    "id": "X03",
@@ -427,7 +429,7 @@
    "validation": [],
    "success": true,
    "reason": "looks it up",
-   "plan_time": 0.002
+   "plan_time": 0.0
   },
   {
    "id": "Q02",
@@ -452,7 +454,7 @@
    "validation": [],
    "success": true,
    "reason": "checks it",
-   "plan_time": 0.0005
+   "plan_time": 0.0
   },
   {
    "id": "Q04",
@@ -496,7 +498,7 @@
    ],
    "success": true,
    "reason": "validator rejected it",
-   "plan_time": 0.0016
+   "plan_time": 0.002
   },
   {
    "id": "I03",
@@ -514,35 +516,35 @@
    "category": "failure",
    "command": "Put Machine Learning in S2-A3",
    "success": null,
-   "reason": "skipped: needs failure injection (Phase 9)"
+   "reason": "skipped: failure tasks run at exec level only"
   },
   {
    "id": "F02",
    "category": "failure",
    "command": "Put Algorithms in S2-A3",
    "success": null,
-   "reason": "skipped: needs failure injection (Phase 9)"
+   "reason": "skipped: failure tasks run at exec level only"
   },
   {
    "id": "F03",
    "category": "failure",
    "command": "Bring Databases to Table D",
    "success": null,
-   "reason": "skipped: needs failure injection (Phase 9)"
+   "reason": "skipped: failure tasks run at exec level only"
   },
   {
    "id": "F04",
    "category": "failure",
    "command": "Move Physics to Table A",
    "success": null,
-   "reason": "skipped: needs failure injection (Phase 9)"
+   "reason": "skipped: failure tasks run at exec level only"
   },
   {
    "id": "F05",
    "category": "failure",
    "command": "Move Kinematics to S3-B2",
    "success": null,
-   "reason": "skipped: needs failure injection (Phase 9)"
+   "reason": "skipped: failure tasks run at exec level only"
   }
  ]
 }

@@ -5,7 +5,7 @@
 
 - **Course:** Robot Manipulators (IIT Mandi), course project
 - **Team:** Chirag, Mihir
-- **Status:** Phases 1-9 of 10 complete (skills, A* + MCL navigation, wrist-camera detector, world model + validator + executor, rule-based baseline, LLM planner on the free Gemini API: 36/37 benchmark tasks vs 14/37; failure injection + replanning: the LLM recovers from 4/5 injected failures, the baseline 3/5); Phase 10 (final evaluation, report) next (see [Progress](#8-progress-tracker))
+- **Status:** all 10 phases complete. Executed in the simulator on a 42-task benchmark fixed before the LLM was written: LLM planner (free Gemini API) 92 % of 126 runs, rule-based baseline 40 % (McNemar p = 5e-7); the LLM recovers from 4 of 5 injected failure types. Final report: [docs/report.md](docs/report.md); slides: `presentation/ShelfSage_Final.pptx`; demo: `python run_demo.py --task X01`
 - **Note:** This is the *initial* idea. It can be simplified later if parts become too hard (see [Fallbacks](#9-risks-and-fallbacks)).
 
 > This README is written so that the whole project can be resumed from scratch, for example in a new chat with an AI assistant. See [How to resume](#12-how-to-resume-in-a-new-chat).
@@ -476,7 +476,27 @@ The benchmark was written **before** the LLM planner, so the prompt cannot be tu
   - Open: in F02 the second shelf placement after an aborted one lost the book (PLACE succeeded in the skill's own checks, the book was found outside the shelf). Probably the book shifted in the fingers during the abort's swing back to the carry pose and the in-hand correction did not catch it; not investigated further yet.
 - [ ] Optional (README): VERIFY with the wrist camera compared with ground truth (not done; VERIFY uses ground truth).
 
-### Phase 10: rest not started (benchmark part done above)
+### Phase 10: Final evaluation and report (done)
+
+- [x] **Repeats** (`run_eval.py --repeat k`): the LLM's answers vary between runs, so every task ran 3 times; each repeat asks the model afresh (the cache key includes the repeat), and the plan and exec levels of one repeat share the answers. A daily-quota stop counts a task as not run, not failed.
+- [x] **Final runs** (prompt v3, Gemini 3.5 Flash-Lite, MCL pose, from the reset scene): baseline exec 42 tasks; LLM plan level 3 x 37, exec level 3 x 42 (including the five failure tasks with replanning).
+- [x] **Analysis** (`benchmark/analyze.py` -> `benchmark/results/summary.md`, `summary.json`, `plots/`): success per category with the range over repeats and 95 % Wilson intervals, exact McNemar test, consistency across repeats, planning latency and tokens, simulated execution time, recovery per failure type. Plots follow the dataviz palette (baseline blue, LLM orange, direct labels).
+
+  | category | baseline executed | LLM plan level (3 runs) | LLM executed (3 runs) |
+  |---|---|---|---|
+  | single | 8/8 | 24/24 | 24/24 |
+  | multi | 1/6 | 16/18 | 14/18 |
+  | phrasing | 0/8 | 22/24 | 22/24 |
+  | spatial | 0/8 | 24/24 | 21/24 |
+  | query | 2/4 | 12/12 | 12/12 |
+  | infeasible | 3/3 | 9/9 | 9/9 |
+  | failure | 3/5 | - | 14/15 |
+  | **all** | **17/42 = 40 % [27-56]** | **107/111 = 96 % [91-99]** | **116/126 = 92 % [86-96]** |
+
+  Paired per task (LLM majority): both 17, only the LLM 22, only the baseline 0, neither 3; exact McNemar p = 4.8e-7. LLM planning: median 2.6 s, 90th percentile 4.3 s, no validator retry in 111 requests, ~6.4k input / 0.7k output tokens per command. Outcomes changed between repeats for 3 tasks (M04, P06, F02).
+- [x] **Where the LLM still fails** (10 of 126 runs): 5 are one manipulation limit (placing into the 4th slot of a compartment next to three books: the arm stops ~7 mm short and the set-down finds no board; PLACE now aborts and keeps the book, so the plan fails at that step), 4 are refusals of commands without a destination ("Clear Table E", "Put away Linear Algebra", in 2 of 3 runs each), 1 is the lost book of F02 run 3. The planner is no longer the bottleneck; the skills are. Next step would be sliding the base along the shelf before inserting into a crowded compartment.
+- [x] `run_demo.py`: any command or benchmark task in the viewer, LLM or baseline, with the task's failure injected and replanning shown on screen (`python run_demo.py --task F03`).
+- [x] **Report** `docs/report.md` (problem, system, benchmark and method, results with plots, failure analysis, caveats, how to reproduce) and **slides** `presentation/ShelfSage_Final.pptx` (13 slides: the progress deck plus two planners, the benchmark, failure recovery, conclusions).
 
 ---
 
@@ -551,9 +571,13 @@ ShelfSage/
 │   ├── llm.py                 # LLM planner (Gemini free tier / Claude): world view + prompt -> JSON plan, validator retries
 │   ├── prompts/system.md      # the LLM planner's system prompt
 │   └── schema.json            # the plan's JSON schema (structured outputs)
+├── run_demo.py                # demo: command or benchmark task -> planner -> robot in the viewer, failures + replanning
+├── docs/report.md             # final report
+├── presentation/              # ShelfSage_Progress.pptx (after Phase 6), ShelfSage_Final.pptx
 ├── benchmark/
 │   ├── tasks.json             # 42 benchmark tasks with goals (fixed before the LLM planner)
 │   ├── run_eval.py            # scores a planner on them, plan level (symbolic) or exec level (simulator)
+│   ├── analyze.py             # final metrics, statistics, plots -> results/summary.md, results/plots/
 │   └── results/               # <planner>_<level>.json
 ├── requirements.txt
 ├── NOTES.md                   # robot joints, actuators, sites, poses (generated)

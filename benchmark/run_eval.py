@@ -69,7 +69,8 @@ def llm_planner(command, world, context=None):
         _LLM["p"] = LLMPlanner(effort=os.environ.get("SHELFSAGE_EFFORT", "medium"))
     b = _LLM["p"].backend
     from planner.llm import SYSTEM
-    key = json.dumps([b.name, b.model, b.effort, hashlib.sha1(SYSTEM.encode()).hexdigest(), command,
+    key = json.dumps([b.name, b.model, b.effort, hashlib.sha1(SYSTEM.encode()).hexdigest(),
+                      int(os.environ.get("SHELFSAGE_REPEAT", "1")), command,
                       world["books"], world["robot"], context], sort_keys=True)
     f = CACHE / (hashlib.sha1(key.encode()).hexdigest()[:20] + ".json")
     if f.exists():
@@ -173,9 +174,9 @@ def run_exec(task, planner, perception, truth):
     t0 = time.time()
     try:
         plan, msg, extra = PLANNERS[planner](task["command"], w0)
-    except Exception as e:                       # e.g. the free tier's daily quota
-        return {"plan": [], "valid": False, "success": False, "executed": False,
-                "reason": f"planner failed: {type(e).__name__}: {e}"}
+    except Exception as e:                       # e.g. the free tier's daily quota: not run
+        return {"plan": [], "valid": False, "success": None, "executed": False,
+                "reason": f"not run: {type(e).__name__}: {e}"}
     plan_time = time.time() - t0
     out = score_plan(task, plan, msg, w0)          # plan-level result first
     out["plan_time"] = round(plan_time, 4)
@@ -224,9 +225,9 @@ def run_failure(task, planner, perception=False, truth=False, max_replans=2):
         return plan, msg
     try:
         rec = run_with_replanning(task["command"], plan_fn, robot, max_replans=max_replans, on_step=inj)
-    except Exception as e:                       # e.g. the free tier's daily quota
-        return {"plan": [], "success": False, "executed": False, "injected": inj.done,
-                "reason": f"run failed: {type(e).__name__}: {e}"}
+    except Exception as e:                       # e.g. the free tier's daily quota: not run
+        return {"plan": [], "success": None, "executed": False, "injected": inj.done,
+                "reason": f"not run: {type(e).__name__}: {e}"}
     w1 = W.snapshot(robot)
     ok, why = goal_holds(task["goal"], w1)
     w0x = {**w0, "books": {b: s for b, s in w0["books"].items() if b not in inj.moved_by_failure}}
@@ -254,9 +255,13 @@ def main():
     ap.add_argument("--truth", action="store_true", help="exec: ground-truth robot pose instead of MCL")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--effort", default="medium", help="llm: low | medium | high | xhigh | max")
+    ap.add_argument("--repeat", type=int, default=1,
+                    help="llm: repeat number (1, 2, ...): each repeat asks the model afresh; the plan "
+                         "and exec levels of the same repeat share the answers")
     ap.add_argument("-v", "--verbose", action="store_true")
     a = ap.parse_args()
     os.environ["SHELFSAGE_EFFORT"] = a.effort
+    os.environ["SHELFSAGE_REPEAT"] = str(a.repeat)
 
     spec = json.loads(TASKS.read_text())
     tasks = [t for t in spec["tasks"] if (not a.tasks or t["id"] in a.tasks)
@@ -269,9 +274,15 @@ def main():
     if a.level == "plan":
         robot, w0 = make_world_and_robot()
         results = []
+        from planner.llm import QuotaExhausted
         for t in run:
             s = time.time()
-            plan, msg, extra = PLANNERS[a.planner](t["command"], w0)
+            try:
+                plan, msg, extra = PLANNERS[a.planner](t["command"], w0)
+            except QuotaExhausted as e:
+                results.append({"plan": [], "success": None, "reason": f"not run: {e}"})
+                print(f"  {t['id']} not run: {e}", flush=True)
+                continue
             r = score_plan(t, plan, msg, w0)
             r["plan_time"] = round(time.time() - s, 4)
             r.update(extra)
@@ -318,7 +329,8 @@ def main():
         tag = f"_{default_backend()}_{a.effort}"
     else:
         tag = ""
-    out = RESULTS / f"{a.planner}{tag}_{a.level}{'_perception' if a.perception else ''}.json"
+    rep = f"_r{a.repeat}" if a.planner == "llm" else ""
+    out = RESULTS / f"{a.planner}{tag}_{a.level}{'_perception' if a.perception else ''}{rep}.json"
     if a.tasks or a.category:
         out = out.with_name(out.stem + "_subset.json")
     llm = [r for r in records if r.get("latency") is not None]
@@ -329,7 +341,7 @@ def main():
               f"{sum(r['attempts'] > 1 for r in llm)} tasks needed a retry; "
               f"tokens in {tok_in} (cache read {sum(r['usage']['cache_read'] for r in llm)}), "
               f"out {sum(r['usage']['output'] for r in llm)}")
-    out.write_text(json.dumps({"planner": a.planner, "level": a.level, "effort": a.effort if a.planner == "llm" else None, "perception": a.perception,
+    out.write_text(json.dumps({"planner": a.planner, "level": a.level, "repeat": a.repeat, "effort": a.effort if a.planner == "llm" else None, "perception": a.perception,
                                "robot_pose": "true" if a.truth else "mcl", "date": time.strftime("%Y-%m-%d %H:%M"),
                                "tasks_version": spec["version"], "wall_time": round(time.time() - t0, 1),
                                "results": records}, indent=1))
