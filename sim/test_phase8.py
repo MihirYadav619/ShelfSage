@@ -5,7 +5,7 @@
    the five skills; a valid plan is accepted; an invalid plan gets the validator's errors back
    and the corrected plan is accepted; a refusal is passed on; a model that never fixes its plan
    gives up after the retries; an API error is reported, not raised.
-2. Live (ANTHROPIC_API_KEY in the environment or in .env; skipped without it):
+2. Live (GEMINI_API_KEY or ANTHROPIC_API_KEY in the environment or in .env; skipped without):
    a. plan level on the whole benchmark (benchmark/tasks.json, failure tasks excluded): the LLM
       must pass every task the baseline passes (the same commands work) and at least 2/3 of the
       tasks the baseline fails (new phrasings, spatial relations, several steps, questions).
@@ -94,6 +94,41 @@ def offline_checks(world):
     checks.append(("never fixed -> gives up after 1 + 2 retries", r.status == "invalid" and r.plan is None and r.attempts == 3))
     r = LLMPlanner(client=FakeClient([RuntimeError("connection reset")])).plan("cmd", world)
     checks.append(("API error reported, not raised", r.status == "error" and "connection reset" in r.message))
+
+    # Gemini backend, with a scripted HTTP post
+    from planner.llm import GeminiBackend
+
+    class Post:
+        def __init__(self, replies):
+            self.replies, self.calls = list(replies), []
+
+        def __call__(self, url, json=None, timeout=None, headers=None):
+            self.calls.append((url, json, headers))
+            code, body = self.replies.pop(0)
+            return NS(status_code=code, text=body if isinstance(body, str) else "", headers={},
+                      json=lambda: body)
+
+    def gem(text):
+        return (200, {"candidates": [{"content": {"role": "model", "parts": [{"text": text}]}, "finishReason": "STOP"}],
+                      "usageMetadata": {"promptTokenCount": 4000, "candidatesTokenCount": 200, "thoughtsTokenCount": 300}})
+
+    post = Post([gem(bad), gem(good)])
+    r = LLMPlanner(backend=GeminiBackend(post=post, model="gemini-test")).plan("cmd", world)
+    url, body, hdr = post.calls[0]
+    checks.append(("gemini: request = generateContent, key in header, system prompt, JSON schema output",
+                   url.endswith("/models/gemini-test:generateContent") and "x-goog-api-key" in hdr
+                   and body["systemInstruction"]["parts"][0]["text"] == SYSTEM
+                   and body["generationConfig"]["responseJsonSchema"] == SCHEMA))
+    hist = post.calls[1][1]["contents"]
+    checks.append(("gemini: invalid plan -> feedback as a 'user' turn after the 'model' turn -> corrected",
+                   r.status == "plan" and r.attempts == 2 and hist[-2]["role"] == "model" and hist[-1]["role"] == "user"
+                   and r.usage["output"] == 1000))
+    post = Post([(400, "Invalid argument: thinking_level is not supported"), gem(good)])
+    r = LLMPlanner(backend=GeminiBackend(post=post, model="gemini-old")).plan("cmd", world)
+    checks.append(("gemini: a model without thinkingLevel is retried without it",
+                   r.status == "plan" and "thinkingConfig" not in post.calls[1][1]["generationConfig"]))
+    r = LLMPlanner(backend=GeminiBackend(post=Post([(403, "API key not valid")]), model="g")).plan("cmd", world)
+    checks.append(("gemini: HTTP error reported, not raised", r.status == "error" and "403" in r.message))
     return checks
 
 
@@ -131,7 +166,7 @@ def live(world, effort):
     (OUT / "summary.json").write_text(json.dumps({"effort": effort, "plan_level": [
         {"id": t["id"], "command": t["command"], "baseline": b["success"], "llm": l["success"], "llm_reason": l["reason"],
          "llm_plan": l["plan"], "latency": l["latency"], "attempts": l["attempts"], "usage": l["usage"]} for t, b, l in rows],
-        "exec": [{"id": t["id"], **e} for t, e in zip(sel, execs)]}, indent=1))
+        "exec": [{"id": t["id"], **e} for t, e in zip(sel, execs)]}, indent=1, default=str))
     lat = sorted(l["latency"] for _, _, l in rows)
     return [(f"same commands: LLM passes every task the baseline passes ({same}/{len(base_ok)})", same == len(base_ok)),
             (f"new commands: LLM passes >= 2/3 of the tasks the baseline fails ({new}/{len(base_fail)})",
@@ -159,10 +194,14 @@ def main():
         final.append((name, ok))
     if not a.offline:
         load_env()
-        if not os.environ.get("ANTHROPIC_API_KEY"):
-            print("\n2. live checks skipped: no ANTHROPIC_API_KEY (environment or .env)")
+        from planner.llm import default_backend
+        backend = default_backend()
+        key = "GEMINI_API_KEY" if backend == "gemini" else "ANTHROPIC_API_KEY"
+        if not os.environ.get(key):
+            print(f"\n2. live checks skipped: no {key} (environment or .env)")
         else:
-            print(f"\n2. live checks (claude-opus-5-5, effort {a.effort})")
+            model = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash") if backend == "gemini" else "claude-opus-5-5"
+            print(f"\n2. live checks ({backend}: {model}, effort {a.effort})")
             t0 = time.time()
             res = live(world, a.effort)
             print(f"  ({time.time() - t0:.0f} s)")

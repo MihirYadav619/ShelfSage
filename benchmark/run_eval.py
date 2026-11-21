@@ -22,7 +22,7 @@ Usage (project root, venv active):
     python benchmark/run_eval.py --level exec             # baseline, executed in the simulator
     python benchmark/run_eval.py --tasks S01 X01 --level exec -v
     python benchmark/run_eval.py --category spatial
-    python benchmark/run_eval.py --planner llm            # Claude (ANTHROPIC_API_KEY), plan level
+    python benchmark/run_eval.py --planner llm            # Gemini (GEMINI_API_KEY) or Claude, plan level
     python benchmark/run_eval.py --planner llm --level exec --effort high
 
 Results: benchmark/results/<planner>_<level>.json (one record per task) + a table per category.
@@ -58,7 +58,8 @@ def llm_planner(command, world):
     if "p" not in _LLM:
         _LLM["p"] = LLMPlanner(effort=os.environ.get("SHELFSAGE_EFFORT", "medium"))
     r = _LLM["p"].plan(command, world)
-    return r.plan, r.message, {"llm_status": r.status, "attempts": r.attempts, "latency": r.latency,
+    return r.plan, r.message, {"llm_status": r.status, "backend": r.backend, "model": r.model,
+                               "attempts": r.attempts, "latency": r.latency,
                                "usage": r.usage, "transcript": r.transcript}
 
 
@@ -244,7 +245,11 @@ def main():
     print(f"  {'all':12s} {tot[0]:5d} {tot[1]:5d} {tot[2]:5d}/{tot[0]:<2d} ({100 * tot[2] / max(tot[0], 1):3.0f} %)"
           f"   ['plan' = a plan was produced]")
     RESULTS.mkdir(parents=True, exist_ok=True)
-    tag = f"_{a.effort}" if a.planner == "llm" else ""
+    if a.planner == "llm":
+        from planner.llm import default_backend
+        tag = f"_{default_backend()}_{a.effort}"
+    else:
+        tag = ""
     out = RESULTS / f"{a.planner}{tag}_{a.level}{'_perception' if a.perception else ''}.json"
     if a.tasks or a.category:
         out = out.with_name(out.stem + "_subset.json")
