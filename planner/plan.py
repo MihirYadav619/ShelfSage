@@ -10,8 +10,9 @@ validate(plan, world) checks a plan before anything moves (both planners' plans 
   * every book and target exists,
   * stepping the world state forward symbolically, every precondition holds: GRASP needs an
     empty hand and the robot at the book's table / shelf column, PLACE needs the book in hand,
-    the robot there and a free slot / edge spot, VERIFY must expect the book where the plan has
-    put it.
+    the robot there and a free slot / edge spot, and a VERIFY of a book the plan has moved must
+    expect it where the plan put it (a VERIFY of a book the plan does not touch is a question,
+    "is it there?", and may answer no).
 It returns every problem found (as text a planner can act on) and the predicted final world.
 """
 import copy
@@ -96,6 +97,7 @@ class Validation:
 def validate(plan, world):
     """Check a plan against the world state without running it (see module docstring)."""
     w = copy.deepcopy(world)
+    w["_moved"] = set()
     errors = []
     if not plan:
         return Validation(False, ["the plan is empty"], w)
@@ -111,6 +113,7 @@ def validate(plan, world):
         err = _step(a, w)
         if err:
             errors.append(f"{where}: {err}")
+    w.pop("_moved", None)
     return Validation(not errors, errors, w)
 
 
@@ -138,6 +141,7 @@ def _step(a, w):
         if not W.same_spot(robot["at"], s["at"]):
             return f"{title} is at {s['at']}, the robot is at {robot['at'] or 'no table or shelf'}: NAVIGATE first"
         robot["holding"] = bid
+        w["_moved"].add(bid)
         s.update(kind="held", where=None, at="held")
         _rebuild(w)
         return None
@@ -163,7 +167,7 @@ def _step(a, w):
         _rebuild(w)
         return None
     if a.name == "VERIFY":
-        if books[bid]["at"] != t:
+        if bid in w["_moved"] and books[bid]["at"] != t:
             return f"{title} would be at {books[bid]['at']}, not {t}: VERIFY would fail"
         return None
     return "not handled"
@@ -172,7 +176,9 @@ def _step(a, w):
 def _rebuild(w):
     nw = W.build(w["books"], w["robot"]["pose"], w["robot"]["holding"])
     nw["robot"]["at"] = w["robot"]["at"]
+    moved = w.get("_moved", set())
     w.update(nw)
+    w["_moved"] = moved
 
 
 def _free_slot_pos(w, comp):

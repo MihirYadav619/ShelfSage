@@ -1,0 +1,237 @@
+"""Run a planner on the benchmark (benchmark/tasks.json) and score it.
+
+Two levels:
+    plan   no physics, seconds: the plan is validated and stepped through symbolically
+           (planner/plan.py); the predicted final world is checked against the task's goal.
+    exec   the plan is executed on the robot in MuJoCo from the reset scene (parallel processes);
+           the real final world is checked. Slow (~1.5-3 min simulated per move).
+
+Scoring (same for every planner):
+    move tasks   success = goal holds in the final world AND every book not named in the goal
+                 is still where it was (table / compartment); at plan level the plan must also be
+                 valid, at exec level every step must succeed
+    query        find: the plan looks that book up (FIND_BOOK) and moves nothing;
+                 verify: the plan checks that book and target (VERIFY) and moves nothing, and the
+                 answer (exec: the VERIFY result; plan: the world) is the expected one
+    infeasible   success = the planner refuses (no plan) or the validator rejects the plan;
+                 nothing runs
+    failure      needs failure injection (Phase 9): skipped for now
+
+Usage (project root, venv active):
+    python benchmark/run_eval.py                          # baseline, plan level
+    python benchmark/run_eval.py --level exec             # baseline, executed in the simulator
+    python benchmark/run_eval.py --tasks S01 X01 --level exec -v
+    python benchmark/run_eval.py --category spatial
+
+Results: benchmark/results/<planner>_<level>.json (one record per task) + a table per category.
+"""
+import argparse
+import json
+import sys
+import time
+from concurrent.futures import ProcessPoolExecutor
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+TASKS = ROOT / "benchmark/tasks.json"
+RESULTS = ROOT / "benchmark/results"
+MOVES = ("GRASP", "PLACE")
+
+
+# ---------------------------------------------------------------------------- planners
+def baseline_planner(command, world):
+    """-> (plan or None, message)"""
+    from planner import baseline
+    pr = baseline.parse(command, world)
+    return pr.plan, pr.reason
+
+
+PLANNERS = {"baseline": baseline_planner}        # the LLM planner is added in Phase 8
+
+
+# ---------------------------------------------------------------------------- scoring
+def goal_holds(goal, world):
+    """(ok, reason) for the goal conditions on a world-state dictionary."""
+    for g in goal:
+        s = world["books"][g["book"]]
+        at, title = s["at"], s["title"]
+        if "at" in g and at != g["at"]:
+            return False, f"{title} is at {at}, wanted {g['at']}"
+        if "at_one_of" in g and at not in g["at_one_of"]:
+            return False, f"{title} is at {at}, wanted one of {', '.join(g['at_one_of'])}"
+        if "shelf" in g and not (s["kind"] == "shelf" and s["where"].startswith(g["shelf"] + "-")):
+            return False, f"{title} is at {at}, wanted shelf {g['shelf']}"
+        if g.get("in_shelf") and s["kind"] != "shelf":
+            return False, f"{title} is at {at}, wanted a shelf"
+    return True, "goal holds"
+
+
+def others_stay(task, w0, w1):
+    named = {g["book"] for g in task.get("goal", [])}
+    moved = [f"{w0['books'][b]['title']} ({w0['books'][b]['at']} -> {w1['books'][b]['at']})"
+             for b in w0["books"] if b not in named and w0["books"][b]["at"] != w1["books"][b]["at"]]
+    return (not moved), ("other books moved: " + ", ".join(moved)) if moved else ""
+
+
+def query_plan_ok(task, plan, world):
+    """Does the plan ask the right question (and move nothing)? (ok, reason)"""
+    from planner import plan as P
+    from planner import world as W
+    if any(a.name in MOVES for a in plan):
+        return False, "the plan moves books for a question"
+    e = task["expect"]
+    if "find" in e:
+        hit = any(a.name == "FIND_BOOK" and a.args and W.book_id(world, a.args[0]) == e["find"] for a in plan)
+        return hit, "looks it up" if hit else f"no FIND_BOOK of {world['books'][e['find']]['title']}"
+    book, target, answer = e["verify"]
+    hit = any(a.name == "VERIFY" and len(a.args) == 2 and W.book_id(world, a.args[0]) == book
+              and P.canonical_target(a.args[1]) == target for a in plan)
+    return hit, "checks it" if hit else f"no VERIFY({world['books'][book]['title']}, {target})"
+
+
+def score_plan(task, plan, msg, world):
+    """Plan-level score: dict(status, success, reason, plan, valid)."""
+    from planner import plan as P
+    out = {"plan": [str(a) for a in plan] if plan else [], "planner_message": msg}
+    e = task.get("expect", {})
+    if plan is None:
+        out.update(valid=False, success=bool(e.get("refuse")), reason=f"no plan: {msg}")
+        return out
+    v = P.validate(plan, world)
+    out["valid"], out["validation"] = v.ok, v.errors
+    if e.get("refuse"):
+        out.update(success=not v.ok, reason="validator rejected it" if not v.ok else "a valid plan for an infeasible task")
+        return out
+    if "find" in e or "verify" in e:
+        ok, why = query_plan_ok(task, plan, world)
+        out.update(success=ok and v.ok, reason=why if v.ok else "invalid: " + "; ".join(v.errors))
+        return out
+    if not v.ok:
+        out.update(success=False, reason="invalid: " + "; ".join(v.errors))
+        return out
+    ok, why = goal_holds(task["goal"], v.world)
+    stay, why2 = others_stay(task, world, v.world)
+    out.update(success=ok and stay, reason=why if not ok else (why2 or why))
+    return out
+
+
+# ---------------------------------------------------------------------------- execution
+def make_world_and_robot(perception=False, truth=False):
+    from sim.run_command import make_robot
+    from planner import world as W
+    robot = make_robot(truth, perception)
+    return robot, W.snapshot(robot)
+
+
+def run_exec(task, planner, perception, truth):
+    """Plan and execute one task from the reset scene (runs in a worker process)."""
+    from planner import world as W
+    from planner.executor import Executor
+    robot, w0 = make_world_and_robot(perception, truth)
+    t0 = time.time()
+    plan, msg = PLANNERS[planner](task["command"], w0)
+    plan_time = time.time() - t0
+    out = score_plan(task, plan, msg, w0)          # plan-level result first
+    out["plan_time"] = round(plan_time, 4)
+    e = task.get("expect", {})
+    if plan is None or (not out["valid"] and "verify" not in e):
+        out["executed"] = False
+        return out
+    if "verify" in e and not out["success"]:
+        out["executed"] = False
+        return out
+    res = Executor(robot).run(plan, command=task["command"], planner=planner)
+    w1 = W.snapshot(robot)
+    out.update(executed=True, steps=[{"step": f"{s.action}({', '.join(s.args)})", "ok": s.success, "msg": s.message,
+                                     "sim_time": s.sim_time} for s in res.steps],
+               sim_time=res.sim_time, wall_time=res.wall_time, exec_message=res.message)
+    if "verify" in e:
+        v = [s for s in res.steps if s.action == "VERIFY"]
+        ok = bool(v) and v[-1].success == e["verify"][2]
+        out.update(success=ok, reason=f"answered {'yes' if v and v[-1].success else 'no'}"
+                   + ("" if ok else f", expected {'yes' if e['verify'][2] else 'no'}"))
+        return out
+    if "find" in e:
+        out.update(success=res.success, reason=res.message)
+        return out
+    ok, why = goal_holds(task["goal"], w1)
+    stay, why2 = others_stay(task, w0, w1)
+    out.update(success=res.success and ok and stay,
+               reason=res.message if not res.success else (why if not ok else (why2 or why)))
+    return out
+
+
+# ---------------------------------------------------------------------------- main
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--planner", default="baseline", choices=sorted(PLANNERS))
+    ap.add_argument("--level", default="plan", choices=["plan", "exec"])
+    ap.add_argument("--tasks", nargs="*", help="only these task ids")
+    ap.add_argument("--category", nargs="*")
+    ap.add_argument("--perception", action="store_true", help="exec: book poses from the wrist camera")
+    ap.add_argument("--truth", action="store_true", help="exec: ground-truth robot pose instead of MCL")
+    ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("-v", "--verbose", action="store_true")
+    a = ap.parse_args()
+
+    spec = json.loads(TASKS.read_text())
+    tasks = [t for t in spec["tasks"] if (not a.tasks or t["id"] in a.tasks)
+             and (not a.category or t["category"] in a.category)]
+    run = [t for t in tasks if t["category"] != "failure"]
+    skipped = [t for t in tasks if t["category"] == "failure"]
+
+    t0 = time.time()
+    if a.level == "plan":
+        robot, w0 = make_world_and_robot()
+        results = []
+        for t in run:
+            s = time.time()
+            plan, msg = PLANNERS[a.planner](t["command"], w0)
+            r = score_plan(t, plan, msg, w0)
+            r["plan_time"] = round(time.time() - s, 4)
+            results.append(r)
+    else:
+        with ProcessPoolExecutor(max_workers=a.workers) as ex:
+            results = list(ex.map(run_exec, run, [a.planner] * len(run), [a.perception] * len(run),
+                                  [a.truth] * len(run)))
+    records = [{"id": t["id"], "category": t["category"], "command": t["command"], **r} for t, r in zip(run, results)]
+    records += [{"id": t["id"], "category": t["category"], "command": t["command"], "success": None,
+                 "reason": "skipped: needs failure injection (Phase 9)"} for t in skipped]
+
+    print(f"{a.planner} planner, {a.level} level, {len(run)} tasks ({len(skipped)} failure tasks skipped)\n")
+    for r in records:
+        mark = "skip" if r["success"] is None else ("PASS" if r["success"] else "FAIL")
+        print(f"  {mark}  {r['id']}  {r['command'][:70]:70s}  {r['reason'][:90]}")
+        if a.verbose and r.get("plan"):
+            print(f"              plan: {' -> '.join(r['plan'])}")
+            for s in r.get("steps", []):
+                print(f"              {'ok' if s['ok'] else 'XX'} {s['step']}  {s['sim_time']:.0f} s  {s['msg']}")
+    cats = list(spec["categories"])
+    print(f"\n  {'category':12s} {'tasks':>5s} {'plan':>5s} {'success':>8s}")
+    tot = [0, 0, 0]
+    for c in cats:
+        rs = [r for r in records if r["category"] == c and r["success"] is not None]
+        if not rs:
+            n_skip = sum(1 for r in records if r["category"] == c)
+            if n_skip:
+                print(f"  {c:12s} {n_skip:5d}  skipped (Phase 9)")
+            continue
+        n, p, s = len(rs), sum(1 for r in rs if r.get("plan")), sum(1 for r in rs if r["success"])
+        tot = [tot[0] + n, tot[1] + p, tot[2] + s]
+        print(f"  {c:12s} {n:5d} {p:5d} {s:5d}/{n:<2d} ({100 * s / n:3.0f} %)")
+    print(f"  {'all':12s} {tot[0]:5d} {tot[1]:5d} {tot[2]:5d}/{tot[0]:<2d} ({100 * tot[2] / max(tot[0], 1):3.0f} %)"
+          f"   ['plan' = a plan was produced]")
+    RESULTS.mkdir(parents=True, exist_ok=True)
+    out = RESULTS / f"{a.planner}_{a.level}{'_perception' if a.perception else ''}.json"
+    if a.tasks or a.category:
+        out = out.with_name(out.stem + "_subset.json")
+    out.write_text(json.dumps({"planner": a.planner, "level": a.level, "perception": a.perception,
+                               "robot_pose": "true" if a.truth else "mcl", "date": time.strftime("%Y-%m-%d %H:%M"),
+                               "tasks_version": spec["version"], "wall_time": round(time.time() - t0, 1),
+                               "results": records}, indent=1))
+    print(f"\n  wrote {out.relative_to(ROOT)} ({time.time() - t0:.0f} s)")
+
+
+if __name__ == "__main__":
+    main()

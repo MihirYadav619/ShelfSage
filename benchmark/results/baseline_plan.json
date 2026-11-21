@@ -1,0 +1,548 @@
+{
+ "planner": "baseline",
+ "level": "plan",
+ "perception": false,
+ "robot_pose": "mcl",
+ "date": "2026-11-22 00:55",
+ "tasks_version": 1,
+ "wall_time": 1.0,
+ "results": [
+  {
+   "id": "S01",
+   "category": "single",
+   "command": "Put Machine Learning in S2-A3",
+   "plan": [
+    "FIND_BOOK(Machine Learning)",
+    "NAVIGATE(Table B)",
+    "GRASP(Machine Learning)",
+    "NAVIGATE(S2-A3)",
+    "PLACE(Machine Learning, S2-A3)",
+    "VERIFY(Machine Learning, S2-A3)"
+   ],
+   "planner_message": "",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 0.0028
+  },
+  {
+   "id": "S02",
+   "category": "single",
+   "command": "Move Physics to Table A",
+   "plan": [
+    "FIND_BOOK(Physics)",
+    "NAVIGATE(S2-A1)",
+    "GRASP(Physics)",
+    "NAVIGATE(Table A)",
+    "PLACE(Physics, Table A)",
+    "VERIFY(Physics, Table A)"
+   ],
+   "planner_message": "",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 0.002
+  },
+  {
+   "id": "S03",
+   "category": "single",
+   "command": "Place Calculus on Table C",
+   "plan": [
+    "FIND_BOOK(Calculus)",
+    "NAVIGATE(Table A)",
+    "GRASP(Calculus)",
+    "NAVIGATE(Table C)",
+    "PLACE(Calculus, Table C)",
+    "VERIFY(Calculus, Table C)"
+   ],
+   "planner_message": "",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 0.0
+  },
+  {
+   "id": "S04",
+   "category": "single",
+   "command": "Move Kinematics to S3-B2",
+   "plan": [
+    "FIND_BOOK(Kinematics)",
+    "NAVIGATE(S2-A1)",
+    "GRASP(Kinematics)",
+    "NAVIGATE(S3-B2)",
+    "PLACE(Kinematics, S3-B2)",
+    "VERIFY(Kinematics, S3-B2)"
+   ],
+   "planner_message": "",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 0.002
+  },
+  {
+   "id": "S05",
+   "category": "single",
+   "command": "Bring Databases to Table D",
+   "plan": [
+    "FIND_BOOK(Databases)",
+    "NAVIGATE(Table E)",
+    "GRASP(Databases)",
+    "NAVIGATE(Table D)",
+    "PLACE(Databases, Table D)",
+    "VERIFY(Databases, Table D)"
+   ],
+   "planner_message": "",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 0.0029
+  },
+  {
+   "id": "S06",
+   "category": "single",
+   "command": "Put Thermodynamics on shelf S1",
+   "plan": [
+    "FIND_BOOK(Thermodynamics)",
+    "NAVIGATE(Table F)",
+    "GRASP(Thermodynamics)",
+    "NAVIGATE(S1-A1)",
+    "PLACE(Thermodynamics, S1-A1)",
+    "VERIFY(Thermodynamics, S1-A1)"
+   ],
+   "planner_message": "'shelf S1' -> S1-A1 for Thermodynamics",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 0.002
+  },
+  {
+   "id": "S07",
+   "category": "single",
+   "command": "Return Linear Algebra to the shelf",
+   "plan": [
+    "FIND_BOOK(Linear Algebra)",
+    "NAVIGATE(Table A)",
+    "GRASP(Linear Algebra)",
+    "NAVIGATE(S1-A3)",
+    "PLACE(Linear Algebra, S1-A3)",
+    "VERIFY(Linear Algebra, S1-A3)"
+   ],
+   "planner_message": "'the shelf' -> S1-A3 for Linear Algebra",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 0.002
+  },
+  {
+   "id": "S08",
+   "category": "single",
+   "command": "Put Control Systems in S2-B3",
+   "plan": [
+    "FIND_BOOK(Control Systems)",
+    "NAVIGATE(Table C)",
+    "GRASP(Control Systems)",
+    "NAVIGATE(S2-B3)",
+    "PLACE(Control Systems, S2-B3)",
+    "VERIFY(Control Systems, S2-B3)"
+   ],
+   "planner_message": "",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 0.002
+  },
+  {
+   "id": "M01",
+   "category": "multi",
+   "command": "Put Deep Learning and Robotics into S2-A3",
+   "plan": [
+    "FIND_BOOK(Deep Learning)",
+    "NAVIGATE(Table B)",
+    "GRASP(Deep Learning)",
+    "NAVIGATE(S2-A3)",
+    "PLACE(Deep Learning, S2-A3)",
+    "VERIFY(Deep Learning, S2-A3)",
+    "FIND_BOOK(Robotics)",
+    "NAVIGATE(Table B)",
+    "GRASP(Robotics)",
+    "NAVIGATE(S2-A3)",
+    "PLACE(Robotics, S2-A3)",
+    "VERIFY(Robotics, S2-A3)"
+   ],
+   "planner_message": "",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "goal holds",
+   "plan_time": 0.0035
+  },
+  {
+   "id": "M02",
+   "category": "multi",
+   "command": "Move Algorithms to S2-A3 and then move Databases to S2-A3",
+   "plan": [],
+   "planner_message": "'S2-A3 and then move Databases to S2-A3' is not a table, a shelf or a compartment",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: 'S2-A3 and then move Databases to S2-A3' is not a table, a shelf or a compartment",
+   "plan_time": 0.0
+  },
+  {
+   "id": "M03",
+   "category": "multi",
+   "command": "Put Python Programming on Table A, then put Statistics in S2-A3",
+   "plan": [],
+   "planner_message": "'Table A, then put Statistics in S2-A3' is not a table, a shelf or a compartment",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: 'Table A, then put Statistics in S2-A3' is not a table, a shelf or a compartment",
+   "plan_time": 0.0
+  },
+  {
+   "id": "M04",
+   "category": "multi",
+   "command": "Swap Physics and Linear Algebra",
+   "plan": [],
+   "planner_message": "no template matches this command",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no template matches this command",
+   "plan_time": 0.0
+  },
+  {
+   "id": "M05",
+   "category": "multi",
+   "command": "Put all the books from Table B into S2-A3",
+   "plan": [],
+   "planner_message": "no book called 'all the books from Table B' (the baseline needs the exact title)",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no book called 'all the books from Table B' (the baseline needs the exact title)",
+   "plan_time": 0.0
+  },
+  {
+   "id": "M06",
+   "category": "multi",
+   "command": "Clear Table E",
+   "plan": [],
+   "planner_message": "no template matches this command",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no template matches this command",
+   "plan_time": 0.0
+  },
+  {
+   "id": "P01",
+   "category": "phrasing",
+   "command": "Could you shelve the Machine Learning book in compartment A3 of the middle shelf?",
+   "plan": [],
+   "planner_message": "no template matches this command",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no template matches this command",
+   "plan_time": 0.0
+  },
+  {
+   "id": "P02",
+   "category": "phrasing",
+   "command": "I need the physics textbook on table A, please",
+   "plan": [],
+   "planner_message": "no template matches this command",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no template matches this command",
+   "plan_time": 0.0
+  },
+  {
+   "id": "P03",
+   "category": "phrasing",
+   "command": "The ML book belongs in S2-A3",
+   "plan": [],
+   "planner_message": "no template matches this command",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no template matches this command",
+   "plan_time": 0.0
+  },
+  {
+   "id": "P04",
+   "category": "phrasing",
+   "command": "Grab deep learning from table B and drop it into the middle shelf, bottom row, third compartment",
+   "plan": [],
+   "planner_message": "no template matches this command",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no template matches this command",
+   "plan_time": 0.0
+  },
+  {
+   "id": "P05",
+   "category": "phrasing",
+   "command": "Kinematics should go to the top row of shelf S3, second compartment",
+   "plan": [],
+   "planner_message": "no template matches this command",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no template matches this command",
+   "plan_time": 0.0
+  },
+  {
+   "id": "P06",
+   "category": "phrasing",
+   "command": "Put away Linear Algebra",
+   "plan": [],
+   "planner_message": "no template matches this command",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no template matches this command",
+   "plan_time": 0.0
+  },
+  {
+   "id": "P07",
+   "category": "phrasing",
+   "command": "Can the robot take the databases book to table D?",
+   "plan": [],
+   "planner_message": "no template matches this command",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no template matches this command",
+   "plan_time": 0.0
+  },
+  {
+   "id": "P08",
+   "category": "phrasing",
+   "command": "Thermodynamics goes on the first shelf",
+   "plan": [],
+   "planner_message": "no template matches this command",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no template matches this command",
+   "plan_time": 0.0
+  },
+  {
+   "id": "X01",
+   "category": "spatial",
+   "command": "Take the book on Table D and put it in the empty compartment nearest to the window",
+   "plan": [],
+   "planner_message": "no book called 'the book' (the baseline needs the exact title)",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no book called 'the book' (the baseline needs the exact title)",
+   "plan_time": 0.0
+  },
+  {
+   "id": "X02",
+   "category": "spatial",
+   "command": "Put the book on Table F on the shelf closest to it",
+   "plan": [],
+   "planner_message": "no book called 'the book' (the baseline needs the exact title)",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no book called 'the book' (the baseline needs the exact title)",
+   "plan_time": 0.0
+  },
+  {
+   "id": "X03",
+   "category": "spatial",
+   "command": "Put the book standing next to Physics in S2-A1 on Table C",
+   "plan": [],
+   "planner_message": "no book called 'the book standing next' (the baseline needs the exact title)",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no book called 'the book standing next' (the baseline needs the exact title)",
+   "plan_time": 0.0
+  },
+  {
+   "id": "X04",
+   "category": "spatial",
+   "command": "Bring the book from the compartment above S2-A4 to Table E",
+   "plan": [],
+   "planner_message": "no book called 'the book from the compartment above S2-A4' (the baseline needs the exact title)",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no book called 'the book from the compartment above S2-A4' (the baseline needs the exact title)",
+   "plan_time": 0.0
+  },
+  {
+   "id": "X05",
+   "category": "spatial",
+   "command": "Move the only book in S3-A3 to an empty compartment next to it",
+   "plan": [],
+   "planner_message": "no book called 'the only book' (the baseline needs the exact title)",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no book called 'the only book' (the baseline needs the exact title)",
+   "plan_time": 0.0
+  },
+  {
+   "id": "X06",
+   "category": "spatial",
+   "command": "Put the book from the table nearest the window into S3-B3",
+   "plan": [],
+   "planner_message": "no book called 'the book from the table nearest the window' (the baseline needs the exact title)",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no book called 'the book from the table nearest the window' (the baseline needs the exact title)",
+   "plan_time": 0.0
+  },
+  {
+   "id": "X07",
+   "category": "spatial",
+   "command": "Move Deep Learning to the table with the fewest books",
+   "plan": [],
+   "planner_message": "'the table with the fewest books' is not a table, a shelf or a compartment",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: 'the table with the fewest books' is not a table, a shelf or a compartment",
+   "plan_time": 0.0
+  },
+  {
+   "id": "X08",
+   "category": "spatial",
+   "command": "Put Graph Theory in an empty compartment of the shelf nearest the window",
+   "plan": [],
+   "planner_message": "'an empty compartment of the shelf nearest the window' is not a table, a shelf or a compartment",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: 'an empty compartment of the shelf nearest the window' is not a table, a shelf or a compartment",
+   "plan_time": 0.0
+  },
+  {
+   "id": "Q01",
+   "category": "query",
+   "command": "Where is Statistics?",
+   "plan": [
+    "FIND_BOOK(Statistics)"
+   ],
+   "planner_message": "",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "looks it up",
+   "plan_time": 0.002
+  },
+  {
+   "id": "Q02",
+   "category": "query",
+   "command": "Which compartment holds the cryptography book?",
+   "plan": [],
+   "planner_message": "no template matches this command",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no template matches this command",
+   "plan_time": 0.0
+  },
+  {
+   "id": "Q03",
+   "category": "query",
+   "command": "Check that Physics is in S2-A1",
+   "plan": [
+    "VERIFY(Physics, S2-A1)"
+   ],
+   "planner_message": "",
+   "valid": true,
+   "validation": [],
+   "success": true,
+   "reason": "checks it",
+   "plan_time": 0.0005
+  },
+  {
+   "id": "Q04",
+   "category": "query",
+   "command": "Is Machine Learning in S2-A3?",
+   "plan": [],
+   "planner_message": "no template matches this command",
+   "valid": false,
+   "success": false,
+   "reason": "no plan: no template matches this command",
+   "plan_time": 0.0
+  },
+  {
+   "id": "I01",
+   "category": "infeasible",
+   "command": "Put Harry Potter in S2-A3",
+   "plan": [],
+   "planner_message": "no book called 'Harry Potter' (the baseline needs the exact title)",
+   "valid": false,
+   "success": true,
+   "reason": "no plan: no book called 'Harry Potter' (the baseline needs the exact title)",
+   "plan_time": 0.0
+  },
+  {
+   "id": "I02",
+   "category": "infeasible",
+   "command": "Put Calculus on Table B",
+   "plan": [
+    "FIND_BOOK(Calculus)",
+    "NAVIGATE(Table A)",
+    "GRASP(Calculus)",
+    "NAVIGATE(Table B)",
+    "PLACE(Calculus, Table B)",
+    "VERIFY(Calculus, Table B)"
+   ],
+   "planner_message": "",
+   "valid": false,
+   "validation": [
+    "step 5 PLACE(Calculus, Table B): Table B has no free edge spot",
+    "step 6 VERIFY(Calculus, Table B): Calculus would be at held, not Table B: VERIFY would fail"
+   ],
+   "success": true,
+   "reason": "validator rejected it",
+   "plan_time": 0.0016
+  },
+  {
+   "id": "I03",
+   "category": "infeasible",
+   "command": "Put Machine Learning in S9-A1",
+   "plan": [],
+   "planner_message": "'S9-A1' is not a table, a shelf or a compartment",
+   "valid": false,
+   "success": true,
+   "reason": "no plan: 'S9-A1' is not a table, a shelf or a compartment",
+   "plan_time": 0.0
+  },
+  {
+   "id": "F01",
+   "category": "failure",
+   "command": "Put Machine Learning in S2-A3",
+   "success": null,
+   "reason": "skipped: needs failure injection (Phase 9)"
+  },
+  {
+   "id": "F02",
+   "category": "failure",
+   "command": "Put Algorithms in S2-A3",
+   "success": null,
+   "reason": "skipped: needs failure injection (Phase 9)"
+  },
+  {
+   "id": "F03",
+   "category": "failure",
+   "command": "Bring Databases to Table D",
+   "success": null,
+   "reason": "skipped: needs failure injection (Phase 9)"
+  },
+  {
+   "id": "F04",
+   "category": "failure",
+   "command": "Move Physics to Table A",
+   "success": null,
+   "reason": "skipped: needs failure injection (Phase 9)"
+  },
+  {
+   "id": "F05",
+   "category": "failure",
+   "command": "Move Kinematics to S3-B2",
+   "success": null,
+   "reason": "skipped: needs failure injection (Phase 9)"
+  }
+ ]
+}

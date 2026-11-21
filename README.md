@@ -411,7 +411,28 @@ Design changes found by the Phase 4 test (scene regenerated, all checks re-run):
   - **Found by the test:** placing in row A under an occupied row B compartment (Linear Algebra into S1-A3, below Numerical Methods / Data Structures in S1-B3), the swing from the carry pose to the pre-place knocked Data Structures out of the shelf: `move_to` checks only the end pose, and with the base 10 cm back the held book's path went through the row B spines (12 cm back: 0.7 cm clear). The Phase 5 tests never had a book above the target. `SHELF_BACK` is now 0.15 m (book 3.7 cm clear of row B; 0.20 m was tried first but hit the chairs of the back-row tables behind the shelf parking, so the base shift timed out after 60 s while the skill carried on). The test now also fails on any failed sub-step, which is how the timeout showed up. Phase 5 test re-run: 10/10 + both extra trials on the MCL pose.
   - Not done yet: plans use ground-truth book locations (FIND_BOOK, world model); the robot does not re-plan after a failure (Phase 9).
 
-### Phases 8-10: not started
+### Phase 10 (first part, done before Phase 8): benchmark fixed, baseline measured
+
+The benchmark was written **before** the LLM planner, so the prompt cannot be tuned to it (like keeping a test set apart); examples for the LLM prompt will be taken from outside it.
+
+- [x] **Task set** (`benchmark/tasks.json`, 42 tasks): *single* (8, one book, template wording), *multi* (6: two books, "and then", swap, all books of a table, "clear Table E"), *phrasing* (8: "Could you shelve the Machine Learning book in compartment A3 of the middle shelf?", "the physics textbook", "Put away Linear Algebra"), *spatial* (8: "the empty compartment nearest to the window", "the book standing next to Physics", "the table with the fewest books"), *query* (4), *infeasible* (3: unknown book, full table, unknown compartment: the planner must refuse) and *failure* (5: dropped book, compartment filled, path blocked, book moved, grasp slip; need the failure injection of Phase 9, skipped until then). Each task has a goal on the final world (book ids and where they must end; ambiguous ones list every right answer); books not named in the goal must stay where they were. Spatial answers were computed from the world model and are noted in the file.
+- [x] **Runner** (`benchmark/run_eval.py --planner baseline --level plan|exec`): *plan* level checks the plan symbolically through the validator (seconds, no physics); *exec* level runs it on the robot from the reset scene (parallel processes, MCL pose) and checks the real final world. Results per task in `benchmark/results/<planner>_<level>.json` and a table per category. A planner is a function `(command, world) -> (plan or None, message)`, so the LLM planner plugs in as a second entry.
+- [x] **Baseline results** (exec level = plan level: every plan it produced also ran successfully in the simulator):
+
+  | category | tasks | baseline |
+  |---|---|---|
+  | single | 8 | 8/8 |
+  | multi | 6 | 1/6 (only "X and Y into ...") |
+  | phrasing | 8 | 0/8 |
+  | spatial | 8 | 0/8 |
+  | query | 4 | 2/4 |
+  | infeasible | 3 | 3/3 |
+  | **all** (failure tasks skipped) | **37** | **14/37 (38 %)** |
+
+  Executed moves took 78-175 s simulated (S08, Control Systems with Signals and Systems pushed out of its lane first: 152 s). The baseline only understands its templates; the 23 tasks it misses are what the LLM planner (Phase 8) has to handle.
+- [ ] Rest of Phase 10 after Phases 8-9: both planners on all 42 tasks, metrics and statistics, plots, `run_demo.py`, report, slides.
+
+### Phases 8-9: not started
 
 ---
 
@@ -479,7 +500,10 @@ ShelfSage/
 │   ├── plan.py                # Action, plan <-> JSON / text, validator (symbolic preconditions)
 │   ├── executor.py            # runs a validated plan step by step, logs every step
 │   └── baseline.py            # rule-based baseline: command templates -> skill sequences (LLM planner: Phase 8)
-├── benchmark/                 # tasks.json, run_eval.py, logs/
+├── benchmark/
+│   ├── tasks.json             # 42 benchmark tasks with goals (fixed before the LLM planner)
+│   ├── run_eval.py            # scores a planner on them, plan level (symbolic) or exec level (simulator)
+│   └── results/               # <planner>_<level>.json
 ├── requirements.txt
 ├── NOTES.md                   # robot joints, actuators, sites, poses (generated)
 └── README.md

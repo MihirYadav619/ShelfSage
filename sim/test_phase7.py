@@ -93,7 +93,11 @@ def planner_checks(world):
     rejected("a table without a free edge spot", [A("NAVIGATE", ["Table A"]), A("GRASP", ["Calculus"]),
                                                   A("NAVIGATE", ["Table B"]), A("PLACE", ["Calculus", "Table B"])],
              "no free edge spot")
-    rejected("a VERIFY that would fail", [A("VERIFY", ["Machine Learning", "S2-A3"])], "VERIFY would fail")
+    rejected("a VERIFY that would fail", [A("NAVIGATE", ["Table B"]), A("GRASP", ["Machine Learning"]),
+                                          A("PLACE", ["Machine Learning", "Table B"]),
+                                          A("VERIFY", ["Machine Learning", "S2-A3"])], "VERIFY would fail")
+    v = P.validate([A("VERIFY", ["Machine Learning", "S2-A3"])], world)
+    checks.append(("validator allows a question whose answer is no: VERIFY(Machine Learning, S2-A3)", v.ok))
     js = P.from_json('{"plan": [{"action": "navigate", "args": ["Table B"]}]}')
     checks.append(("plan JSON round trip", P.from_json(P.to_json(js)) == js and js[0].name == "NAVIGATE"))
     return checks
