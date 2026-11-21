@@ -5,7 +5,7 @@
 
 - **Course:** Robot Manipulators (IIT Mandi), course project
 - **Team:** Chirag, Mihir
-- **Status:** Phases 1-6 of 10 complete (navigation: A* on the known map, MCL localization, LiDAR obstacle avoidance; the Phase 5 task also passes on the MCL pose with detector book poses); Phase 7 next (see [Progress](#8-progress-tracker))
+- **Status:** Phases 1-7 of 10 complete (skills, A* + MCL navigation, wrist-camera detector; Phase 7: world model, plan validator, executor and a rule-based baseline planner run 10/10 fixed commands end to end); Phase 8 (LLM planner) next (see [Progress](#8-progress-tracker))
 - **Note:** This is the *initial* idea. It can be simplified later if parts become too hard (see [Fallbacks](#9-risks-and-fallbacks)).
 
 > This README is written so that the whole project can be resumed from scratch, for example in a new chat with an AI assistant. See [How to resume](#12-how-to-resume-in-a-new-chat).
@@ -197,7 +197,7 @@ Defined in `skills/interface.py` (bind a robot with `bind(robot)`; books by titl
 
 | Skill | Purpose | Status |
 |---|---|---|
-| `FIND_BOOK(title)` | Look up which table or shelf holds the book (world-state lookup) | ground truth (Phase 5); world model in 7 |
+| `FIND_BOOK(title)` | Look up which table or shelf holds the book (world-state lookup) | done (ground truth; the planners plan on `planner/world.py`) |
 | `NAVIGATE(target)` | Drive the base to the parking pose of a table ("Table B") or shelf ("S2-A3") | done (Phase 6): A* + MCL pose + LiDAR obstacle avoidance |
 | `GRASP(obj)` | Pick up a book with the 2-finger gripper (drags it to the table edge first if needed) | done (Phase 5) |
 | `PLACE(obj, shelf)` | Put the held book in a shelf compartment, leftmost free slot; or `PLACE(obj, "Table X")`: lay it at a free edge spot of a table | done (Phase 5) |
@@ -346,7 +346,7 @@ Design changes found by the Phase 4 test (scene regenerated, all checks re-run):
   - **Carry pose** moved to 0.60 m ahead / 1.20 m up (was 0.45 / 1.15, with joint 5 at its limit). While holding, IK drops solutions within 0.2 rad of a joint limit (`reject_margin`) and arm moves are slowed to 0.8 rad/s peak.
   - **Wrist family switch:** the table grasp (horizontal, 13 cm above the mount, at the edge of the dead band) only has twisted IK solutions, in the other wrist family than the carry pose. So the move to the carry pose still swings joint 5 by ~5 rad; slow, but the book shifts up to ~1 cm. Two things absorb that: **in-hand correction** (before placing, the TCP target is shifted by how far the book sits off in the fingers; ground truth now, wrist camera later) and **guarded set-down** (lower until the surface carries 2.5 N of the book, `robot.object_contact_force`, instead of to a fixed height). Shelf placing aims 6 mm off the divider (`PLACE_CLEARANCE`).
   - **Trade-off:** with the stiff finger contacts, pressing on a cover chatters (the contact keeps breaking), so the base-pull drag now takes 3-4 strokes instead of 1 (still 2.9-3.0 cm overhang). At solref 10 ms the drag took 1 stroke but the ~2 mm creep left in the grasp made the shelf insertion fail. An admittance loop holding 10 N during the pull did keep the force steady but the fingertip still slid over the cover; not kept.
-- [x] **Skills** (`skills/interface.py`, on top of `skills/manipulation.py` and the new `skills/navigation.py`): `NAVIGATE`, `GRASP`, `PLACE`, plus ground-truth `FIND_BOOK` and `VERIFY`. GRASP handles a book on a table (drag to the edge if needed, edge grasp, carry pose) or in a shelf (pre-grasp 15 cm out, in around the spine, lift 3 cm, pull out, base 10 cm back, carry pose). PLACE takes the leftmost free slot of the compartment, backs the base off 10 cm to swing the book to the pre-place, drives up again, corrects for the book's pose in the fingers, slides in, guarded set-down, withdraws. NAVIGATE drives the three east-west parking lines and the aisle at x = 1.25 m (A* in Phase 6). `SkillResult` moved to `skills/result.py`.
+- [x] **Skills** (`skills/interface.py`, on top of `skills/manipulation.py` and the new `skills/navigation.py`): `NAVIGATE`, `GRASP`, `PLACE`, plus ground-truth `FIND_BOOK` and `VERIFY`. GRASP handles a book on a table (drag to the edge if needed, edge grasp, carry pose) or in a shelf (pre-grasp 15 cm out, in around the spine, lift 3 cm, pull out, base 15 cm back, carry pose). PLACE takes the leftmost free slot of the compartment, backs the base off 15 cm (10 cm until Phase 7) to swing the book to the pre-place, drives up again, corrects for the book's pose in the fingers, slides in, guarded set-down, withdraws. NAVIGATE drives the three east-west parking lines and the aisle at x = 1.25 m (A* in Phase 6). `SkillResult` moved to `skills/result.py`.
   - **Done-when test passed** (`sim/test_phase5.py`, ground-truth poses, friction grasp): NAVIGATE(table) -> GRASP -> NAVIGATE(S2-A3) -> PLACE -> VERIFY from the reset scene, **10/10** books from all 6 tables (README asks for 8/10; Calculus and Databases are dragged to the edge first, ~3 min simulated each, the rest ~1.5 min). Also two books one after the other into S2-A3 (slots 1 and 2) and Physics out of S2-A1 into S2-A3; no other book moves more than 1 cm.
   - Found on the way: `home()` at the shelf parking reaches into the shelf; it hit the shelf and turned the base by 17 deg (the shelf grasp now goes from the stow pose straight to the pre-grasp). Pulled out 15 cm, a book's back edge is right at the neighbours' protruding spines and the swing to the carry pose hit them; the arm cannot reach 20 cm out at row A, so the base backs off 10 cm for that swing instead.
 - [x] **Perception: dataset + YOLOv8n-seg detector, 39 classes** (one per book; `perception/`):
@@ -400,7 +400,18 @@ Design changes found by the Phase 4 test (scene regenerated, all checks re-run):
 - [x] **Detector retrained on the new look** (`perception/make_dataset.py --n 4000`, `train_yolo.py`, 60 epochs, val mask mAP50 0.99). The old weights on the new scene: 28/32 books found + 1 wrong (shelf books against the new oak and slats); retrained: **32/32, none wrong** (the old scene with the old weights: 31/32). `make_dataset.py` now skips the rare view where MuJoCo's segmentation render returns a seg id past the scene's geoms (it crashed the run at ~2600 images).
 - [x] **Everything re-run on the new scene:** books stable (`--check`), Phase 3 test all passed (LiDAR scan lines up with the map incl. the decor boxes), Phase 4 all passed, Phase 5 `--mcl` 10/10 and `--mcl --perception` 10/10, Phase 6 all passed (MCL error <= 7.4 mm parked, <= 9.4 mm on the way), random table picks 24/24 (ground truth) and 24/24 (turned up to 45 deg, books in the lane, MCL pose), shelf -> table (MCL + detector) passes with a 2.0 N set-down.
 
-### Phases 7-10: not started
+### Phase 7: Skills integration and baseline planner (done)
+
+- [x] **World model** (`planner/world.py`): `snapshot(robot)` -> a plain dictionary (JSON-ready), the only thing the planners and the validator see: every book (title, table / compartment / held, position), every table (books, free edge spots), every compartment (books, capacity, free slots), the robot (pose estimate, which parking pose it is at, what it holds), the window. Fixed facts from `library_meta.json`, the current state from the simulator (ground truth for the books). `build()` makes the same dictionary from book locations alone, so the validator can step it forward without a simulator.
+- [x] **Plans and validator** (`planner/plan.py`): a plan is a list of `Action(name, args)`; JSON (`{"plan": [{"action": ..., "args": [...]}]}`, the format the LLM will produce) and arrow text both ways. `validate(plan, world)` runs the plan symbolically before anything moves: known action, right number of arguments, book and target exist, and every precondition: GRASP needs an empty hand and the robot at the book's table / shelf column, PLACE the book in hand, the robot there and a free slot or edge spot, VERIFY must expect the book where the plan put it. It returns every problem as text a planner can act on (e.g. `step 5 PLACE(Calculus, Table B): Table B has no free edge spot`) and the predicted final world.
+- [x] **Executor** (`planner/executor.py`): validates, then runs the steps in order through the skills; the first failing step stops the run and its `SkillResult` message is the reason (for replanning in Phase 9). Every step is logged: action, arguments, success, message, simulated and wall-clock time, and the skill's own sub-step checks; `ExecutionResult.save()` writes it as JSON.
+- [x] **Rule-based baseline** (`planner/baseline.py`): fixed templates. *move*: put / place / move / bring / take / return / carry `<book>` [back] in / into / to / on / onto `<target>`, one book or two joined by "and" (a title with "and" in it, like Signals and Systems, still works); *find*: where is / find `<book>`; *check*: check / verify [that] `<book>` is in / on `<target>`. Book = exact title or id (optionally "the ... book"). Target = a compartment, a table, a shelf ("shelf S1": its first compartment with room) or "the shelf" (the compartment with room whose parking pose is nearest the book). A move becomes FIND_BOOK -> NAVIGATE(where it is) -> GRASP -> NAVIGATE(target) -> PLACE -> VERIFY per book. Anything else is rejected with the reason; *"Take the book closest to Table D and place it in the empty shelf nearest to the window"* and *"the machine learning textbook"* are, by design (that is what Phase 8 has to handle). Parsing takes ~1 ms.
+- [x] `sim/run_command.py "<command>"`: one command end to end (baseline -> validator -> executor), `--viewer` to watch it with the current step shown, `--perception` for camera book poses, `--plan-only`; log in `sim/output/phase7/logs/`.
+- [x] **Done-when test passed** (`sim/test_phase7.py`): **planner checks 23/23** (13 commands parsed or rejected as expected, 9 kinds of bad plan rejected by the validator, JSON round trip) and **10/10 fixed commands end to end** from the reset scene on the MCL pose: table -> shelf, shelf -> table, table -> table with a drag (Calculus to Table C), shelf -> shelf (the middle book of S2-A1 to S3-B2), two books into one compartment, "shelf S1", "the shelf", a lookup and a check. Every step and every skill sub-step succeeded, no other book moved more than 0.11 cm. 18/18 NAVIGATE, 9/9 GRASP, 9/9 PLACE; a single-book move takes 80-120 s simulated (~95 s for a table book, ~120 s when it is dragged first), two books 175 s.
+  - **Found by the test:** placing in row A under an occupied row B compartment (Linear Algebra into S1-A3, below Numerical Methods / Data Structures in S1-B3), the swing from the carry pose to the pre-place knocked Data Structures out of the shelf: `move_to` checks only the end pose, and with the base 10 cm back the held book's path went through the row B spines (12 cm back: 0.7 cm clear). The Phase 5 tests never had a book above the target. `SHELF_BACK` is now 0.15 m (book 3.7 cm clear of row B; 0.20 m was tried first but hit the chairs of the back-row tables behind the shelf parking, so the base shift timed out after 60 s while the skill carried on). The test now also fails on any failed sub-step, which is how the timeout showed up. Phase 5 test re-run: 10/10 + both extra trials on the MCL pose.
+  - Not done yet: plans use ground-truth book locations (FIND_BOOK, world model); the robot does not re-plan after a failure (Phase 9).
+
+### Phases 8-10: not started
 
 ---
 
@@ -451,6 +462,9 @@ ShelfSage/
 │   ├── test_random_pick.py    # table GRASP from random poses (any depth / angle, books in the way)
 │   ├── test_phase6.py         # Phase 6 done-when test: tour on the MCL pose, reach, obstacles
 │   ├── demo_phase6.py         # navigation demo: A* path, MCL particles, LiDAR, obstacle avoidance
+│   ├── demo_shelf_to_table.py # middle book of S2-A1 -> Table A (MCL + detector)
+│   ├── run_command.py         # one command end to end: baseline -> plan -> validator -> executor
+│   ├── test_phase7.py         # Phase 7 done-when test: planner checks + 10 commands end to end
 │   └── test_robot.py          # Phase 3 done-when test
 ├── skills/
 │   ├── __init__.py
@@ -460,7 +474,11 @@ ShelfSage/
 │   └── result.py              # SkillResult
 ├── control/                   # occupancy.py, kinematics.py, ik.py, planner.py (A*), mcl.py (done)
 ├── perception/                # make_dataset.py, train_yolo.py, detect.py, check_detect.py; data/, runs/ git-ignored
-├── planner/                   # baseline_planner.py, llm_planner.py, prompts/, schema.json
+├── planner/
+│   ├── world.py               # world model: world-state dict from the simulator (books, tables, compartments, robot)
+│   ├── plan.py                # Action, plan <-> JSON / text, validator (symbolic preconditions)
+│   ├── executor.py            # runs a validated plan step by step, logs every step
+│   └── baseline.py            # rule-based baseline: command templates -> skill sequences (LLM planner: Phase 8)
 ├── benchmark/                 # tasks.json, run_eval.py, logs/
 ├── requirements.txt
 ├── NOTES.md                   # robot joints, actuators, sites, poses (generated)

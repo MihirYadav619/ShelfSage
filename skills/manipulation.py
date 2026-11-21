@@ -727,7 +727,11 @@ def place_on_table(robot, book, table, spot=None, say=print, log=None):
 
 # ---------------------------------------------------------------------------- shelf
 SHELF_PRE = 0.15           # pre-grasp / pre-place / pull-out: this far out of the shelf (m)
-SHELF_BACK = 0.10          # the base backs off this far before swinging the book to / from the carry
+SHELF_BACK = 0.15          # the base backs off this far before swinging the book to / from the carry
+                           # pose (the swing is checked only at its end). 0.10: placing in row A,
+                           # the book hit a book standing in row B above (Phase 7 test); 0.15: 3.7 cm
+                           # clear of it and the chassis 3.2 cm clear of the chairs behind (0.20 hit
+                           # them and the base timed out); 0.30: pre-place out of reach
                            # pose: 15 cm out, the back edge of the book (15 cm wide) is right at the
                            # neighbours' spines (they stick out 3 cm) and the swing hit them; the
                            # arm cannot reach 20 cm out at row A, so the base makes the room
@@ -878,7 +882,7 @@ def approach_feeling(robot, g, fwd, side, book, step=0.005):
 def pick_from_shelf(robot, book, comp, say=print, log=None):
     """Take a standing book out of a shelf compartment, robot at the compartment's column parking:
     pre-grasp 15 cm out, straight in around the protruding spine, close, lift 3 cm off the board,
-    pull out, base 10 cm back, carry pose."""
+    pull out, base 15 cm back, carry pose."""
     log = [] if log is None else log
     check = _check(log)
     fwd, side = shelf_axes(comp.split("-")[0])
@@ -930,7 +934,7 @@ def pick_from_shelf(robot, book, comp, say=print, log=None):
 
 def place_in_shelf(robot, book, comp, say=print, log=None):
     """Put the held book into the leftmost free slot of a compartment, robot at the column
-    parking: base 10 cm back, swing to the pre-place, base forward again (book 15 cm out), correct
+    parking: base 15 cm back, swing to the pre-place, base forward again (book 15 cm out), correct
     for where the book sits in the fingers, slide in 3 cm above the board, guarded set-down, let
     go, withdraw, stow."""
     log = [] if log is None else log
