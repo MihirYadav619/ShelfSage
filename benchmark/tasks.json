@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "about": "ShelfSage benchmark (fixed before the LLM planner was written, so the prompt is not tuned to it). Every task starts from the reset scene. goal: conditions on the final world (book ids; 'at' = 'Table X' or a compartment); books not named in the goal must stay where they were. expect: find (plan looks the book up), verify [book, target, answer] (plan checks it, the answer is right), refuse (no action may run). Failure tasks need the failure injection of Phase 9 and are skipped until then. Goal ids: see scene/library_meta.json. Spatial answers were computed from the world model (planner/world.py) on 2026-11-22: empty compartment nearest the window = S3-A4 (2.69 m, next S3-B3 2.83 m); table nearest the window = F (1.55 m, next C 2.48 m); S2-A1 holds Physics, Kinematics, Dynamics from the left; tables with the fewest books = D and F (1 each).",
+  "about": "ShelfSage benchmark (fixed before the LLM planner was written, so the prompt is not tuned to it). Every task starts from the reset scene. goal: conditions on the final world (book ids; 'at' = 'Table X' or a compartment); books not named in the goal must stay where they were. expect: find (plan looks the book up), verify [book, target, answer] (plan checks it, the answer is right), refuse (no action may run). Failure tasks: 'inject' is applied once just before the first plan step matching 'before' (sim/failures.py); the planner may plan again after the failure (planner/replan.py). The failure tasks were made concrete in Phase 9, before any planner ran them (see their notes). Goal ids: see scene/library_meta.json. Spatial answers were computed from the world model (planner/world.py) on 2026-11-22: empty compartment nearest the window = S3-A4 (2.69 m, next S3-B3 2.83 m); table nearest the window = F (1.55 m, next C 2.48 m); S2-A1 holds Physics, Kinematics, Dynamics from the left; tables with the fewest books = D and F (1 each).",
   "categories": {
     "single": "one book, template wording (the baseline's home ground)",
     "multi": "several books or steps in one command",
@@ -71,16 +71,19 @@
     {"id": "I03", "category": "infeasible", "command": "Put Machine Learning in S9-A1", "expect": {"refuse": true}, "note": "no such compartment"},
 
     {"id": "F01", "category": "failure", "command": "Put Machine Learning in S2-A3", "goal": [{"book": "ml", "at": "S2-A3"}],
-     "inject": {"type": "drop_book", "when": "during NAVIGATE to S2-A3"}, "phase": 9},
+     "inject": {"type": "drop_book", "before": {"action": "NAVIGATE", "args": ["S2-A3"]}},
+     "note": "the book slips out of the gripper as the robot sets off for the shelf and lands on the nearest table with room"},
     {"id": "F02", "category": "failure", "command": "Put Algorithms in S2-A3", "goal": [{"book": "algo", "shelf": "S2"}],
-     "inject": {"type": "compartment_filled", "target": "S2-A3", "when": "before PLACE"}, "phase": 9,
+     "inject": {"type": "compartment_filled", "target": "S2-A3", "before": {"action": "PLACE", "args": ["Algorithms", "S2-A3"]}},
      "note": "S2-A3 is full when the robot gets there: the book should go to another S2 compartment"},
-    {"id": "F03", "category": "failure", "command": "Bring Databases to Table D", "goal": [{"book": "db", "at": "Table D"}],
-     "inject": {"type": "path_blocked", "when": "during NAVIGATE to Table D"}, "phase": 9},
+    {"id": "F03", "category": "failure", "command": "Bring Databases to Table D", "goal": [{"book": "db", "on_table": true}],
+     "inject": {"type": "path_blocked", "target": "Table D", "before": {"action": "NAVIGATE", "args": ["Table D"]}},
+     "note": "a cart stands in Table D's work zone, so Table D cannot be reached: the robot must not keep the book in the gripper or drop it anywhere; it should lay it on a table it can reach (and report). Goal set when the injection was made concrete (before any planner ran this task): Databases lies on some table."},
     {"id": "F04", "category": "failure", "command": "Move Physics to Table A", "goal": [{"book": "physics", "at": "Table A"}],
-     "inject": {"type": "book_moved", "book": "physics", "to": "S2-B1", "when": "before GRASP"}, "phase": 9,
-     "note": "the world model is stale: GRASP finds no book, FIND_BOOK has to look again"},
+     "inject": {"type": "book_moved", "book": "physics", "to": "S2-B4", "before": {"action": "GRASP", "args": ["Physics"]}},
+     "note": "the world model is stale: Physics was moved to S2-B4 (another column) just before GRASP; first written as S2-B1, changed because S2-B1 shares the parking pose with S2-A1 and the grasp would simply succeed there"},
     {"id": "F05", "category": "failure", "command": "Move Kinematics to S3-B2", "goal": [{"book": "kinematics", "at": "S3-B2"}],
-     "inject": {"type": "grasp_slip", "when": "during NAVIGATE to S3-B2"}, "phase": 9}
+     "inject": {"type": "grasp_slip", "before": {"action": "NAVIGATE", "args": ["S3-B2"]}},
+     "note": "the book slips out while being pulled and stays in S2-A1"}
   ]
 }

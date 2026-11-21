@@ -5,7 +5,7 @@
 
 - **Course:** Robot Manipulators (IIT Mandi), course project
 - **Team:** Chirag, Mihir
-- **Status:** Phases 1-8 of 10 complete (skills, A* + MCL navigation, wrist-camera detector, world model + validator + executor, rule-based baseline, LLM planner on the free Gemini API: 36/37 benchmark tasks vs 14/37 for the baseline); the benchmark (first part of Phase 10) is fixed; Phase 9 (failure injection and replanning) next (see [Progress](#8-progress-tracker))
+- **Status:** Phases 1-9 of 10 complete (skills, A* + MCL navigation, wrist-camera detector, world model + validator + executor, rule-based baseline, LLM planner on the free Gemini API: 36/37 benchmark tasks vs 14/37; failure injection + replanning: the LLM recovers from 4/5 injected failures, the baseline 3/5); Phase 10 (final evaluation, report) next (see [Progress](#8-progress-tracker))
 - **Note:** This is the *initial* idea. It can be simplified later if parts become too hard (see [Fallbacks](#9-risks-and-fallbacks)).
 
 > This README is written so that the whole project can be resumed from scratch, for example in a new chat with an AI assistant. See [How to resume](#12-how-to-resume-in-a-new-chat).
@@ -455,7 +455,28 @@ The benchmark was written **before** the LLM planner, so the prompt cannot be tu
   - **Executed in the simulator** (MCL pose): swap Physics <-> Linear Algebra (12 steps, 168 s simulated), "shelve the Machine Learning book in compartment A3 of the middle shelf", "the empty compartment nearest to the window" (Python Programming -> S3-A4), "the book standing next to Physics" (Kinematics -> Table C) and the yes / no question all succeeded; "Put away Linear Algebra" succeeded in v1 and was refused in v2: 5/6 in each run (the test's own 6/6 check is left failing rather than loosened after the fact).
   - Results: `benchmark/results/phase8_gemini-3.5-flash-lite_prompt-v1.json` and `..._prompt-v2.json` (plan per task, reason, latency, tokens, the executed runs).
 
-### Phase 9: not started
+### Phase 9: Verify, failure injection and replanning (done)
+
+- [x] **Failure injection** (`sim/failures.py`, `Injector`, passed to the executor as `on_step`): applied once, just before the first plan step that matches (action + book / target, so "ml" matches "Machine Learning"), by changing the simulated world the way the failure would: **drop_book** (the held book slips out on the way and lands on the nearest table with a free edge spot), **grasp_slip** (it slips out while being pulled and stays standing in its compartment), **compartment_filled** (five other books fill the target compartment meanwhile), **path_blocked** (the book cart is left in the target table's work zone), **book_moved** (someone moves the book to another compartment just before GRASP: the world model is stale). The benchmark's five failure tasks (F01-F05) were made concrete with these (two details changed before any planner ran them, noted in `tasks.json`).
+- [x] **Replanning** (`planner/replan.py`, `run_with_replanning`): plan -> validate -> execute; on a failing step the world is read again and the planner is asked again with the same command plus what happened (steps done, the failed step, the skill's message); at most 2 replans. The LLM planner gets this as context; the baseline cannot read it and parses the command again against the new world (its templates resolve where the book is now).
+- [x] **PLACE in a shelf fails honestly now** (found by F02): placing into the 4th slot of S2-A1 (next to three books) the arm stopped 7 mm short of the insert pose and the guarded set-down never touched the board (0 N), but the skill let go anyway and reported success; the book can fall out of the shelf. Now an insert more than 1.2 cm short or a set-down without contact aborts: the hand keeps the book, backs out the way it came, returns to the carry pose and PLACE fails with the reason ("could not place it in S2-A1, slot 4: the book did not come down on the board; the book is still held"), so the planner can choose another place. Phase 5 test (MCL) 10/10 and Phase 7 test 10/10 re-run with it.
+- [x] **Prompt v3** (after seeing the first Phase 9 run, both kept): a section on replanning. Refusing stays right for a command that cannot be done before anything moved, but after a failure the robot may be holding a book: never leave it in the gripper; if the requested target can no longer be used, take the closest alternative that keeps to the command (another compartment of the same shelf, the nearest reachable table, or back where it came from) and say so; do not navigate to a place the failure says cannot be reached. With prompt v2 the LLM refused F02 and F03 and kept the book in the hand (3/5, log in `benchmark/results/phase9_prompt-v2_log.txt`).
+- [x] **Done-when test passed** (`sim/test_phase9.py`, MCL pose, Gemini 3.5 Flash-Lite, prompt v3): recovered = the failure happened, the goal holds at the end, the hand is empty, nothing else disturbed.
+
+  | failure | baseline | LLM |
+  |---|---|---|
+  | F01 drop_book (Machine Learning -> S2-A3) | recovered (re-parse: the book is on Table B again) | recovered |
+  | F02 compartment_filled (Algorithms -> S2-A3) | no: tries the full S2-A3 again, rejected by the validator twice, keeps the book | no: S2-A1 (PLACE now reports it cannot), then the empty S2-A2: PLACE reported success but the book was not in the shelf afterwards |
+  | F03 path_blocked (Databases -> Table D) | no: drives to the blocked Table D three times, keeps the book | **recovered**: lays it back on Table E and says why |
+  | F04 book_moved (Physics -> Table A) | recovered | recovered |
+  | F05 grasp_slip (Kinematics -> S3-B2) | recovered | recovered |
+  | **recovered** | **3/5** | **4/5** (4 different failures; README asks for 2-3) |
+
+  One replan was enough in every recovery; a recovered task took 103-158 s simulated. The baseline recovers whenever re-running the same command against the new world is the right answer (dropped, slipped or moved book) and fails whenever the command itself has to change (full compartment, unreachable table).
+  - Open: in F02 the second shelf placement after an aborted one lost the book (PLACE succeeded in the skill's own checks, the book was found outside the shelf). Probably the book shifted in the fingers during the abort's swing back to the carry pose and the in-hand correction did not catch it; not investigated further yet.
+- [ ] Optional (README): VERIFY with the wrist camera compared with ground truth (not done; VERIFY uses ground truth).
+
+### Phase 10: rest not started (benchmark part done above)
 
 ---
 
@@ -510,6 +531,8 @@ ShelfSage/
 │   ├── run_command.py         # one command end to end: baseline -> plan -> validator -> executor
 │   ├── test_phase7.py         # Phase 7 done-when test: planner checks + 10 commands end to end
 │   ├── test_phase8.py         # Phase 8 test: LLM planner offline checks + live benchmark
+│   ├── failures.py            # Phase 9 failure injection (drop, slip, full compartment, blocked table, moved book)
+│   ├── test_phase9.py         # Phase 9 test: five injected failures, both planners, replanning
 │   └── test_robot.py          # Phase 3 done-when test
 ├── skills/
 │   ├── __init__.py
@@ -523,6 +546,7 @@ ShelfSage/
 │   ├── world.py               # world model: world-state dict from the simulator (books, tables, compartments, robot)
 │   ├── plan.py                # Action, plan <-> JSON / text, validator (symbolic preconditions)
 │   ├── executor.py            # runs a validated plan step by step, logs every step
+│   ├── replan.py              # plan -> execute -> on failure plan again with what happened
 │   ├── baseline.py            # rule-based baseline: command templates -> skill sequences
 │   ├── llm.py                 # LLM planner (Gemini free tier / Claude): world view + prompt -> JSON plan, validator retries
 │   ├── prompts/system.md      # the LLM planner's system prompt

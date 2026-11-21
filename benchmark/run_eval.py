@@ -15,7 +15,9 @@ Scoring (same for every planner):
                  answer (exec: the VERIFY result; plan: the world) is the expected one
     infeasible   success = the planner refuses (no plan) or the validator rejects the plan;
                  nothing runs
-    failure      needs failure injection (Phase 9): skipped for now
+    failure      exec level only: the failure is injected while the plan runs, the planner may
+                 plan again (up to 2 times); success = goal holds at the end, nothing else
+                 disturbed, hand empty
 
 Usage (project root, venv active):
     python benchmark/run_eval.py                          # baseline, plan level
@@ -43,8 +45,9 @@ MOVES = ("GRASP", "PLACE")
 
 
 # ---------------------------------------------------------------------------- planners
-def baseline_planner(command, world):
-    """-> (plan or None, message, extra info for the record)"""
+def baseline_planner(command, world, context=None):
+    """-> (plan or None, message, extra info for the record). The baseline cannot use the
+    failure context: after a failure it parses the command again against the new world."""
     from planner import baseline
     pr = baseline.parse(command, world)
     return pr.plan, pr.reason, {}
@@ -56,7 +59,7 @@ _LLM = {}
 CACHE = ROOT / "sim/output/llm_cache"        # git-ignored: one file per answered request
 
 
-def llm_planner(command, world):
+def llm_planner(command, world, context=None):
     """LLM plan, cached: a command already answered for the same world by the same backend /
     model / effort is not asked again (free-tier daily limits). API errors are not cached."""
     import hashlib
@@ -67,13 +70,13 @@ def llm_planner(command, world):
     b = _LLM["p"].backend
     from planner.llm import SYSTEM
     key = json.dumps([b.name, b.model, b.effort, hashlib.sha1(SYSTEM.encode()).hexdigest(), command,
-                      world["books"], world["robot"]], sort_keys=True)
+                      world["books"], world["robot"], context], sort_keys=True)
     f = CACHE / (hashlib.sha1(key.encode()).hexdigest()[:20] + ".json")
     if f.exists():
         c = json.loads(f.read_text())
         plan = P.from_json(c["plan"]) if c["plan"] is not None else None
         return plan, c["message"], {**c["extra"], "cached": True}
-    r = _LLM["p"].plan(command, world)
+    r = _LLM["p"].plan(command, world, context)
     extra = {"llm_status": r.status, "backend": r.backend, "model": r.model, "attempts": r.attempts,
              "latency": r.latency, "usage": r.usage, "transcript": r.transcript}
     if r.status != "error":
@@ -100,6 +103,8 @@ def goal_holds(goal, world):
             return False, f"{title} is at {at}, wanted shelf {g['shelf']}"
         if g.get("in_shelf") and s["kind"] != "shelf":
             return False, f"{title} is at {at}, wanted a shelf"
+        if g.get("on_table") and s["kind"] != "table":
+            return False, f"{title} is at {at}, wanted a table"
     return True, "goal holds"
 
 
@@ -203,6 +208,41 @@ def run_exec(task, planner, perception, truth):
     return out
 
 
+def run_failure(task, planner, perception=False, truth=False, max_replans=2):
+    """A failure task: plan, execute with the failure injected (sim/failures.py), plan again
+    after the failure (planner/replan.py, up to max_replans), score the final world. Success =
+    the failure really happened, the goal holds in the end and no other book was disturbed
+    (books the failure itself moved excepted)."""
+    from planner import world as W
+    from planner.replan import run_with_replanning
+    from sim.failures import Injector
+    robot, w0 = make_world_and_robot(perception, truth)
+    inj = Injector(robot, task["inject"])
+
+    def plan_fn(command, world, context):
+        plan, msg, _ = PLANNERS[planner](command, world, context)
+        return plan, msg
+    try:
+        rec = run_with_replanning(task["command"], plan_fn, robot, max_replans=max_replans, on_step=inj)
+    except Exception as e:                       # e.g. the free tier's daily quota
+        return {"plan": [], "success": False, "executed": False, "injected": inj.done,
+                "reason": f"run failed: {type(e).__name__}: {e}"}
+    w1 = W.snapshot(robot)
+    ok, why = goal_holds(task["goal"], w1)
+    w0x = {**w0, "books": {b: s for b, s in w0["books"].items() if b not in inj.moved_by_failure}}
+    w1x = {**w1, "books": {b: s for b, s in w1["books"].items() if b not in inj.moved_by_failure}}
+    stay, why2 = others_stay(task, w0x, w1x)
+    held = w1["robot"]["holding"]
+    success = inj.done and ok and stay and held is None
+    reason = ("the failure was never injected (no matching step)" if not inj.done else
+              why if not ok else why2 if not stay else f"still holding {held}" if held else
+              f"recovered: {rec.message}")
+    return {"plan": rec.attempts[0]["plan"] if rec.attempts else [], "success": success, "executed": True,
+            "injected": inj.done, "failure": inj.description, "replans": rec.replans,
+            "run_success": rec.success, "run_message": rec.message, "attempts": rec.attempts,
+            "sim_time": rec.sim_time, "reason": reason}
+
+
 # ---------------------------------------------------------------------------- main
 def main():
     ap = argparse.ArgumentParser()
@@ -222,7 +262,8 @@ def main():
     tasks = [t for t in spec["tasks"] if (not a.tasks or t["id"] in a.tasks)
              and (not a.category or t["category"] in a.category)]
     run = [t for t in tasks if t["category"] != "failure"]
-    skipped = [t for t in tasks if t["category"] == "failure"]
+    failures = [t for t in tasks if t["category"] == "failure"]
+    skipped = failures if a.level == "plan" else []
 
     t0 = time.time()
     if a.level == "plan":
@@ -241,9 +282,12 @@ def main():
         with ProcessPoolExecutor(max_workers=a.workers) as ex:
             results = list(ex.map(run_exec, run, [a.planner] * len(run), [a.perception] * len(run),
                                   [a.truth] * len(run)))
+            fres = list(ex.map(run_failure, failures, [a.planner] * len(failures),
+                               [a.perception] * len(failures), [a.truth] * len(failures)))
+        run, results = run + failures, results + fres
     records = [{"id": t["id"], "category": t["category"], "command": t["command"], **r} for t, r in zip(run, results)]
     records += [{"id": t["id"], "category": t["category"], "command": t["command"], "success": None,
-                 "reason": "skipped: needs failure injection (Phase 9)"} for t in skipped]
+                 "reason": "skipped: failure tasks run at exec level only"} for t in skipped]
 
     print(f"{a.planner} planner, {a.level} level, {len(run)} tasks ({len(skipped)} failure tasks skipped)\n")
     for r in records:
@@ -261,7 +305,7 @@ def main():
         if not rs:
             n_skip = sum(1 for r in records if r["category"] == c)
             if n_skip:
-                print(f"  {c:12s} {n_skip:5d}  skipped (Phase 9)")
+                print(f"  {c:12s} {n_skip:5d}  skipped (exec level only)")
             continue
         n, p, s = len(rs), sum(1 for r in rs if r.get("plan")), sum(1 for r in rs if r["success"])
         tot = [tot[0] + n, tot[1] + p, tot[2] + s]

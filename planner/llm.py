@@ -76,6 +76,13 @@ class LLMResult:
     model: str = ""
 
 
+def command_text(command, context=None):
+    """The command, plus what happened so far when planning again after a failure (Phase 9)."""
+    if not context:
+        return "Command: " + command
+    return f"Command: {command}\n\nReplanning after a failure:\n{context}"
+
+
 # ---------------------------------------------------------------------------- backends
 class QuotaExhausted(RuntimeError):
     """The free tier's daily request limit for this model is used up (resets after a day)."""
@@ -97,10 +104,10 @@ class ClaudeBackend:
             client = anthropic.Anthropic()
         self.client = client
 
-    def start(self, world_text, command):
+    def start(self, world_text, command, context=None):
         return [{"role": "user", "content": [
             {"type": "text", "text": "World state:\n" + world_text, "cache_control": {"type": "ephemeral"}},
-            {"type": "text", "text": "Command: " + command}]}]
+            {"type": "text", "text": command_text(command, context)}]}]
 
     def ask(self, messages):
         kw = dict(model=self.model, max_tokens=16000,
@@ -139,8 +146,9 @@ class GeminiBackend:
             post = requests.post
         self.post = post
 
-    def start(self, world_text, command):
-        return [{"role": "user", "parts": [{"text": "World state:\n" + world_text}, {"text": "Command: " + command}]}]
+    def start(self, world_text, command, context=None):
+        return [{"role": "user", "parts": [{"text": "World state:\n" + world_text},
+                                           {"text": command_text(command, context)}]}]
 
     def ask(self, contents):
         body = {"systemInstruction": {"parts": [{"text": SYSTEM}]}, "contents": contents,
@@ -189,9 +197,10 @@ class LLMPlanner:
             backend = ClaudeBackend(effort, client) if backend == "claude" else GeminiBackend(effort)
         self.backend, self.retries = backend, retries
 
-    def plan(self, command, world):
+    def plan(self, command, world, context=None):
+        """context: what happened to earlier plans for this command (planner/replan.py)."""
         b = self.backend
-        conv = b.start(json.dumps(W.llm_view(world), separators=(",", ":")), command)
+        conv = b.start(json.dumps(W.llm_view(world), separators=(",", ":")), command, context)
         out = LLMResult(None, "", usage={"input": 0, "output": 0, "cache_read": 0, "cache_write": 0},
                         backend=b.name, model=b.model)
         t0 = time.time()

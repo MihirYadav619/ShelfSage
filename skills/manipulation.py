@@ -932,6 +932,26 @@ def pick_from_shelf(robot, book, comp, say=print, log=None):
     return SkillResult(True, "holding the book")
 
 
+def _place_abort(robot, book, comp, k, gs, fwd, side, park, log, why):
+    """PLACE in a shelf could not finish: keep the book, back out the way it came in (lift, out of
+    the shelf, base back, carry pose, base forward again) and report why, so the planner can
+    choose another place. (Before Phase 9 the skill let go anyway and reported success; a book
+    released 3 cm above the board can fall out of the shelf.)"""
+    check = _check(log)
+    tcp = robot.fk_world()[:3, 3]
+    robot.move_linear(tcp + 0.02 * UP, z_axis=fwd, y_axis=side, speed=0.03)
+    robot.move_linear(robot.fk_world()[:3, 3] - SHELF_PRE * fwd, z_axis=fwd, y_axis=side, speed=0.04)
+    back = (park[0] - SHELF_BACK * fwd[0], park[1] - SHELF_BACK * fwd[1], park[2])
+    _base_shift(robot, back, book, log, "base backs off (book still held)")
+    to_carry_pose(robot, book, log)
+    _base_shift(robot, park, book, log, "base forward again")
+    held = robot.holding == book
+    check("book still in the hand", held)
+    return SkillResult(False, f"could not place it in {comp}, slot {k + 1}: {why}"
+                       + ("; the book is still held" if held else "; the book was lost"),
+                       {"slot": k, "held": held})
+
+
 def place_in_shelf(robot, book, comp, say=print, log=None):
     """Put the held book into the leftmost free slot of a compartment, robot at the column
     parking: base 15 cm back, swing to the pre-place, base forward again (book 15 cm out), correct
@@ -957,9 +977,14 @@ def place_in_shelf(robot, book, comp, say=print, log=None):
     shift = in_hand_correction(robot, book, gs, target)
     say(f"  book sits {np.linalg.norm(shift) * 100:.1f} cm off in the hand, correcting")
     gs = gs + shift
-    check("insert", robot.move_linear(gs + SHELF_UP * UP, z_axis=fwd, y_axis=side, speed=0.04))
+    ins = robot.move_linear(gs + SHELF_UP * UP, z_axis=fwd, y_axis=side, speed=0.04)
+    if not check("insert", ins.success or ins.final_error < 0.012):
+        return _place_abort(robot, book, comp, k, gs, fwd, side, park, log,
+                            f"the arm could not reach slot {k + 1} of {comp} ({ins.final_error * 100:.1f} cm short)")
     g = set_down(robot, book, fwd, side, SHELF_UP + 0.02)
-    check(f"set down ({g.force:.1f} N on the board)", g)
+    if not check(f"set down ({g.force:.1f} N on the board)", g):
+        return _place_abort(robot, book, comp, k, gs, fwd, side, park, log,
+                            f"the book did not come down on the board of {comp} ({g.force:.1f} N)")
     robot.release(book)
     robot.set_gripper_width(W_OPEN_SHELF, 0.5)
     tcp = robot.fk_world()[:3, 3]

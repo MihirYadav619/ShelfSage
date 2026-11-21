@@ -1,0 +1,575 @@
+[
+ {
+  "id": "F01",
+  "failure_type": "drop_book",
+  "plan": [
+   "FIND_BOOK(Machine Learning)",
+   "NAVIGATE(Table B)",
+   "GRASP(Machine Learning)",
+   "NAVIGATE(S2-A3)",
+   "PLACE(Machine Learning, S2-A3)",
+   "VERIFY(Machine Learning, S2-A3)"
+  ],
+  "success": true,
+  "executed": true,
+  "injected": true,
+  "failure": "Machine Learning slipped out of the gripper and fell onto Table B",
+  "replans": 1,
+  "run_success": true,
+  "run_message": "done after 1 replan(s)",
+  "attempts": [
+   {
+    "plan": [
+     "FIND_BOOK(Machine Learning)",
+     "NAVIGATE(Table B)",
+     "GRASP(Machine Learning)",
+     "NAVIGATE(S2-A3)",
+     "PLACE(Machine Learning, S2-A3)",
+     "VERIFY(Machine Learning, S2-A3)"
+    ],
+    "planner_message": "",
+    "success": false,
+    "failed_step": "PLACE(Machine Learning, S2-A3)",
+    "error": "not holding Machine Learning: GRASP it first",
+    "steps": [
+     {
+      "step": "FIND_BOOK(Machine Learning)",
+      "ok": true,
+      "msg": "Machine Learning is at Table B",
+      "sim_time": 0.0
+     },
+     {
+      "step": "NAVIGATE(Table B)",
+      "ok": true,
+      "msg": "at Table B",
+      "sim_time": 5.62
+     },
+     {
+      "step": "GRASP(Machine Learning)",
+      "ok": true,
+      "msg": "holding the book",
+      "sim_time": 34.16
+     },
+     {
+      "step": "NAVIGATE(S2-A3)",
+      "ok": true,
+      "msg": "at S2-A3",
+      "sim_time": 18.88
+     },
+     {
+      "step": "PLACE(Machine Learning, S2-A3)",
+      "ok": false,
+      "msg": "not holding Machine Learning: GRASP it first",
+      "sim_time": 0.0
+     }
+    ],
+    "plan_time": 0.0
+   },
+   {
+    "plan": [
+     "FIND_BOOK(Machine Learning)",
+     "NAVIGATE(Table B)",
+     "GRASP(Machine Learning)",
+     "NAVIGATE(S2-A3)",
+     "PLACE(Machine Learning, S2-A3)",
+     "VERIFY(Machine Learning, S2-A3)"
+    ],
+    "planner_message": "",
+    "success": true,
+    "failed_step": "",
+    "error": "",
+    "steps": [
+     {
+      "step": "FIND_BOOK(Machine Learning)",
+      "ok": true,
+      "msg": "Machine Learning is at Table B",
+      "sim_time": 0.0
+     },
+     {
+      "step": "NAVIGATE(Table B)",
+      "ok": true,
+      "msg": "at Table B",
+      "sim_time": 18.82
+     },
+     {
+      "step": "GRASP(Machine Learning)",
+      "ok": true,
+      "msg": "holding the book",
+      "sim_time": 34.16
+     },
+     {
+      "step": "NAVIGATE(S2-A3)",
+      "ok": true,
+      "msg": "at S2-A3",
+      "sim_time": 18.04
+     },
+     {
+      "step": "PLACE(Machine Learning, S2-A3)",
+      "ok": true,
+      "msg": "placed in S2-A3, slot 1",
+      "sim_time": 25.44
+     },
+     {
+      "step": "VERIFY(Machine Learning, S2-A3)",
+      "ok": true,
+      "msg": "Machine Learning stands in S2-A3",
+      "sim_time": 0.0
+     }
+    ],
+    "plan_time": 0.0
+   }
+  ],
+  "sim_time": 158.4,
+  "reason": "recovered: done after 1 replan(s)"
+ },
+ {
+  "id": "F02",
+  "failure_type": "compartment_filled",
+  "plan": [
+   "FIND_BOOK(Algorithms)",
+   "NAVIGATE(Table E)",
+   "GRASP(Algorithms)",
+   "NAVIGATE(S2-A3)",
+   "PLACE(Algorithms, S2-A3)",
+   "VERIFY(Algorithms, S2-A3)"
+  ],
+  "success": false,
+  "executed": true,
+  "injected": true,
+  "failure": "S2-A3 was filled with 5 other books meanwhile (Fluid Mechanics, Heat Transfer, Materials Science, Numerical Methods, Data Structures)",
+  "replans": 2,
+  "run_success": false,
+  "run_message": "still failing after 2 replans: plan rejected by the validator: step 3 PLACE(Algorithms, S2-A3): S2-A3 is full (5 books)",
+  "attempts": [
+   {
+    "plan": [
+     "FIND_BOOK(Algorithms)",
+     "NAVIGATE(Table E)",
+     "GRASP(Algorithms)",
+     "NAVIGATE(S2-A3)",
+     "PLACE(Algorithms, S2-A3)",
+     "VERIFY(Algorithms, S2-A3)"
+    ],
+    "planner_message": "",
+    "success": false,
+    "failed_step": "PLACE(Algorithms, S2-A3)",
+    "error": "compartment S2-A3 is full",
+    "steps": [
+     {
+      "step": "FIND_BOOK(Algorithms)",
+      "ok": true,
+      "msg": "Algorithms is at Table E",
+      "sim_time": 0.0
+     },
+     {
+      "step": "NAVIGATE(Table E)",
+      "ok": true,
+      "msg": "at Table E",
+      "sim_time": 14.64
+     },
+     {
+      "step": "GRASP(Algorithms)",
+      "ok": true,
+      "msg": "holding the book",
+      "sim_time": 34.28
+     },
+     {
+      "step": "NAVIGATE(S2-A3)",
+      "ok": true,
+      "msg": "at S2-A3",
+      "sim_time": 13.04
+     },
+     {
+      "step": "PLACE(Algorithms, S2-A3)",
+      "ok": false,
+      "msg": "compartment S2-A3 is full",
+      "sim_time": 0.0
+     }
+    ],
+    "plan_time": 0.0
+   },
+   {
+    "plan": [
+     "FIND_BOOK(Algorithms)",
+     "NAVIGATE(S2-A3)",
+     "PLACE(Algorithms, S2-A3)",
+     "VERIFY(Algorithms, S2-A3)"
+    ],
+    "planner_message": "",
+    "success": false,
+    "failed_step": "(validator)",
+    "error": "plan rejected by the validator: step 3 PLACE(Algorithms, S2-A3): S2-A3 is full (5 books)",
+    "steps": [],
+    "plan_time": 0.0
+   },
+   {
+    "plan": [
+     "FIND_BOOK(Algorithms)",
+     "NAVIGATE(S2-A3)",
+     "PLACE(Algorithms, S2-A3)",
+     "VERIFY(Algorithms, S2-A3)"
+    ],
+    "planner_message": "",
+    "success": false,
+    "failed_step": "(validator)",
+    "error": "plan rejected by the validator: step 3 PLACE(Algorithms, S2-A3): S2-A3 is full (5 books)",
+    "steps": [],
+    "plan_time": 0.0
+   }
+  ],
+  "sim_time": 62.3,
+  "reason": "Algorithms is at held, wanted shelf S2"
+ },
+ {
+  "id": "F03",
+  "failure_type": "path_blocked",
+  "plan": [
+   "FIND_BOOK(Databases)",
+   "NAVIGATE(Table E)",
+   "GRASP(Databases)",
+   "NAVIGATE(Table D)",
+   "PLACE(Databases, Table D)",
+   "VERIFY(Databases, Table D)"
+  ],
+  "success": false,
+  "executed": true,
+  "injected": true,
+  "failure": "a book cart was left in front of Table D, in its robot work zone",
+  "replans": 2,
+  "run_success": false,
+  "run_message": "still failing after 2 replans: still blocked after replanning",
+  "attempts": [
+   {
+    "plan": [
+     "FIND_BOOK(Databases)",
+     "NAVIGATE(Table E)",
+     "GRASP(Databases)",
+     "NAVIGATE(Table D)",
+     "PLACE(Databases, Table D)",
+     "VERIFY(Databases, Table D)"
+    ],
+    "planner_message": "",
+    "success": false,
+    "failed_step": "NAVIGATE(Table D)",
+    "error": "still blocked after replanning",
+    "steps": [
+     {
+      "step": "FIND_BOOK(Databases)",
+      "ok": true,
+      "msg": "Databases is at Table E",
+      "sim_time": 0.0
+     },
+     {
+      "step": "NAVIGATE(Table E)",
+      "ok": true,
+      "msg": "at Table E",
+      "sim_time": 14.64
+     },
+     {
+      "step": "GRASP(Databases)",
+      "ok": true,
+      "msg": "holding the book",
+      "sim_time": 65.92
+     },
+     {
+      "step": "NAVIGATE(Table D)",
+      "ok": false,
+      "msg": "still blocked after replanning",
+      "sim_time": 5.3
+     }
+    ],
+    "plan_time": 0.0
+   },
+   {
+    "plan": [
+     "FIND_BOOK(Databases)",
+     "NAVIGATE(Table D)",
+     "PLACE(Databases, Table D)",
+     "VERIFY(Databases, Table D)"
+    ],
+    "planner_message": "",
+    "success": false,
+    "failed_step": "NAVIGATE(Table D)",
+    "error": "still blocked after replanning",
+    "steps": [
+     {
+      "step": "FIND_BOOK(Databases)",
+      "ok": true,
+      "msg": "Databases is held",
+      "sim_time": 0.0
+     },
+     {
+      "step": "NAVIGATE(Table D)",
+      "ok": false,
+      "msg": "still blocked after replanning",
+      "sim_time": 2.9
+     }
+    ],
+    "plan_time": 0.0
+   },
+   {
+    "plan": [
+     "FIND_BOOK(Databases)",
+     "NAVIGATE(Table D)",
+     "PLACE(Databases, Table D)",
+     "VERIFY(Databases, Table D)"
+    ],
+    "planner_message": "",
+    "success": false,
+    "failed_step": "NAVIGATE(Table D)",
+    "error": "still blocked after replanning",
+    "steps": [
+     {
+      "step": "FIND_BOOK(Databases)",
+      "ok": true,
+      "msg": "Databases is held",
+      "sim_time": 0.0
+     },
+     {
+      "step": "NAVIGATE(Table D)",
+      "ok": false,
+      "msg": "still blocked after replanning",
+      "sim_time": 2.8
+     }
+    ],
+    "plan_time": 0.0
+   }
+  ],
+  "sim_time": 91.9,
+  "reason": "Databases is at held, wanted a table"
+ },
+ {
+  "id": "F04",
+  "failure_type": "book_moved",
+  "plan": [
+   "FIND_BOOK(Physics)",
+   "NAVIGATE(S2-A1)",
+   "GRASP(Physics)",
+   "NAVIGATE(Table A)",
+   "PLACE(Physics, Table A)",
+   "VERIFY(Physics, Table A)"
+  ],
+  "success": true,
+  "executed": true,
+  "injected": true,
+  "failure": "someone moved Physics to S2-B4",
+  "replans": 1,
+  "run_success": true,
+  "run_message": "done after 1 replan(s)",
+  "attempts": [
+   {
+    "plan": [
+     "FIND_BOOK(Physics)",
+     "NAVIGATE(S2-A1)",
+     "GRASP(Physics)",
+     "NAVIGATE(Table A)",
+     "PLACE(Physics, Table A)",
+     "VERIFY(Physics, Table A)"
+    ],
+    "planner_message": "",
+    "success": false,
+    "failed_step": "GRASP(Physics)",
+    "error": "the book is in S2-B4: NAVIGATE there first",
+    "steps": [
+     {
+      "step": "FIND_BOOK(Physics)",
+      "ok": true,
+      "msg": "Physics is at S2-A1",
+      "sim_time": 0.0
+     },
+     {
+      "step": "NAVIGATE(S2-A1)",
+      "ok": true,
+      "msg": "at S2-A1",
+      "sim_time": 19.18
+     },
+     {
+      "step": "GRASP(Physics)",
+      "ok": false,
+      "msg": "the book is in S2-B4: NAVIGATE there first",
+      "sim_time": 0.0
+     }
+    ],
+    "plan_time": 0.0
+   },
+   {
+    "plan": [
+     "FIND_BOOK(Physics)",
+     "NAVIGATE(S2-B4)",
+     "GRASP(Physics)",
+     "NAVIGATE(Table A)",
+     "PLACE(Physics, Table A)",
+     "VERIFY(Physics, Table A)"
+    ],
+    "planner_message": "",
+    "success": true,
+    "failed_step": "",
+    "error": "",
+    "steps": [
+     {
+      "step": "FIND_BOOK(Physics)",
+      "ok": true,
+      "msg": "Physics is at S2-B4",
+      "sim_time": 0.0
+     },
+     {
+      "step": "NAVIGATE(S2-B4)",
+      "ok": true,
+      "msg": "at S2-B4",
+      "sim_time": 6.62
+     },
+     {
+      "step": "GRASP(Physics)",
+      "ok": true,
+      "msg": "holding the book",
+      "sim_time": 23.4
+     },
+     {
+      "step": "NAVIGATE(Table A)",
+      "ok": true,
+      "msg": "at Table A",
+      "sim_time": 20.34
+     },
+     {
+      "step": "PLACE(Physics, Table A)",
+      "ok": true,
+      "msg": "laid on Table A, spot 2",
+      "sim_time": 33.24
+     },
+     {
+      "step": "VERIFY(Physics, Table A)",
+      "ok": true,
+      "msg": "Physics lies on Table A",
+      "sim_time": 0.0
+     }
+    ],
+    "plan_time": 0.0
+   }
+  ],
+  "sim_time": 103.1,
+  "reason": "recovered: done after 1 replan(s)"
+ },
+ {
+  "id": "F05",
+  "failure_type": "grasp_slip",
+  "plan": [
+   "FIND_BOOK(Kinematics)",
+   "NAVIGATE(S2-A1)",
+   "GRASP(Kinematics)",
+   "NAVIGATE(S3-B2)",
+   "PLACE(Kinematics, S3-B2)",
+   "VERIFY(Kinematics, S3-B2)"
+  ],
+  "success": true,
+  "executed": true,
+  "injected": true,
+  "failure": "Kinematics slipped out while being pulled and stayed in S2-A1",
+  "replans": 1,
+  "run_success": true,
+  "run_message": "done after 1 replan(s)",
+  "attempts": [
+   {
+    "plan": [
+     "FIND_BOOK(Kinematics)",
+     "NAVIGATE(S2-A1)",
+     "GRASP(Kinematics)",
+     "NAVIGATE(S3-B2)",
+     "PLACE(Kinematics, S3-B2)",
+     "VERIFY(Kinematics, S3-B2)"
+    ],
+    "planner_message": "",
+    "success": false,
+    "failed_step": "PLACE(Kinematics, S3-B2)",
+    "error": "not holding Kinematics: GRASP it first",
+    "steps": [
+     {
+      "step": "FIND_BOOK(Kinematics)",
+      "ok": true,
+      "msg": "Kinematics is at S2-A1",
+      "sim_time": 0.0
+     },
+     {
+      "step": "NAVIGATE(S2-A1)",
+      "ok": true,
+      "msg": "at S2-A1",
+      "sim_time": 19.18
+     },
+     {
+      "step": "GRASP(Kinematics)",
+      "ok": true,
+      "msg": "holding the book",
+      "sim_time": 24.96
+     },
+     {
+      "step": "NAVIGATE(S3-B2)",
+      "ok": true,
+      "msg": "at S3-B2",
+      "sim_time": 10.5
+     },
+     {
+      "step": "PLACE(Kinematics, S3-B2)",
+      "ok": false,
+      "msg": "not holding Kinematics: GRASP it first",
+      "sim_time": 0.0
+     }
+    ],
+    "plan_time": 0.0
+   },
+   {
+    "plan": [
+     "FIND_BOOK(Kinematics)",
+     "NAVIGATE(S2-A1)",
+     "GRASP(Kinematics)",
+     "NAVIGATE(S3-B2)",
+     "PLACE(Kinematics, S3-B2)",
+     "VERIFY(Kinematics, S3-B2)"
+    ],
+    "planner_message": "",
+    "success": true,
+    "failed_step": "",
+    "error": "",
+    "steps": [
+     {
+      "step": "FIND_BOOK(Kinematics)",
+      "ok": true,
+      "msg": "Kinematics is at S2-A1",
+      "sim_time": 0.0
+     },
+     {
+      "step": "NAVIGATE(S2-A1)",
+      "ok": true,
+      "msg": "at S2-A1",
+      "sim_time": 10.26
+     },
+     {
+      "step": "GRASP(Kinematics)",
+      "ok": true,
+      "msg": "holding the book",
+      "sim_time": 24.66
+     },
+     {
+      "step": "NAVIGATE(S3-B2)",
+      "ok": true,
+      "msg": "at S3-B2",
+      "sim_time": 9.82
+     },
+     {
+      "step": "PLACE(Kinematics, S3-B2)",
+      "ok": true,
+      "msg": "placed in S3-B2, slot 2",
+      "sim_time": 24.6
+     },
+     {
+      "step": "VERIFY(Kinematics, S3-B2)",
+      "ok": true,
+      "msg": "Kinematics stands in S3-B2",
+      "sim_time": 0.0
+     }
+    ],
+    "plan_time": 0.0
+   }
+  ],
+  "sim_time": 127.3,
+  "reason": "recovered: done after 1 replan(s)"
+ }
+]

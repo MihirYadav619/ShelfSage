@@ -1,0 +1,93 @@
+1. offline checks
+  PASS  failure description names the steps done, the failed step and the error
+  PASS  replans once after a failure, the second planner call gets the context
+
+2. baseline: 5 failure tasks in the simulator
+
+  PASS  F01 drop_book          Put Machine Learning in S2-A3
+        failure: Machine Learning slipped out of the gripper and fell onto Table B
+        plan 1: FIND_BOOK(Machine Learning) -> NAVIGATE(Table B) -> GRASP(Machine Learning) -> NAVIGATE(S2-A3) -> PLACE(Machine Learning, S2-A3) -> VERIFY(Machine Learning, S2-A3)
+          failed at PLACE(Machine Learning, S2-A3): not holding Machine Learning: GRASP it first
+        plan 2: FIND_BOOK(Machine Learning) -> NAVIGATE(Table B) -> GRASP(Machine Learning) -> NAVIGATE(S2-A3) -> PLACE(Machine Learning, S2-A3) -> VERIFY(Machine Learning, S2-A3)
+        -> recovered: done after 1 replan(s)  (158 s simulated)
+
+  FAIL  F02 compartment_filled Put Algorithms in S2-A3
+        failure: S2-A3 was filled with 5 other books meanwhile (Fluid Mechanics, Heat Transfer, Materials Science, Numerical Methods, Data Structures)
+        plan 1: FIND_BOOK(Algorithms) -> NAVIGATE(Table E) -> GRASP(Algorithms) -> NAVIGATE(S2-A3) -> PLACE(Algorithms, S2-A3) -> VERIFY(Algorithms, S2-A3)
+          failed at PLACE(Algorithms, S2-A3): compartment S2-A3 is full
+        plan 2: FIND_BOOK(Algorithms) -> NAVIGATE(S2-A3) -> PLACE(Algorithms, S2-A3) -> VERIFY(Algorithms, S2-A3)
+          failed at (validator): plan rejected by the validator: step 3 PLACE(Algorithms, S2-A3): S2-A3 is full (5 books)
+        plan 3: FIND_BOOK(Algorithms) -> NAVIGATE(S2-A3) -> PLACE(Algorithms, S2-A3) -> VERIFY(Algorithms, S2-A3)
+          failed at (validator): plan rejected by the validator: step 3 PLACE(Algorithms, S2-A3): S2-A3 is full (5 books)
+        -> Algorithms is at held, wanted shelf S2  (62 s simulated)
+
+  FAIL  F03 path_blocked       Bring Databases to Table D
+        failure: a book cart was left in front of Table D, in its robot work zone
+        plan 1: FIND_BOOK(Databases) -> NAVIGATE(Table E) -> GRASP(Databases) -> NAVIGATE(Table D) -> PLACE(Databases, Table D) -> VERIFY(Databases, Table D)
+          failed at NAVIGATE(Table D): still blocked after replanning
+        plan 2: FIND_BOOK(Databases) -> NAVIGATE(Table D) -> PLACE(Databases, Table D) -> VERIFY(Databases, Table D)
+          failed at NAVIGATE(Table D): still blocked after replanning
+        plan 3: FIND_BOOK(Databases) -> NAVIGATE(Table D) -> PLACE(Databases, Table D) -> VERIFY(Databases, Table D)
+          failed at NAVIGATE(Table D): still blocked after replanning
+        -> Databases is at held, wanted a table  (92 s simulated)
+
+  PASS  F04 book_moved         Move Physics to Table A
+        failure: someone moved Physics to S2-B4
+        plan 1: FIND_BOOK(Physics) -> NAVIGATE(S2-A1) -> GRASP(Physics) -> NAVIGATE(Table A) -> PLACE(Physics, Table A) -> VERIFY(Physics, Table A)
+          failed at GRASP(Physics): the book is in S2-B4: NAVIGATE there first
+        plan 2: FIND_BOOK(Physics) -> NAVIGATE(S2-B4) -> GRASP(Physics) -> NAVIGATE(Table A) -> PLACE(Physics, Table A) -> VERIFY(Physics, Table A)
+        -> recovered: done after 1 replan(s)  (103 s simulated)
+
+  PASS  F05 grasp_slip         Move Kinematics to S3-B2
+        failure: Kinematics slipped out while being pulled and stayed in S2-A1
+        plan 1: FIND_BOOK(Kinematics) -> NAVIGATE(S2-A1) -> GRASP(Kinematics) -> NAVIGATE(S3-B2) -> PLACE(Kinematics, S3-B2) -> VERIFY(Kinematics, S3-B2)
+          failed at PLACE(Kinematics, S3-B2): not holding Kinematics: GRASP it first
+        plan 2: FIND_BOOK(Kinematics) -> NAVIGATE(S2-A1) -> GRASP(Kinematics) -> NAVIGATE(S3-B2) -> PLACE(Kinematics, S3-B2) -> VERIFY(Kinematics, S3-B2)
+        -> recovered: done after 1 replan(s)  (127 s simulated)
+
+  baseline: recovered 3/5 (329 s wall)
+
+2. llm: 5 failure tasks in the simulator
+
+  PASS  F01 drop_book          Put Machine Learning in S2-A3
+        failure: Machine Learning slipped out of the gripper and fell onto Table B
+        plan 1: FIND_BOOK(Machine Learning) -> NAVIGATE(Table B) -> GRASP(Machine Learning) -> NAVIGATE(S2-A3) -> PLACE(Machine Learning, S2-A3) -> VERIFY(Machine Learning, S2-A3)
+          failed at PLACE(Machine Learning, S2-A3): not holding Machine Learning: GRASP it first
+        plan 2: FIND_BOOK(Machine Learning) -> NAVIGATE(Table B) -> GRASP(Machine Learning) -> NAVIGATE(S2-A3) -> PLACE(Machine Learning, S2-A3) -> VERIFY(Machine Learning, S2-A3)
+        -> recovered: done after 1 replan(s)  (158 s simulated)
+
+  FAIL  F02 compartment_filled Put Algorithms in S2-A3
+        failure: S2-A3 was filled with 5 other books meanwhile (Fluid Mechanics, Heat Transfer, Materials Science, Numerical Methods, Data Structures)
+        plan 1: FIND_BOOK(Algorithms) -> NAVIGATE(Table E) -> GRASP(Algorithms) -> NAVIGATE(S2-A3) -> PLACE(Algorithms, S2-A3) -> VERIFY(Algorithms, S2-A3)
+          failed at PLACE(Algorithms, S2-A3): compartment S2-A3 is full
+        plan 2: (none: Compartment S2-A3 has zero free slots and is full, so Algorithms cannot be placed there.)
+        -> Algorithms is at held, wanted shelf S2  (62 s simulated)
+
+  FAIL  F03 path_blocked       Bring Databases to Table D
+        failure: a book cart was left in front of Table D, in its robot work zone
+        plan 1: FIND_BOOK(Databases) -> NAVIGATE(Table E) -> GRASP(Databases) -> NAVIGATE(Table D) -> PLACE(Databases, Table D) -> VERIFY(Databases, Table D)
+          failed at NAVIGATE(Table D): still blocked after replanning
+        plan 2: (none: The robot cannot navigate to Table D because the path to the table remains blocked.)
+        -> Databases is at held, wanted a table  (86 s simulated)
+
+  PASS  F04 book_moved         Move Physics to Table A
+        failure: someone moved Physics to S2-B4
+        plan 1: FIND_BOOK(Physics) -> NAVIGATE(S2-A1) -> GRASP(Physics) -> NAVIGATE(Table A) -> PLACE(Physics, Table A) -> VERIFY(Physics, Table A)
+          failed at GRASP(Physics): the book is in S2-B4: NAVIGATE there first
+        plan 2: NAVIGATE(S2-B4) -> GRASP(Physics) -> NAVIGATE(Table A) -> PLACE(Physics, Table A) -> VERIFY(Physics, Table A)
+        -> recovered: done after 1 replan(s)  (103 s simulated)
+
+  PASS  F05 grasp_slip         Move Kinematics to S3-B2
+        failure: Kinematics slipped out while being pulled and stayed in S2-A1
+        plan 1: FIND_BOOK(Kinematics) -> NAVIGATE(S2-A1) -> GRASP(Kinematics) -> NAVIGATE(S3-B2) -> PLACE(Kinematics, S3-B2) -> VERIFY(Kinematics, S3-B2)
+          failed at PLACE(Kinematics, S3-B2): not holding Kinematics: GRASP it first
+        plan 2: FIND_BOOK(Kinematics) -> NAVIGATE(S2-A1) -> GRASP(Kinematics) -> NAVIGATE(S3-B2) -> PLACE(Kinematics, S3-B2) -> VERIFY(Kinematics, S3-B2)
+        -> recovered: done after 1 replan(s)  (127 s simulated)
+
+  llm: recovered 3/5 (253 s wall)
+
+  PASS  failure description names the steps done, the failed step and the error
+  PASS  replans once after a failure, the second planner call gets the context
+  PASS  baseline: recovered 3/5 (for comparison)
+  PASS  LLM planner recovers from >= 3 different failures (3: book_moved, drop_book, grasp_slip)
+RESULT: all passed

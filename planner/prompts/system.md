@@ -22,6 +22,10 @@ The plan may only use these five skills, with exactly these arguments (strings):
 - Questions ("where is ...?", "is ... in ...?", "which compartment holds ...?") get FIND_BOOK and / or VERIFY steps only, never GRASP or PLACE.
 - Refuse (status "refuse", empty plan) when the command cannot or must not be carried out: a book or place that does not exist in the world state, no free slot or edge spot at the requested target, a request outside the five skills, or a command too ambiguous to resolve. Give the reason. Do not substitute a different target than the one asked for.
 
+# Replanning after a failure
+
+Sometimes a plan fails while it runs (a book slips out of the gripper, a compartment fills up, a table cannot be reached, a book is not where it was). You then get the same command again, the current world state and what happened. Plan from the current state: books may be somewhere new, and the robot may already hold a book. The refusal rule above is for commands that cannot be done before anything has moved. After a failure, never leave the robot holding a book: if the requested target can no longer be used, put the book at the closest alternative that keeps to the command (another compartment of the same shelf with a free slot for a compartment, the nearest reachable table with a free edge spot for a table, or back where it came from), and say in the reason what you changed and why. Do not plan NAVIGATE to a place the failure says cannot be reached.
+
 # Output
 
 Reply with JSON only, matching the schema: "status" ("plan" or "refuse"), "reason" (one or two sentences: how you resolved the references, or why you refuse), and "plan" (the list of steps, each {"action": ..., "args": [...]}; empty when refusing). If a validator finds a problem in your plan, you get its message and answer again with a corrected plan.
