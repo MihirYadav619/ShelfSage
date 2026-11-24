@@ -510,8 +510,8 @@ Done on 2026-11-24, after the final evaluation (its numbers above were measured 
   - The benchmark stays in known mode: many of its tasks name books by where they lie ("the book on Table D", "Clear Table E", "the table with the fewest books"), which a robot that has not looked yet cannot know. A LOOK skill followed by a replan would be the next step for those.
 - [x] **Fix: 4th slot of a compartment** (5 of the 10 LLM misses). Cause: at slot 4 of row A joint 5 hit its lower limit (-2.897 rad), so the set-down stopped short of the board. PLACE now slides the base along the shelf when the slot is right of the base centre (slot 4: 14 cm), so the slot is 10 cm left of it; joint 5 then keeps 0.14 rad to its limit and Thermodynamics goes into S3-A1 slot 4.
 - [x] **Fix: F02 lost book.** Cause: after the aborted slot-4 placement the arm left the shelf on another IK branch, and its swing to the carry pose hit the front of the board above with the book, turning it ~35 deg in the fingers. The next PLACE pushed the tilted book in (82 N instead of ~3 N), let go, and the book fell to the floor, yet PLACE reported "placed". Now an abort leaves the way it came in (back through the arm's own pre-place and carry joint configurations); PLACE refuses to insert a book tilted more than 15 deg in the hand (keeps it, reports it); and PLACE checks after letting go that the book stands in the compartment, else it reports the failure. Forced abort followed by a placement elsewhere: the book stays upright and is placed.
+- [x] Search ignores detector masks under 1500 px and keeps one book per spot (a sliver of a book was once taken for Compilers on Table B).
 - [x] Re-run: planner checks 28/28 (`test_phase7.py --planner-only`, with four new search-mode checks); baseline exec benchmark 17/42, the same per category as before.
-- [x] **Web page** (`web/`, `python web/server.py`, then open http://localhost:8000): type a request, pick the language model or the rule-based parser, and watch the robot: a live view rendered off-screen by the simulator (MJPEG; "Follow the robot" or "Whole room"), the plan with the planner's reason, each step stamped DONE / AT WORK / FAILED as it runs (replans too), the robot's messages, and a card catalogue of every book with its home and what the robot currently knows about it (click a title to put it on the slip). Search mode, the library keeps its state between requests, "Reset library" starts again. Standard library only (`http.server`, server-sent events), bound to 127.0.0.1; `--speed` sets the real-time factor (default 2). Search now ignores masks under 1500 px and keeps one book per spot: in one run a sliver of a book was taken for Compilers on Table B.
 
 ---
 
@@ -589,7 +589,6 @@ ShelfSage/
 │   ├── prompts/system.md      # the LLM planner's system prompt
 │   └── schema.json            # the plan's JSON schema (structured outputs)
 ├── Book_Catalog.pdf           # library catalog: which compartment each book belongs to (generated)
-├── web/                       # web page: server.py (simulator thread, MJPEG view, events) + static/ (page)
 ├── run_demo.py                # demo: command or benchmark task -> planner -> robot in the viewer, failures + replanning
 ├── docs/report.md             # final report
 ├── presentation/              # ShelfSage_Progress.pptx (after Phase 6), ShelfSage_Final.pptx
