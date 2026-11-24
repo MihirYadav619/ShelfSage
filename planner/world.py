@@ -195,3 +195,38 @@ def llm_view(world):
                                "FIND_BOOK searches for it with the camera and leaves the robot parked "
                                "at it.")
     return view
+
+
+# ---------------------------------------------------------------------------- unknown books
+_VERBS = (r"find|locate|search for|look for|where is|where's|where can i find|pick up|pick|get|fetch|"
+          r"grab|bring|take|put away|put|move|place|shelve|return|carry")
+_STOP = r"\s+(?:and|then|to|into|in|onto|on|from|back|at|off|over|for)\b"
+
+
+def missing_book(command):
+    """If the command asks for one book by name ("find X", "where is X", "pick up X and ...") and
+    no book of the library is called anything like X, X (as typed); else None. Lets a front end
+    answer "no such book" at once instead of asking the planner. Near names ("the networks
+    book", "Machine Vision") return None and are left to the planner."""
+    import difflib
+    import re
+    c = command.strip().strip("\"'").rstrip(".!?").strip()
+    c = re.sub(r"^(?:please\s+|can you\s+|could you\s+|robot,?\s+)+", "", c, flags=re.IGNORECASE)
+    m = re.match(rf"(?:{_VERBS})\s+(?:me\s+)?(.+)$", c, re.IGNORECASE)
+    if not m:
+        return None
+    name = re.split(_STOP, m.group(1), maxsplit=1, flags=re.IGNORECASE)[0]
+    name = re.sub(r"^(?:the|a|an|my)\s+", "", name.strip(" \"'"), flags=re.IGNORECASE)
+    name = re.sub(r"\s+(?:book|textbook|text book)$", "", name, flags=re.IGNORECASE).strip(" \"'")
+    n = name.lower()
+    if not n or n in ("it", "book", "books", "all", "everything", "one"):
+        return None
+    if re.match(r"(?:all|every|each|the)\b|.*\b(?:books|table|shelf|compartment)\b", n):
+        return None                       # "all the books on Table B": not one named book
+    for bid, info in META["books"].items():
+        t = info["title"].lower()
+        if n == bid.lower() or n in t or t in n or difflib.SequenceMatcher(None, n, t).ratio() > 0.6:
+            return None
+        if any(len(w) > 3 and w in t.split() for w in n.split()):
+            return None
+    return name

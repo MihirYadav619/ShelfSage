@@ -61,6 +61,12 @@ def run(command, robot, say=print, on_step=None, plan_only=False, planner="basel
     ex = Executor(robot, say=say)
     world = ex.world()
     t0 = time.time()
+    from planner.world import missing_book
+    missing = missing_book(command)
+    if missing:                           # no such book: answer at once, nothing moves
+        from planner.executor import ExecutionResult
+        why = f"there is no book called '{missing}' in this library (see Book_Catalog.pdf)"
+        return ExecutionResult(command, planner, [], False, [why], False, why, [], 0.0, 0.0, 0.0)
     if planner == "llm":
         from planner.llm import LLMPlanner
         r = LLMPlanner().plan(command, world)

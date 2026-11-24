@@ -67,6 +67,12 @@ def main():
 
     def planner(cmd, world, context):
         lines["step"] = "planning..." if context is None else "replanning after the failure..."
+        missing = W.missing_book(cmd) if context is None else None
+        if missing:                       # answer at once: no planner, no search of the tables
+            msg = f"there is no book called '{missing}' in this library (see Book_Catalog.pdf)"
+            print(f"\n[catalog] {msg}")
+            lines["plan"] = f"(no plan) {msg}"
+            return None, msg
         plan, msg, extra = PLANNERS[a.planner](cmd, world, context)
         print(f"\n[{a.planner}] {'replan' if context else 'plan'}: {msg}")
         if plan:

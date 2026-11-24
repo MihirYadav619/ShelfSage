@@ -155,9 +155,15 @@ class GeminiBackend:
                 "generationConfig": {"responseMimeType": "application/json", "responseJsonSchema": SCHEMA}}
         if self.thinking:
             body["generationConfig"]["thinkingConfig"] = {"thinkingLevel": GEMINI_THINKING.get(self.effort, "MEDIUM")}
-        for _ in range(4):                       # free tier: back off on 429 / 503
-            r = self.post(GEMINI_URL.format(model=self.model), json=body, timeout=180,
-                          headers={"x-goog-api-key": self.key, "Content-Type": "application/json"})
+        for attempt in range(4):                 # free tier: back off on 429 / 503
+            try:
+                r = self.post(GEMINI_URL.format(model=self.model), json=body, timeout=180,
+                              headers={"x-goog-api-key": self.key, "Content-Type": "application/json"})
+            except OSError as e:                 # dropped connection / timeout (requests' errors are OSErrors)
+                if attempt == 3:
+                    raise RuntimeError(f"Gemini API not reachable: {e}") from None
+                time.sleep(5)
+                continue
             if r.status_code == 400 and self.thinking and "thinking" in r.text.lower():
                 self.thinking = False            # an older model without thinkingLevel
                 body["generationConfig"].pop("thinkingConfig", None)
