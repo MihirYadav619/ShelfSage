@@ -33,6 +33,9 @@ LOOK_AHEAD, TABLE_LOOK_UP = 0.45, 0.40       # as skills/perception.py: camera 4
 SIDE = 0.35                                  # arm mount, 40 cm above the table, then 35 cm to
 SHELF_LOOK_BACK, SHELF_LOOK_DIST = 0.15, 0.32  # either side; shelf: base 15 cm back, camera 32 cm
 SLACK = 0.03                                 # camera centres may be a few cm off
+MIN_PIXELS = 1500                            # smaller masks (a sliver of a book at the image edge)
+                                             # are not trusted: one once named the wrong book
+SAME_BOOK = 0.08                             # m: two detections this close are one book
 
 
 def enable(robot):
@@ -86,8 +89,15 @@ def _look_all(robot, eyes, cam, view, z_range=None):
 
 
 def _record(robot, dets, seen):
-    """Put every detection on its table / compartment in memory; returns {book: target}."""
+    """Put every detection on its table / compartment in memory; returns {book: target}.
+    Only clear sightings: big enough masks, and of two detections at the same spot (one book
+    seen as two titles) the more confident one."""
+    dets = sorted((d for d in dets if d.pixels >= MIN_PIXELS), key=lambda d: -d.conf)
+    kept = []
     for d in dets:
+        if all(np.linalg.norm(d.centre - k.centre) > SAME_BOOK for k in kept):
+            kept.append(d)
+    for d in kept:
         if d.book == robot.holding:
             continue
         kind, where = mp.locate_point(d.centre, SLACK)
