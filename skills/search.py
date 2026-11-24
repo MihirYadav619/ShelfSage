@@ -41,6 +41,7 @@ SAME_BOOK = 0.08                             # m: two detections this close are 
 def enable(robot):
     """Switch the robot to search mode: memory = the shelf inventory, tables unknown."""
     robot.memory = {}
+    robot.looked = set()                      # tables looked over completely
     for bid in META["books"]:
         kind, where = mp.locate_book(robot, bid)
         if kind == "shelf":
@@ -125,6 +126,12 @@ def scan_table(robot, table, book=None):
                 robot.stow()
                 return seen
     robot.stow()
+    if hasattr(robot, "looked"):
+        robot.looked.add(f"Table {table}")
+        # a book remembered on this table but not seen in a full look is no longer there
+        for b, m in list(robot.memory.items()):
+            if m["kind"] == "table" and m["where"] == table and b not in seen:
+                forget(robot, b)
     return seen
 
 
@@ -207,3 +214,25 @@ def find(robot, bid, say=print, log=None):
     if bid in robot.memory:
         forget(robot, bid)
     return SkillResult(False, f"could not find {title}: looked at every table and shelf column", {"looked": looked})
+
+
+# ---------------------------------------------------------------------------- LOOK
+def look(robot, target, say=print, log=None):
+    """LOOK(Table X): drive to the table and look it over completely with the camera; every book
+    seen is remembered (and books remembered there but not seen are forgotten). The planner is
+    then asked again with what the robot now knows (planner/replan.py)."""
+    p = nav.parse_target(target)
+    if p is None or p[0] != "table" or p[1] not in META["tables"]:
+        return SkillResult(False, f"LOOK takes a table ('Table A'..'Table F'), not '{target}'")
+    table = p[1]
+    goal = nav.parking_pose(f"Table {table}")
+    if not nav.near(robot, goal):
+        ok, msg = nav.navigate(robot, goal, say=say, log=log, holding=robot.holding)
+        if not ok:
+            return SkillResult(False, msg)
+    say(f"  looking at Table {table}")
+    seen = scan_table(robot, table)
+    on = [META["books"][b]["title"] for b, t in seen.items() if t == f"Table {table}"]
+    say("  seen: " + (", ".join(on) if on else "no book"))
+    msg = f"on Table {table} the camera saw " + (", ".join(on) if on else "no book")
+    return SkillResult(True, msg, {"table": table, "books": on})

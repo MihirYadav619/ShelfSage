@@ -27,7 +27,7 @@ def books():
     out = []
     for bid, b in META["books"].items():
         shelf, rc = b["home"].split("-")
-        out.append({"id": bid, "title": b["title"], "home": b["home"], "shelf": shelf,
+        out.append({"id": bid, "title": b["title"], "home": b["home"], "shelf": shelf, "colour": b.get("colour", ""),
                     "row": rc[0], "col": int(rc[1:])})
     return sorted(out, key=lambda b: b["title"].lower())
 
@@ -35,15 +35,15 @@ def books():
 def page_list(pdf, bs):
     fig = plt.figure(figsize=(8.27, 11.69))                       # A4 portrait
     fig.text(0.08, 0.95, "ShelfSage Library", fontsize=22, weight="bold", color=NAVY)
-    fig.text(0.08, 0.925, "Book catalog: the shelf each book belongs to", fontsize=12, color=INK)
+    fig.text(0.08, 0.925, "Book catalog: the shelf each book belongs to, and its spine colour", fontsize=12, color=INK)
     fig.text(0.08, 0.895, "Shelf ID S2-A3 = shelf S2, row A (bottom; B is the top row), column 3 "
              "(counted from the left, facing the shelf).", fontsize=9, color="#555555")
     ax = fig.add_axes([0.08, 0.06, 0.84, 0.82])
     ax.axis("off")
-    rows = [[str(i + 1), b["title"], b["home"], b["shelf"], f"{b['row']} ({ROWS[b['row']]})", str(b["col"])]
+    rows = [[str(i + 1), b["title"], b["colour"], b["home"], b["shelf"], f"{b['row']} ({ROWS[b['row']]})", str(b["col"])]
             for i, b in enumerate(bs)]
-    t = ax.table(cellText=rows, colLabels=["#", "Book", "Shelf ID", "Shelf", "Row", "Column"],
-                 colWidths=[0.06, 0.44, 0.14, 0.1, 0.16, 0.1], loc="upper center", cellLoc="left")
+    t = ax.table(cellText=rows, colLabels=["#", "Book", "Spine", "Shelf ID", "Shelf", "Row", "Column"],
+                 colWidths=[0.05, 0.38, 0.1, 0.13, 0.09, 0.15, 0.1], loc="upper center", cellLoc="left")
     t.auto_set_font_size(False)
     t.set_fontsize(9)
     t.scale(1, 1.32)
@@ -55,7 +55,7 @@ def page_list(pdf, bs):
             cell.get_text().set_weight("bold")
         elif r % 2 == 0:
             cell.set_facecolor(LIGHT)
-        if c == 2 and r > 0:
+        if c == 3 and r > 0:
             cell.get_text().set_weight("bold")
     fig.text(0.5, 0.025, f"{len(bs)} books - generated from scene/layout.json by scene/make_catalog.py",
              ha="center", fontsize=7, color="#888888")

@@ -1378,6 +1378,7 @@
       "title": "Linear Algebra",
       "location": "table:A",
       "home": "S1-B1",
+      "colour": "red",
       "body": "book_linalg",
       "color": [
         0.8,
@@ -1389,6 +1390,7 @@
       "title": "Calculus",
       "location": "table:A",
       "home": "S1-B2",
+      "colour": "orange",
       "body": "book_calculus",
       "color": [
         0.9,
@@ -1400,6 +1402,7 @@
       "title": "Machine Learning",
       "location": "table:B",
       "home": "S3-A2",
+      "colour": "blue",
       "body": "book_ml",
       "color": [
         0.15,
@@ -1411,6 +1414,7 @@
       "title": "Deep Learning",
       "location": "table:B",
       "home": "S3-A2",
+      "colour": "blue",
       "body": "book_dl",
       "color": [
         0.1,
@@ -1422,6 +1426,7 @@
       "title": "Robotics",
       "location": "table:B",
       "home": "S2-A4",
+      "colour": "green",
       "body": "book_robotics",
       "color": [
         0.2,
@@ -1433,6 +1438,7 @@
       "title": "Control Systems",
       "location": "table:C",
       "home": "S2-B3",
+      "colour": "purple",
       "body": "book_control",
       "color": [
         0.55,
@@ -1444,6 +1450,7 @@
       "title": "Signals and Systems",
       "location": "table:C",
       "home": "S2-B3",
+      "colour": "pink",
       "body": "book_signals",
       "color": [
         0.85,
@@ -1455,6 +1462,7 @@
       "title": "Python Programming",
       "location": "table:D",
       "home": "S1-A2",
+      "colour": "yellow",
       "body": "book_python",
       "color": [
         0.95,
@@ -1466,6 +1474,7 @@
       "title": "Algorithms",
       "location": "table:E",
       "home": "S1-B3",
+      "colour": "black",
       "body": "book_algo",
       "color": [
         0.25,
@@ -1477,6 +1486,7 @@
       "title": "Databases",
       "location": "table:E",
       "home": "S1-A3",
+      "colour": "grey",
       "body": "book_db",
       "color": [
         0.5,
@@ -1488,6 +1498,7 @@
       "title": "Thermodynamics",
       "location": "table:F",
       "home": "S3-B3",
+      "colour": "brown",
       "body": "book_thermo",
       "color": [
         0.7,
@@ -1499,6 +1510,7 @@
       "title": "Physics",
       "location": "shelf:S2-A1",
       "home": "S2-A1",
+      "colour": "blue",
       "body": "book_physics",
       "color": [
         0.3,
@@ -1510,6 +1522,7 @@
       "title": "Statistics",
       "location": "shelf:S2-B2",
       "home": "S2-B2",
+      "colour": "orange",
       "body": "book_stats",
       "color": [
         0.9,
@@ -1521,6 +1534,7 @@
       "title": "Operating Systems",
       "location": "shelf:S1-A1",
       "home": "S1-A1",
+      "colour": "orange",
       "body": "book_os",
       "color": [
         0.8,
@@ -1532,6 +1546,7 @@
       "title": "Computer Networks",
       "location": "shelf:S1-A1",
       "home": "S1-A1",
+      "colour": "teal",
       "body": "book_networks",
       "color": [
         0.2,
@@ -1543,6 +1558,7 @@
       "title": "Compilers",
       "location": "shelf:S1-A2",
       "home": "S1-A2",
+      "colour": "pink",
       "body": "book_compilers",
       "color": [
         0.8,
@@ -1554,6 +1570,7 @@
       "title": "Computer Architecture",
       "location": "shelf:S1-A4",
       "home": "S1-A4",
+      "colour": "green",
       "body": "book_arch",
       "color": [
         0.52,
@@ -1565,6 +1582,7 @@
       "title": "Discrete Mathematics",
       "location": "shelf:S1-A4",
       "home": "S1-A4",
+      "colour": "blue",
       "body": "book_discrete",
       "color": [
         0.15,
@@ -1576,6 +1594,7 @@
       "title": "Graph Theory",
       "location": "shelf:S1-A4",
       "home": "S1-A4",
+      "colour": "red",
       "body": "book_graphs",
       "color": [
         0.62,
@@ -1587,6 +1606,7 @@
       "title": "Probability",
       "location": "shelf:S1-B1",
       "home": "S1-B1",
+      "colour": "green",
       "body": "book_prob",
       "color": [
         0.41,
@@ -1598,6 +1618,7 @@
       "title": "Optimization",
       "location": "shelf:S1-B1",
       "home": "S1-B1",
+      "colour": "purple",
       "body": "book_optim",
       "color": [
         0.55,
@@ -1609,6 +1630,7 @@
       "title": "Numerical Methods",
       "location": "shelf:S1-B3",
       "home": "S1-B3",
+      "colour": "yellow",
       "body": "book_numerics",
       "color": [
         0.92,
@@ -1620,6 +1642,7 @@
       "title": "Data Structures",
       "location": "shelf:S1-B3",
       "home": "S1-B3",
+      "colour": "teal",
       "body": "book_dsa",
       "color": [
         0.36,
@@ -1631,6 +1654,7 @@
       "title": "Kinematics",
       "location": "shelf:S2-A1",
       "home": "S2-A1",
+      "colour": "pink",
       "body": "book_kinematics",
       "color": [
         0.8,
@@ -1642,6 +1666,7 @@
       "title": "Dynamics",
       "location": "shelf:S2-A1",
       "home": "S2-A1",
+      "colour": "green",
       "body": "book_dynamics",
       "color": [
         0.57,
@@ -1653,6 +1678,7 @@
       "title": "Mechatronics",
       "location": "shelf:S2-A4",
       "home": "S2-A4",
+      "colour": "blue",
       "body": "book_mechatronics",
       "color": [
         0.28,
@@ -1664,6 +1690,7 @@
       "title": "Embedded Systems",
       "location": "shelf:S2-B2",
       "home": "S2-B2",
+      "colour": "red",
       "body": "book_embedded",
       "color": [
         0.62,
@@ -1675,6 +1702,7 @@
       "title": "Digital Electronics",
       "location": "shelf:S2-B2",
       "home": "S2-B2",
+      "colour": "green",
       "body": "book_digital",
       "color": [
         0.34,
@@ -1686,6 +1714,7 @@
       "title": "Power Electronics",
       "location": "shelf:S2-B4",
       "home": "S2-B4",
+      "colour": "purple",
       "body": "book_power",
       "color": [
         0.82,
@@ -1697,6 +1726,7 @@
       "title": "Computer Vision",
       "location": "shelf:S3-A1",
       "home": "S3-A1",
+      "colour": "lime",
       "body": "book_cv",
       "color": [
         0.86,
@@ -1708,6 +1738,7 @@
       "title": "Natural Language Processing",
       "location": "shelf:S3-A1",
       "home": "S3-A1",
+      "colour": "blue",
       "body": "book_nlp",
       "color": [
         0.51,
@@ -1719,6 +1750,7 @@
       "title": "Reinforcement Learning",
       "location": "shelf:S3-A1",
       "home": "S3-A1",
+      "colour": "pink",
       "body": "book_rl",
       "color": [
         0.8,
@@ -1730,6 +1762,7 @@
       "title": "Artificial Intelligence",
       "location": "shelf:S3-A3",
       "home": "S3-A3",
+      "colour": "green",
       "body": "book_ai",
       "color": [
         0.22,
@@ -1741,6 +1774,7 @@
       "title": "Information Theory",
       "location": "shelf:S3-B1",
       "home": "S3-B1",
+      "colour": "purple",
       "body": "book_infotheory",
       "color": [
         0.53,
@@ -1752,6 +1786,7 @@
       "title": "Cryptography",
       "location": "shelf:S3-B1",
       "home": "S3-B1",
+      "colour": "brown",
       "body": "book_crypto",
       "color": [
         0.62,
@@ -1763,6 +1798,7 @@
       "title": "Quantum Computing",
       "location": "shelf:S3-B2",
       "home": "S3-B2",
+      "colour": "teal",
       "body": "book_quantum",
       "color": [
         0.15,
@@ -1774,6 +1810,7 @@
       "title": "Fluid Mechanics",
       "location": "shelf:S3-B4",
       "home": "S3-B4",
+      "colour": "pink",
       "body": "book_fluids",
       "color": [
         0.62,
@@ -1785,6 +1822,7 @@
       "title": "Heat Transfer",
       "location": "shelf:S3-B4",
       "home": "S3-B4",
+      "colour": "green",
       "body": "book_heat",
       "color": [
         0.71,
@@ -1796,6 +1834,7 @@
       "title": "Materials Science",
       "location": "shelf:S3-B4",
       "home": "S3-B4",
+      "colour": "blue",
       "body": "book_materials",
       "color": [
         0.23,

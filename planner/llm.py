@@ -80,7 +80,12 @@ def command_text(command, context=None):
     """The command, plus what happened so far when planning again after a failure (Phase 9)."""
     if not context:
         return "Command: " + command
+    if context.startswith(OBSERVED):
+        return f"Command: {command}\n\nContinuing after LOOK:\n{context[len(OBSERVED):]}"
     return f"Command: {command}\n\nReplanning after a failure:\n{context}"
+
+
+OBSERVED = "[observed] "     # prefix of a context that reports a LOOK, not a failure
 
 
 # ---------------------------------------------------------------------------- backends

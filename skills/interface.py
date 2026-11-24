@@ -63,6 +63,23 @@ def find_book(title: str) -> SkillResult:
                        {"book": bid, "kind": loc[0], "where": loc[1]})
 
 
+def look(target: str) -> SkillResult:
+    """Look over a table: drive there and see which books lie on it (wrist camera + detector in
+    search mode; the world state otherwise). The planner plans again with what was seen."""
+    r = _robot()
+    if search.active(r):
+        _ctx["say"](f"LOOK {target}")
+        return search.look(r, target, say=_ctx["say"], log=_ctx["log"])
+    p = nav.parse_target(target)
+    if p is None or p[0] != "table":
+        return SkillResult(False, f"LOOK takes a table ('Table A'..'Table F'), not '{target}'")
+    res = navigate(f"Table {p[1]}")
+    if not res.success:
+        return res
+    on = [mp.META["books"][b]["title"] for b in mp.META["books"] if mp.locate_book(r, b) == ("table", p[1])]
+    return SkillResult(True, f"on Table {p[1]} lie " + (", ".join(on) if on else "no books"), {"books": on})
+
+
 def navigate(target: str) -> SkillResult:
     """Drive the base to the parking pose of a table or shelf, e.g. 'Table B' or 'S2-A3'."""
     r = _robot()
@@ -196,6 +213,7 @@ def verify(obj: str, shelf: str) -> SkillResult:
 # The LLM planner will only be allowed to call actions listed here.
 SKILLS = {
     "FIND_BOOK": find_book,
+    "LOOK": look,
     "NAVIGATE": navigate,
     "GRASP": grasp,
     "PLACE": place,

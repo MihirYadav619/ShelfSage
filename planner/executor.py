@@ -17,7 +17,7 @@ from planner import plan as P
 from planner import world as W
 from skills import interface as sk
 
-SKILL_FUNCS = {"FIND_BOOK": sk.find_book, "NAVIGATE": sk.navigate, "GRASP": sk.grasp,
+SKILL_FUNCS = {"FIND_BOOK": sk.find_book, "LOOK": sk.look, "NAVIGATE": sk.navigate, "GRASP": sk.grasp,
                "PLACE": sk.place, "VERIFY": sk.verify}
 assert set(SKILL_FUNCS) == set(P.SIGNATURES) == set(sk.SKILLS)
 

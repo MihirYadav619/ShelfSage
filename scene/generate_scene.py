@@ -330,7 +330,8 @@ def build_books(layout, tables_meta, comps):
         home = b.get("home")
         if home not in comps:
             raise ValueError(f"Book {b['id']}: home {home!r} is not a shelf compartment")
-        meta[b["id"]] = {"title": b["title"], "location": b["location"], "home": home, "body": name,
+        meta[b["id"]] = {"title": b["title"], "location": b["location"], "home": home,
+                         "colour": b.get("colour", "unknown"), "body": name,
                          "color": b["color"]}
     return xml, meta
 

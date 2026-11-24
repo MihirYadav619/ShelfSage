@@ -8,7 +8,7 @@
       "items": {
         "type": "object",
         "properties": {
-          "action": {"type": "string", "enum": ["FIND_BOOK", "NAVIGATE", "GRASP", "PLACE", "VERIFY"]},
+          "action": {"type": "string", "enum": ["FIND_BOOK", "LOOK", "NAVIGATE", "GRASP", "PLACE", "VERIFY"]},
           "args": {"type": "array", "items": {"type": "string"}}
         },
         "required": ["action", "args"],

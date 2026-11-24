@@ -18,6 +18,7 @@ import time
 from dataclasses import asdict, dataclass, field
 
 from planner.executor import Executor
+from planner.llm import OBSERVED
 
 
 @dataclass
@@ -62,19 +63,36 @@ def describe(attempts):
     return "\n".join(lines)
 
 
-def run_with_replanning(command, planner, robot, max_replans=2, on_step=None, say=lambda s: None):
+def observed(attempts):
+    """What the LOOKs so far showed, for the planner (search mode, skills/search.py): the plan
+    ended with LOOK(table), and the planner continues the command knowing what lies there."""
+    lines = []
+    for a in attempts:
+        for st in a.steps:
+            if st["step"].startswith("LOOK(") and st["ok"]:
+                lines.append(f"{st['step']}: {st['msg']}.")
+    lines.append("The world state above now includes what the camera saw (and the robot stands at the "
+                 "last table it looked at). Plan the rest of the command from here; do not LOOK at a "
+                 "table again whose looked_at is true.")
+    return OBSERVED + "\n".join(lines)
+
+
+def run_with_replanning(command, planner, robot, max_replans=2, on_step=None, say=lambda s: None, max_looks=3):
+    """Plan, execute, and plan again: after a failure (up to max_replans times, with what went
+    wrong) and after a plan that ends with LOOK (up to max_looks times, with what was seen)."""
     ex = Executor(robot, say=say)
-    attempts = []
+    attempts, failures = [], []
     t0 = robot.d.time
-    for k in range(max_replans + 1):
+    replans = looks = 0
+    context = None
+    while True:
         world = ex.world()
-        context = describe(attempts) if attempts else None
         s = time.time()
         plan, msg = planner(command, world, context)
         pt = round(time.time() - s, 2)
         if plan is None:
             attempts.append(Attempt([], msg, False, error=f"no plan: {msg}", plan_time=pt))
-            return ReplanResult(command, False, k, f"the planner gave no plan: {msg}",
+            return ReplanResult(command, False, replans, f"the planner gave no plan: {msg}",
                                 [asdict(a) for a in attempts], round(robot.d.time - t0, 1))
         res = ex.run(plan, command=command, on_step=on_step)
         steps = [{"step": f"{st.action}({', '.join(st.args)})", "ok": st.success, "msg": st.message,
@@ -83,10 +101,18 @@ def run_with_replanning(command, planner, robot, max_replans=2, on_step=None, sa
         a = Attempt([str(x) for x in plan], msg, res.success, failed["step"] if failed else "",
                     (failed["msg"] if failed else ("" if res.valid else res.message)), steps, pt)
         attempts.append(a)
+        if res.success and plan and plan[-1].name == "LOOK" and looks < max_looks:
+            looks += 1
+            context = observed(attempts)
+            continue
         if res.success:
-            return ReplanResult(command, True, k, "done" if k == 0 else f"done after {k} replan(s)",
+            return ReplanResult(command, True, replans, "done" if replans == 0 else f"done after {replans} replan(s)",
                                 [asdict(a) for a in attempts], round(robot.d.time - t0, 1))
         if not res.valid:
             a.failed_step, a.error = "(validator)", res.message
-    return ReplanResult(command, False, max_replans, f"still failing after {max_replans} replans: {attempts[-1].error}",
-                        [asdict(a) for a in attempts], round(robot.d.time - t0, 1))
+        if replans >= max_replans:
+            return ReplanResult(command, False, replans, f"still failing after {max_replans} replans: {a.error}",
+                                [asdict(a) for a in attempts], round(robot.d.time - t0, 1))
+        replans += 1
+        failures.append(a)
+        context = describe(failures)

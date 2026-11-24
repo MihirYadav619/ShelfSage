@@ -29,6 +29,7 @@ FOUND = "found:"           # robot["at"] after a FIND_BOOK of an unknown book (s
 # name -> argument names; the executor maps the same names to skills/interface.py
 SIGNATURES = {
     "FIND_BOOK": ["book"],
+    "LOOK": ["target"],
     "NAVIGATE": ["target"],
     "GRASP": ["book"],
     "PLACE": ["book", "target"],
@@ -114,6 +115,9 @@ def validate(plan, world):
             errors.append(f"{where}: needs {len(SIGNATURES[a.name])} argument(s) "
                           f"({', '.join(SIGNATURES[a.name])})")
             continue
+        if a.name == "LOOK" and i != len(plan):
+            errors.append(f"{where}: LOOK must be the last step: you plan again with what the camera saw")
+            continue
         err = _step(a, w)
         if err:
             errors.append(f"{where}: {err}")
@@ -124,6 +128,12 @@ def validate(plan, world):
 def _step(a, w):
     """Check one action against the symbolic world w and apply its effect; error text or None."""
     robot, books = w["robot"], w["books"]
+    if a.name == "LOOK":
+        t = canonical_target(a.args[0])
+        if t is None or not t.startswith("Table "):
+            return f"LOOK takes a table ('Table A'..'Table F'), not '{a.args[0]}'"
+        robot["at"], robot["pose"] = t, list(W.parking_of(t))
+        return None
     bid = W.book_id(w, a.args[0]) if a.name != "NAVIGATE" else None
     if a.name != "NAVIGATE" and bid is None:
         return f"no book called '{a.args[0]}'"

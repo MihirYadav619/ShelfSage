@@ -62,10 +62,12 @@ def snapshot(robot, truth=False):
             m = memory.get(bid)
             kind, where, p = (m["kind"], m["where"], m["pos"]) if m else ("unknown", None, None)
         books[bid] = {"title": info["title"], "kind": kind, "where": where,
-                      "at": target_name(kind, where), "pos": p, "home": info["home"]}
+                      "at": target_name(kind, where), "pos": p, "home": info["home"],
+                      "colour": info.get("colour")}
     x, y, yaw = robot.get_pose()
     w = build(books, (x, y, yaw), robot.holding)
     w["search"] = memory is not None
+    w["looked"] = sorted(getattr(robot, "looked", set())) if memory is not None else []
     return w
 
 
@@ -152,6 +154,8 @@ def llm_view(world):
             "row": "back (north, nearer the shelves)" if p[1] > -1.0 else "front (south)",
             "side": _side(p[0]),
             "distance_to_window_m": d(p, win)}
+        if world.get("search"):
+            tables[f"Table {t}"]["looked_at"] = f"Table {t}" in world.get("looked", [])
     comps = {}
     for c, s in world["compartments"].items():
         order = sorted(s["books"], key=lambda b: books[b]["pos"][0])
@@ -166,7 +170,7 @@ def llm_view(world):
                          "compartments": sorted(c for c in comps if c.startswith(name + "-"))}
     book_list = {}
     for b, s in sorted(books.items(), key=lambda kv: kv[1]["title"]):
-        e = {"id": b, "at": s["at"], "home": META["books"][b]["home"]}
+        e = {"id": b, "colour": META["books"][b].get("colour"), "at": s["at"], "home": META["books"][b]["home"]}
         if s["kind"] == "unknown":
             e["at"] = "unknown (not seen yet)" if world.get("search") else "unknown"
             book_list[s["title"]] = e
@@ -191,9 +195,10 @@ def llm_view(world):
     if world.get("search"):
         view["search_mode"] = ("The robot knows the shelf inventory but not where loose books lie: a book "
                                "whose 'at' is unknown is somewhere on a table (or misplaced), and the "
-                               "tables' book lists only show books the camera has already seen. "
-                               "FIND_BOOK searches for it with the camera and leaves the robot parked "
-                               "at it.")
+                               "tables' book lists only show books the camera has already seen "
+                               "(complete only for a table with looked_at true). FIND_BOOK searches for "
+                               "a named book with the camera and leaves the robot parked at it; LOOK "
+                               "looks over one table.")
     return view
 
 
@@ -201,6 +206,10 @@ def llm_view(world):
 _VERBS = (r"find|locate|search for|look for|where is|where's|where can i find|pick up|pick|get|fetch|"
           r"grab|bring|take|put away|put|move|place|shelve|return|carry")
 _STOP = r"\s+(?:and|then|to|into|in|onto|on|from|back|at|off|over|for)\b"
+_DESCRIBE = {"big", "small", "thick", "thin", "first", "last", "second", "third", "other", "left", "right",
+             "leftmost", "rightmost", "nearest", "closest", "farthest", "only", "same", "dark", "light",
+             "bright", "that", "this", "these", "those", "some", "any", "one", "colour", "color", "colored",
+             "coloured", "white"}
 
 
 def missing_book(command):
@@ -223,6 +232,9 @@ def missing_book(command):
         return None
     if re.match(r"(?:all|every|each|the)\b|.*\b(?:books|table|shelf|compartment)\b", n):
         return None                       # "all the books on Table B": not one named book
+    colours = {str(i.get("colour", "")).lower() for i in META["books"].values()}
+    if set(n.split()) & (colours | _DESCRIBE):
+        return None                       # "the red book", "the big one": a description, not a title
     for bid, info in META["books"].items():
         t = info["title"].lower()
         if n == bid.lower() or n in t or t in n or difflib.SequenceMatcher(None, n, t).ratio() > 0.6:
