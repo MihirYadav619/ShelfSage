@@ -48,6 +48,9 @@ class Detection:
 
 
 class BookDetector:
+    on_frame = None     # optional hook: on_frame(BGR image, [(title, conf, box xyxy, mask), ...])
+                        # after every detection, e.g. to show what the camera saw (run_demo.py)
+
     def __init__(self, weights=WEIGHTS, conf=0.5, device=0):
         from ultralytics import YOLO
         self.model = YOLO(str(weights))
@@ -79,6 +82,11 @@ class BookDetector:
         K = robot.camera_intrinsics()
         res = self.model.predict(rgb[..., ::-1].copy(), conf=self.conf, device=self.device, verbose=False,
                                  retina_masks=True)[0]            # ultralytics expects BGR arrays
+        if BookDetector.on_frame is not None:
+            masks = res.masks.data.cpu().numpy() > 0.5 if res.masks is not None else [None] * len(res.boxes)
+            items = [(META["books"][BOOKS[int(c)]]["title"], float(p), xyxy, mk) for c, p, xyxy, mk in
+                     zip(res.boxes.cls.cpu().numpy(), res.boxes.conf.cpu().numpy(), res.boxes.xyxy.cpu().numpy(), masks)]
+            BookDetector.on_frame(rgb[..., ::-1].copy(), items)
         if res.masks is None:
             return []
         T = self.camera_pose(robot)

@@ -38,6 +38,8 @@ def main():
     ap.add_argument("--replans", type=int, default=2)
     ap.add_argument("--known", action="store_true", help="book locations known in advance (no search)")
     ap.add_argument("--search", action="store_true", help="search with the camera also for --task")
+    ap.add_argument("--no-camera", action="store_true", help="no window with the wrist camera's view")
+    ap.add_argument("--quiet", action="store_true", help="do not print the robot's own messages")
     a = ap.parse_args()
 
     task = None
@@ -82,8 +84,14 @@ def main():
             if inj.done and not lines["note"]:
                 lines["note"] = "FAILURE: " + inj.description
 
+    def say(text):
+        """The skills' own messages (where the robot looks, what the camera saw, ...)."""
+        text = text.strip()
+        if text and not text.startswith("[") and not a.quiet:
+            print("       " + text)
+
     def run():
-        rec = run_with_replanning(command, planner, robot, max_replans=a.replans, on_step=on_step)
+        rec = run_with_replanning(command, planner, robot, max_replans=a.replans, on_step=on_step, say=say)
         if interactive:
             lines["step"] = ("SUCCESS" if rec.success else "FAILED") + f" - {rec.message}"
             print(f"\n{lines['step']}")
@@ -117,20 +125,51 @@ def main():
             viewer.set_texts((mujoco.mjtFontScale.mjFONTSCALE_150, mujoco.mjtGridPos.mjGRID_TOPLEFT,
                               f"{a.planner}: \"{command}\"\nplan: {wrap(lines['plan'])}\n{lines['step']}\n{lines['note']}", ""))
 
-        robot.viewer, robot.speed, robot.on_sync = viewer, a.speed, on_sync
+        cam = None
+        if not a.no_camera:
+            from sim.camera_window import CameraWindow
+            cam = CameraWindow(robot)
+
+        def on_sync_all():
+            on_sync()
+            if cam is not None:
+                cam.live()
+
+        robot.viewer, robot.speed, robot.on_sync = viewer, a.speed, on_sync_all
         try:
             if not interactive:
                 run()
             else:
                 print(f"ShelfSage interactive ({a.planner} planner). Type a command and press Enter; "
                       "empty line or 'quit' to stop. The library keeps its state between commands.")
+                # the terminal is read in its own thread, so the camera window stays live while
+                # the prompt waits
+                import queue
+                import threading
+                typed, want = queue.Queue(), threading.Event()
+
+                def reader():
+                    while True:
+                        want.wait()
+                        want.clear()
+                        try:
+                            typed.put(input("\ncommand> ").strip())
+                        except EOFError:
+                            typed.put(None)
+                            return
+                threading.Thread(target=reader, daemon=True).start()
                 while viewer.is_running():
                     lines.update(plan="", step="waiting for a command (type it in the terminal)", note="")
                     robot.wait(0.05)
-                    try:
-                        command = input("\ncommand> ").strip()
-                    except EOFError:
-                        break
+                    want.set()
+                    command = None
+                    while viewer.is_running():
+                        try:
+                            command = typed.get(timeout=0.03)
+                            break
+                        except queue.Empty:
+                            if cam is not None:
+                                cam.pump(1)
                     if not command or command.lower() in ("quit", "exit", "q"):
                         break
                     run()
