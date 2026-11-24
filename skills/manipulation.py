@@ -739,6 +739,10 @@ SHELF_UP = 0.03            # book lifted off the board while sliding in / out
 W_OPEN_SHELF = 0.05
 SET_DOWN_FORCE = 2.5       # N on the surface under the book (its weight is 3.3 N)
 PLACE_CLEARANCE = 0.006    # m: placing in a shelf slot, aim this far off the divider / left neighbour
+PLACE_LATERAL_MAX = 0.0    # m: a slot more than this to the right of the base centre (slots 4-5 of
+PLACE_LATERAL = -0.10      # a compartment) is placed with the base slid along the shelf so the slot
+                           # is here; from the column parking, slot 4 of row A drove joint 5 into its
+                           # lower limit (-2.897) and the set-down stopped short of the board
 SLOT_TOL = 0.03            # a slot is taken if a book's centre is within this of it (along the shelf)
 
 
@@ -764,16 +768,22 @@ def locate_book(robot, book):
     ("held", None) or ("unknown", None)."""
     if robot.holding == book:
         return ("held", None)
-    p = robot.d.body(f"book_{book}").xpos
+    return locate_point(robot.d.body(f"book_{book}").xpos)
+
+
+def locate_point(p, slack=0.0):
+    """Where a book centre at world point p is: ("table", "B"), ("shelf", "S2-A3") or
+    ("unknown", None). slack (m) widens the boxes, for centres estimated by the camera."""
     for name, t in META["tables"].items():
         hx, hy = t["half_size"]
-        if abs(p[0] - t["pos"][0]) < hx and abs(p[1] - t["pos"][1]) < hy and abs(p[2] - t["top_z"]) < 0.06:
+        if (abs(p[0] - t["pos"][0]) < hx + slack and abs(p[1] - t["pos"][1]) < hy + slack
+                and abs(p[2] - t["top_z"]) < 0.06 + slack):
             return ("table", name)
     for s in META["shelves"].values():
         for comp, c in s["compartments"].items():
             xs = [q[0] for q in c["positions"]]
-            if (min(xs) - 0.05 < p[0] < max(xs) + 0.05 and abs(p[1] - c["surface"][1]) < 0.2
-                    and c["surface"][2] < p[2] < c["surface"][2] + BD["length"]):
+            if (min(xs) - 0.05 - slack < p[0] < max(xs) + 0.05 + slack and abs(p[1] - c["surface"][1]) < 0.2 + slack
+                    and c["surface"][2] - slack < p[2] < c["surface"][2] + BD["length"] + slack):
                 return ("shelf", comp)
     return ("unknown", None)
 
@@ -793,10 +803,10 @@ def free_slot(robot, comp, ignore=None):
     return None
 
 
-def to_carry_pose(robot, book, log):
+def to_carry_pose(robot, book, log, duration=2.5):
     """Book standing above the front of the chassis, for driving."""
     p, f, left = carry_target(robot)
-    return _check(log)("carry pose", robot.move_to(p, z_axis=f, y_axis=left, duration=2.5,
+    return _check(log)("carry pose", robot.move_to(p, z_axis=f, y_axis=left, duration=duration,
                                                    allow=(f"book_{book}",)))
 
 
@@ -932,18 +942,30 @@ def pick_from_shelf(robot, book, comp, say=print, log=None):
     return SkillResult(True, "holding the book")
 
 
-def _place_abort(robot, book, comp, k, gs, fwd, side, park, log, why):
+MAX_PLACE_TILT = 15.0      # deg: the held book's length axis this far off vertical -> do not insert
+
+
+def _place_abort(robot, book, comp, k, gs, fwd, side, park, log, why, q_pre=None, q_carry=None):
     """PLACE in a shelf could not finish: keep the book, back out the way it came in (lift, out of
     the shelf, base back, carry pose, base forward again) and report why, so the planner can
     choose another place. (Before Phase 9 the skill let go anyway and reported success; a book
-    released 3 cm above the board can fall out of the shelf.)"""
+    released 3 cm above the board can fall out of the shelf.)
+    q_pre / q_carry: the arm's joints at the pre-place and in the carry pose on the way in. The arm
+    goes back through exactly these, i.e. the way in, reversed: after an insert that ended at a
+    joint limit the arm was on another IK branch, and a new swing to the carry pose hit the
+    board of the row above with the book, turning it ~35 deg in the fingers (F02: the next
+    placement then jammed the tilted book in and it fell out)."""
     check = _check(log)
     tcp = robot.fk_world()[:3, 3]
     robot.move_linear(tcp + 0.02 * UP, z_axis=fwd, y_axis=side, speed=0.03)
     robot.move_linear(robot.fk_world()[:3, 3] - SHELF_PRE * fwd, z_axis=fwd, y_axis=side, speed=0.04)
     back = (park[0] - SHELF_BACK * fwd[0], park[1] - SHELF_BACK * fwd[1], park[2])
     _base_shift(robot, back, book, log, "base backs off (book still held)")
-    to_carry_pose(robot, book, log)
+    if q_pre is not None and q_carry is not None:
+        robot.move_arm(q_pre, 2.0, settle=0.2)
+        robot.move_arm(q_carry, 2.5, settle=0.3)
+    else:
+        to_carry_pose(robot, book, log)
     _base_shift(robot, park, book, log, "base forward again")
     held = robot.holding == book
     check("book still in the hand", held)
@@ -968,27 +990,52 @@ def place_in_shelf(robot, book, comp, say=print, log=None):
     gs = target - fwd * (BD["width"] / 2 - BD["grip_in"]["shelf"])
     say(f"place {META['books'][book]['title']} in {comp}, slot {k + 1}")
     park = robot.get_pose()
+    lateral = float((target[:2] - np.array(park[:2])) @ side[:2])
+    if lateral > PLACE_LATERAL_MAX:
+        d = lateral - PLACE_LATERAL
+        slid = (park[0] + d * side[0], park[1] + d * side[1], park[2])
+        say(f"  slot {k + 1} is {lateral * 100:.0f} cm right of the base: sliding {d * 100:.0f} cm along the shelf")
+        if not _base_shift(robot, slid, book, log, "base slides along the shelf"):
+            _base_shift(robot, park, book, log, "base back to the parking")
+            return SkillResult(False, f"could not slide along {comp.split('-')[0]} to reach slot {k + 1}")
+        park = robot.get_pose()
     back = (park[0] - SHELF_BACK * fwd[0], park[1] - SHELF_BACK * fwd[1], park[2])
+    q_carry = robot.arm_q().copy()
     _base_shift(robot, back, book, log, "base backs off")
     if not check("shelf pre-place", robot.move_to(gs + SHELF_UP * UP - (SHELF_PRE + SHELF_BACK) * fwd,
                                                    z_axis=fwd, y_axis=side, duration=2.5, allow=(f"book_{book}",))):
         return SkillResult(False, "pre-place not reachable")
+    q_pre = robot.arm_q().copy()
     _base_shift(robot, park, book, log, "base forward to the shelf")
+    tilt = math.degrees(math.acos(min(1.0, abs(robot.d.body(f"book_{book}").xmat[6]))))
+    if not check(f"book upright in the hand ({tilt:.0f} deg)", tilt < MAX_PLACE_TILT):
+        # a tilted book jams on the board and falls out once released: keep it, report it
+        return _place_abort(robot, book, comp, k, gs, fwd, side, park, log,
+                            f"the book has turned {tilt:.0f} deg in the gripper", q_pre, q_carry)
     shift = in_hand_correction(robot, book, gs, target)
     say(f"  book sits {np.linalg.norm(shift) * 100:.1f} cm off in the hand, correcting")
     gs = gs + shift
     ins = robot.move_linear(gs + SHELF_UP * UP, z_axis=fwd, y_axis=side, speed=0.04)
     if not check("insert", ins.success or ins.final_error < 0.012):
         return _place_abort(robot, book, comp, k, gs, fwd, side, park, log,
-                            f"the arm could not reach slot {k + 1} of {comp} ({ins.final_error * 100:.1f} cm short)")
+                            f"the arm could not reach slot {k + 1} of {comp} ({ins.final_error * 100:.1f} cm short)",
+                            q_pre, q_carry)
     g = set_down(robot, book, fwd, side, SHELF_UP + 0.02)
     if not check(f"set down ({g.force:.1f} N on the board)", g):
         return _place_abort(robot, book, comp, k, gs, fwd, side, park, log,
-                            f"the book did not come down on the board of {comp} ({g.force:.1f} N)")
+                            f"the book did not come down on the board of {comp} ({g.force:.1f} N)",
+                            q_pre, q_carry)
     robot.release(book)
     robot.set_gripper_width(W_OPEN_SHELF, 0.5)
     tcp = robot.fk_world()[:3, 3]
     check("withdraw", robot.move_linear(tcp - SHELF_PRE * fwd, z_axis=fwd, y_axis=side, speed=0.06))
     robot.stow()
     robot.wait(0.5)
+    loc = locate_book(robot, book)
+    standing = abs(robot.d.body(f"book_{book}").xmat[8]) < 0.2
+    if not check("book stands in the compartment", loc == ("shelf", comp) and standing):
+        # honest report (F02 once said "placed" for a book that had fallen out)
+        where = loc[1] if loc[0] == "shelf" else ("on the floor or somewhere unknown" if loc[0] == "unknown" else loc[0])
+        return SkillResult(False, f"let go of the book in {comp}, but it did not stay standing there "
+                                  f"(now {where})", {"slot": k, "held": False})
     return SkillResult(True, f"placed in {comp}, slot {k + 1}", {"slot": k})

@@ -13,6 +13,8 @@ validate(plan, world) checks a plan before anything moves (both planners' plans 
     the robot there and a free slot / edge spot, and a VERIFY of a book the plan has moved must
     expect it where the plan put it (a VERIFY of a book the plan does not touch is a question,
     "is it there?", and may answer no).
+In search mode (world["search"], skills/search.py) a book may be "unknown": FIND_BOOK then finds it
+and leaves the robot at it, so a GRASP of an unknown book must follow its FIND_BOOK directly.
 It returns every problem found (as text a planner can act on) and the predicted final world.
 """
 import copy
@@ -21,6 +23,8 @@ import math
 from dataclasses import dataclass, field
 
 from planner import world as W
+
+FOUND = "found:"           # robot["at"] after a FIND_BOOK of an unknown book (search mode)
 
 # name -> argument names; the executor maps the same names to skills/interface.py
 SIGNATURES = {
@@ -125,7 +129,15 @@ def _step(a, w):
         return f"no book called '{a.args[0]}'"
     title = books[bid]["title"] if bid else None
     if a.name == "FIND_BOOK":
-        return None if books[bid]["kind"] != "unknown" else f"{title} is not on a table or in a shelf"
+        s = books[bid]
+        if not w.get("search"):
+            return None if s["kind"] != "unknown" else f"{title} is not on a table or in a shelf"
+        # search mode: the robot drives to the book (searching for it if unknown) and stays there
+        if s["kind"] in ("table", "shelf"):
+            robot["at"], robot["pose"] = s["at"], list(W.parking_of(s["at"]))
+        elif s["kind"] == "unknown":
+            robot["at"] = FOUND + bid
+        return None
     if a.name == "NAVIGATE":
         t = canonical_target(a.args[0])
         if t is None:
@@ -136,9 +148,13 @@ def _step(a, w):
         if robot["holding"] is not None:
             return f"the hand already holds {books[robot['holding']]['title']}"
         s = books[bid]
-        if s["kind"] not in ("table", "shelf"):
+        if s["kind"] == "unknown" and w.get("search"):
+            if robot["at"] != FOUND + bid:
+                return (f"where {title} is is not known yet: FIND_BOOK({title}) first, directly "
+                        "before this GRASP (FIND_BOOK leaves the robot at the book)")
+        elif s["kind"] not in ("table", "shelf"):
             return f"{title} is {s['kind']}, cannot be grasped"
-        if not W.same_spot(robot["at"], s["at"]):
+        elif not W.same_spot(robot["at"], s["at"]):
             return f"{title} is at {s['at']}, the robot is at {robot['at'] or 'no table or shelf'}: NAVIGATE first"
         robot["holding"] = bid
         w["_moved"].add(bid)

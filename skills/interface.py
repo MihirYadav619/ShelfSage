@@ -15,6 +15,7 @@ import numpy as np
 
 from skills import manipulation as mp
 from skills import navigation as nav
+from skills import search
 from skills.result import SkillResult
 
 _ctx = {"robot": None, "say": print, "log": []}
@@ -46,10 +47,15 @@ def _where(loc):
 
 # ---------------------------------------------------------------------------- skills
 def find_book(title: str) -> SkillResult:
-    """Look up which table (or shelf compartment) currently holds the book."""
+    """Find the book. Search mode (skills/search.py): drive to the tables (then the shelves) and
+    look with the wrist camera until it is seen; the robot stays parked there. Otherwise: look up
+    which table / compartment holds it (simulator ground truth, the benchmark setting)."""
     bid = book_id(title)
     if bid is None:
         return SkillResult(False, f"no book called '{title}'")
+    if search.active(_robot()):
+        _ctx["say"](f"FIND_BOOK {mp.META['books'][bid]['title']} (searching with the camera)")
+        return search.find(_robot(), bid, say=_ctx["say"], log=_ctx["log"])
     loc = mp.locate_book(_robot(), bid)
     if loc[0] == "unknown":
         return SkillResult(False, f"{mp.META['books'][bid]['title']} is not on a table or in a shelf")
@@ -82,6 +88,15 @@ def grasp(obj: str) -> SkillResult:
     if r.holding is not None:
         return SkillResult(False, f"already holding {mp.META['books'][r.holding]['title']}")
     loc = mp.locate_book(r, bid)
+    if search.active(r):
+        title = mp.META['books'][bid]['title']
+        known = r.memory.get(bid)
+        if known is None:
+            return SkillResult(False, f"where {title} is is not known: FIND_BOOK it first")
+        if (known["kind"], known["where"]) != loc:
+            search.forget(r, bid)
+            return SkillResult(False, f"{title} is no longer at {search.target_of(known)} "
+                                      "(someone moved it): FIND_BOOK it again")
     say(f"GRASP {mp.META['books'][bid]['title']} ({_where(loc)})")
     if loc[0] == "table":
         here = nav.parking_pose(f"Table {loc[1]}")
@@ -107,6 +122,8 @@ def grasp(obj: str) -> SkillResult:
     else:
         return SkillResult(False, f"cannot grasp it: the book is {loc[0]}")
     held = r.holding == bid and r.d.body(f"book_{bid}").xpos[2] > 0.95
+    if search.active(r):
+        search.forget(r, bid)                    # in the hand (or dropped somewhere unknown)
     return SkillResult(held, "holding the book" if held else "lost the book after grasping it")
 
 
@@ -126,7 +143,7 @@ def place(obj: str, shelf: str) -> SkillResult:
         if abs(r.get_pose()[1] - here[1]) > 0.6 or abs(r.get_pose()[0] - here[0]) > 1.0:
             return SkillResult(False, f"not at Table {p[1]}: NAVIGATE there first")
         say(f"PLACE {mp.META['books'][bid]['title']} on Table {p[1]}")
-        return mp.place_on_table(r, bid, p[1], say=say, log=log)
+        return _placed(r, bid, mp.place_on_table(r, bid, p[1], say=say, log=log))
     if p is None or p[0] != "shelf" or p[2] is None:
         return SkillResult(False, f"'{shelf}' is not a shelf compartment like 'S2-A3' or a table like 'Table A'")
     comp = p[2]
@@ -138,7 +155,16 @@ def place(obj: str, shelf: str) -> SkillResult:
     say(f"PLACE {mp.META['books'][bid]['title']} in {comp}")
     if not nav.near(r, goal):
         r.go_to(*goal, tol_xy=0.01, tol_yaw=0.01)
-    return mp.place_in_shelf(r, bid, comp, say=say, log=log)
+    return _placed(r, bid, mp.place_in_shelf(r, bid, comp, say=say, log=log))
+
+
+def _placed(r, bid, res):
+    """Search mode: remember where a placed book went (the robot put it there)."""
+    if search.active(r) and r.holding != bid:
+        kind, where = mp.locate_book(r, bid)
+        if kind in ("table", "shelf"):
+            search.remember(r, bid, kind, where, r.d.body(f"book_{bid}").xpos)
+    return res
 
 
 def verify(obj: str, shelf: str) -> SkillResult:

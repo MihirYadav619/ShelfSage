@@ -19,6 +19,7 @@ From the points (the visible top cover of a lying book / the spine of a standing
 """
 import json
 import math
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -28,7 +29,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parent.parent
 META = json.loads((ROOT / "scene/library_meta.json").read_text())
 BD = META["book_dims"]
-WEIGHTS = ROOT / "perception/runs/books/weights/best.pt"
+WEIGHTS = Path(os.environ.get("SHELFSAGE_WEIGHTS", ROOT / "perception/runs/books/weights/best.pt"))
 BOOKS = list(META["books"])
 
 

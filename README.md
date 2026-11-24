@@ -5,7 +5,7 @@
 
 - **Course:** Robot Manipulators (IIT Mandi), course project
 - **Team:** Chirag, Mihir
-- **Status:** all 10 phases complete. Executed in the simulator on a 42-task benchmark fixed before the LLM was written: LLM planner (free Gemini API) 92 % of 126 runs, rule-based baseline 40 % (McNemar p = 5e-7); the LLM recovers from 4 of 5 injected failure types. Final report: [docs/report.md](docs/report.md); slides: `presentation/ShelfSage_Final.pptx`; demo: `python run_demo.py --task X01`
+- **Status:** all 10 phases complete. Executed in the simulator on a 42-task benchmark fixed before the LLM was written: LLM planner (free Gemini API) 92 % of 126 runs, rule-based baseline 40 % (McNemar p = 5e-7); the LLM recovers from 4 of 5 injected failure types. Final report: [docs/report.md](docs/report.md); slides: `presentation/ShelfSage_Final.pptx`; demo: `python run_demo.py --task X01`. After the evaluation (see [After Phase 10](#after-phase-10-camera-search-catalog-labels-fixes)): the robot finds loose books with its wrist camera instead of knowing where they lie (`python run_demo.py "Pick up the Algorithms book and place it in the shelf"`), every book has a home compartment ([Book_Catalog.pdf](Book_Catalog.pdf)), tables and shelves carry name signs, and the 4th-slot placement and the F02 lost book are fixed.
 - **Note:** This is the *initial* idea. It can be simplified later if parts become too hard (see [Fallbacks](#9-risks-and-fallbacks)).
 
 > This README is written so that the whole project can be resumed from scratch, for example in a new chat with an AI assistant. See [How to resume](#12-how-to-resume-in-a-new-chat).
@@ -197,7 +197,7 @@ Defined in `skills/interface.py` (bind a robot with `bind(robot)`; books by titl
 
 | Skill | Purpose | Status |
 |---|---|---|
-| `FIND_BOOK(title)` | Look up which table or shelf holds the book (world-state lookup) | done (ground truth; the planners plan on `planner/world.py`) |
+| `FIND_BOOK(title)` | Find the book. Search mode (default in the demo): drive to the tables (nearest first, then the shelf columns) and look with the wrist camera + detector until it is seen; the robot stays parked at it. Known mode (benchmark): look up which table or shelf holds it | done (`skills/search.py`) |
 | `NAVIGATE(target)` | Drive the base to the parking pose of a table ("Table B") or shelf ("S2-A3") | done (Phase 6): A* + MCL pose + LiDAR obstacle avoidance |
 | `GRASP(obj)` | Pick up a book with the 2-finger gripper (drags it to the table edge first if needed) | done (Phase 5) |
 | `PLACE(obj, shelf)` | Put the held book in a shelf compartment, leftmost free slot; or `PLACE(obj, "Table X")`: lay it at a free edge spot of a table | done (Phase 5) |
@@ -498,6 +498,20 @@ The benchmark was written **before** the LLM planner, so the prompt cannot be tu
 - [x] `run_demo.py`: any command or benchmark task in the viewer, LLM or baseline, with the task's failure injected and replanning shown on screen (`python run_demo.py --task F03`).
 - [x] **Report** `docs/report.md` (problem, system, benchmark and method, results with plots, failure analysis, caveats, how to reproduce) and **slides** `presentation/ShelfSage_Final.pptx` (13 slides: the progress deck plus two planners, the benchmark, failure recovery, conclusions).
 
+### After Phase 10: camera search, catalog, labels, fixes
+
+Done on 2026-11-24, after the final evaluation (its numbers above were measured before these changes).
+
+- [x] **Catalog: every book has a home compartment** (`"home"` in `scene/layout.json`, copied to `library_meta.json`). Shelf books: the compartment they stand in. The 11 table books by subject, never more than 3 books per compartment: Linear Algebra S1-B1, Calculus S1-B2, Algorithms S1-B3, Python Programming S1-A2, Databases S1-A3, Machine Learning and Deep Learning S3-A2, Robotics S2-A4, Control Systems and Signals and Systems S2-B3, Thermodynamics S3-B3. **`Book_Catalog.pdf`** (`python scene/make_catalog.py`): page 1 the books A-Z with shelf ID, shelf, row and column; page 2 a map of the three shelves with each compartment's books.
+- [x] **Name signs** (`build_signs` in `scene/generate_scene.py`, visual only: no collisions, not in the LiDAR map): a navy "TABLE A" plate under the robot-side edge of each table, a "SHELF S1" header on top of each bookcase, a small brass "S2-A3" plate on the board under each compartment, and the floor zone plates now name their table / shelf. A sign hanging from the ceiling above each table was tried first: in the overview it appeared over the next row of tables and hid the shelves.
+- [x] **Detector retrained with the signs in the scene.** The old weights took the compartment plates for book spines (navy plates: 2 false "Algorithms"; brass: 7 false "Calculus"; the old scene: 0). New dataset (6000 images, seeds 0-5, as in Phase 5) and 60 epochs: val mask mAP50 0.986, mAP50-95 0.960. `check_detect.py` on the scene: 31 of 32 books, **no false or wrong detection**; the one miss is Computer Networks seen half-hidden from the look at the row above (from its own compartment it is found, 1.2 cm off). `SHELFSAGE_WEIGHTS` overrides the weights file.
+- [x] **Search mode: the robot finds books with its camera** (`skills/search.py`, on by default in `run_demo.py` and `sim/run_command.py`, `--known` for the old behaviour). The robot knows the map, the catalog and the shelf inventory, but not where loose books lie: books on the tables are "unknown" in its memory (`robot.memory`) and in the world state the planners see. `FIND_BOOK` drives to the tables nearest first (then the shelf columns, for a misplaced book), looks with the wrist camera (up to six views per table, the views of the grasp's first look; rows A and B per shelf column) and stops when the detector sees the book, leaving the robot parked there. Every book seen on the way is remembered. A GRASP of a book whose remembered place is wrong (someone moved it) forgets it and fails, so a replan searches again. Validator: a GRASP of an unknown book must directly follow its FIND_BOOK. Baseline: `FIND_BOOK -> GRASP` for an unknown book. Prompt v4: search mode, and "put away / return to the shelf / place it in the shelf" means the book's home (which should also remove the refusals of "Put away Linear Algebra" and "Clear Table E").
+  - "pick up the algorithms book and place it in shelf" with the LLM: `FIND_BOOK(Algorithms) -> GRASP(Algorithms) -> NAVIGATE(S1-B3) -> PLACE(Algorithms, S1-B3) -> VERIFY(Algorithms, S1-B3)`; the robot looked at Tables B, A and C and found it on Table E (125 s simulated); success in 191 s simulated. Same with the baseline ("Put Algorithms on the shelf").
+  - The benchmark stays in known mode: many of its tasks name books by where they lie ("the book on Table D", "Clear Table E", "the table with the fewest books"), which a robot that has not looked yet cannot know. A LOOK skill followed by a replan would be the next step for those.
+- [x] **Fix: 4th slot of a compartment** (5 of the 10 LLM misses). Cause: at slot 4 of row A joint 5 hit its lower limit (-2.897 rad), so the set-down stopped short of the board. PLACE now slides the base along the shelf when the slot is right of the base centre (slot 4: 14 cm), so the slot is 10 cm left of it; joint 5 then keeps 0.14 rad to its limit and Thermodynamics goes into S3-A1 slot 4.
+- [x] **Fix: F02 lost book.** Cause: after the aborted slot-4 placement the arm left the shelf on another IK branch, and its swing to the carry pose hit the front of the board above with the book, turning it ~35 deg in the fingers. The next PLACE pushed the tilted book in (82 N instead of ~3 N), let go, and the book fell to the floor, yet PLACE reported "placed". Now an abort leaves the way it came in (back through the arm's own pre-place and carry joint configurations); PLACE refuses to insert a book tilted more than 15 deg in the hand (keeps it, reports it); and PLACE checks after letting go that the book stands in the compartment, else it reports the failure. Forced abort followed by a placement elsewhere: the book stays upright and is placed.
+- [x] Re-run: planner checks 28/28 (`test_phase7.py --planner-only`, with four new search-mode checks); baseline exec benchmark 17/42, the same per category as before.
+
 ---
 
 ## 9. Risks and fallbacks
@@ -526,7 +540,8 @@ ShelfSage/
 │   ├── generate_scene.py      # layout -> library.xml + library_meta.json
 │   ├── decor.py               # modern decor (CC0 models, art, slats, lights, outside ground)
 │   ├── assets/decor/          # decor meshes (OBJ, Poly Haven CC0) + decor.json (parts, bounds)
-│   ├── make_textures.py       # plaster, spines, covers, zone label -> textures/
+│   ├── make_textures.py       # plaster, spines, covers, zone labels, name signs -> textures/
+│   ├── make_catalog.py        # Book_Catalog.pdf: every book and its home compartment
 │   ├── fetch_covers.py        # real book covers -> textures/covers/
 │   ├── robot_model.py         # base + Menagerie Panda (MjSpec attach), sensors, home keyframe
 │   ├── library.xml            # generated MJCF
@@ -559,6 +574,7 @@ ShelfSage/
 │   ├── interface.py           # the skills (FIND_BOOK, NAVIGATE, GRASP, PLACE, VERIFY) + SKILLS dictionary
 │   ├── manipulation.py        # drag to edge, table / shelf pick, shelf place (Phase 5)
 │   ├── navigation.py          # parking poses, lanes + aisle (A* in Phase 6)
+│   ├── search.py              # search mode: the robot's memory of book places, FIND_BOOK with the camera
 │   └── result.py              # SkillResult
 ├── control/                   # occupancy.py, kinematics.py, ik.py, planner.py (A*), mcl.py (done)
 ├── perception/                # make_dataset.py, train_yolo.py, detect.py, check_detect.py; data/, runs/ git-ignored
@@ -571,6 +587,7 @@ ShelfSage/
 │   ├── llm.py                 # LLM planner (Gemini free tier / Claude): world view + prompt -> JSON plan, validator retries
 │   ├── prompts/system.md      # the LLM planner's system prompt
 │   └── schema.json            # the plan's JSON schema (structured outputs)
+├── Book_Catalog.pdf           # library catalog: which compartment each book belongs to (generated)
 ├── run_demo.py                # demo: command or benchmark task -> planner -> robot in the viewer, failures + replanning
 ├── docs/report.md             # final report
 ├── presentation/              # ShelfSage_Progress.pptx (after Phase 6), ShelfSage_Final.pptx

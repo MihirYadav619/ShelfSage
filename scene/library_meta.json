@@ -1377,6 +1377,7 @@
     "linalg": {
       "title": "Linear Algebra",
       "location": "table:A",
+      "home": "S1-B1",
       "body": "book_linalg",
       "color": [
         0.8,
@@ -1387,6 +1388,7 @@
     "calculus": {
       "title": "Calculus",
       "location": "table:A",
+      "home": "S1-B2",
       "body": "book_calculus",
       "color": [
         0.9,
@@ -1397,6 +1399,7 @@
     "ml": {
       "title": "Machine Learning",
       "location": "table:B",
+      "home": "S3-A2",
       "body": "book_ml",
       "color": [
         0.15,
@@ -1407,6 +1410,7 @@
     "dl": {
       "title": "Deep Learning",
       "location": "table:B",
+      "home": "S3-A2",
       "body": "book_dl",
       "color": [
         0.1,
@@ -1417,6 +1421,7 @@
     "robotics": {
       "title": "Robotics",
       "location": "table:B",
+      "home": "S2-A4",
       "body": "book_robotics",
       "color": [
         0.2,
@@ -1427,6 +1432,7 @@
     "control": {
       "title": "Control Systems",
       "location": "table:C",
+      "home": "S2-B3",
       "body": "book_control",
       "color": [
         0.55,
@@ -1437,6 +1443,7 @@
     "signals": {
       "title": "Signals and Systems",
       "location": "table:C",
+      "home": "S2-B3",
       "body": "book_signals",
       "color": [
         0.85,
@@ -1447,6 +1454,7 @@
     "python": {
       "title": "Python Programming",
       "location": "table:D",
+      "home": "S1-A2",
       "body": "book_python",
       "color": [
         0.95,
@@ -1457,6 +1465,7 @@
     "algo": {
       "title": "Algorithms",
       "location": "table:E",
+      "home": "S1-B3",
       "body": "book_algo",
       "color": [
         0.25,
@@ -1467,6 +1476,7 @@
     "db": {
       "title": "Databases",
       "location": "table:E",
+      "home": "S1-A3",
       "body": "book_db",
       "color": [
         0.5,
@@ -1477,6 +1487,7 @@
     "thermo": {
       "title": "Thermodynamics",
       "location": "table:F",
+      "home": "S3-B3",
       "body": "book_thermo",
       "color": [
         0.7,
@@ -1487,6 +1498,7 @@
     "physics": {
       "title": "Physics",
       "location": "shelf:S2-A1",
+      "home": "S2-A1",
       "body": "book_physics",
       "color": [
         0.3,
@@ -1497,6 +1509,7 @@
     "stats": {
       "title": "Statistics",
       "location": "shelf:S2-B2",
+      "home": "S2-B2",
       "body": "book_stats",
       "color": [
         0.9,
@@ -1507,6 +1520,7 @@
     "os": {
       "title": "Operating Systems",
       "location": "shelf:S1-A1",
+      "home": "S1-A1",
       "body": "book_os",
       "color": [
         0.8,
@@ -1517,6 +1531,7 @@
     "networks": {
       "title": "Computer Networks",
       "location": "shelf:S1-A1",
+      "home": "S1-A1",
       "body": "book_networks",
       "color": [
         0.2,
@@ -1527,6 +1542,7 @@
     "compilers": {
       "title": "Compilers",
       "location": "shelf:S1-A2",
+      "home": "S1-A2",
       "body": "book_compilers",
       "color": [
         0.8,
@@ -1537,6 +1553,7 @@
     "arch": {
       "title": "Computer Architecture",
       "location": "shelf:S1-A4",
+      "home": "S1-A4",
       "body": "book_arch",
       "color": [
         0.52,
@@ -1547,6 +1564,7 @@
     "discrete": {
       "title": "Discrete Mathematics",
       "location": "shelf:S1-A4",
+      "home": "S1-A4",
       "body": "book_discrete",
       "color": [
         0.15,
@@ -1557,6 +1575,7 @@
     "graphs": {
       "title": "Graph Theory",
       "location": "shelf:S1-A4",
+      "home": "S1-A4",
       "body": "book_graphs",
       "color": [
         0.62,
@@ -1567,6 +1586,7 @@
     "prob": {
       "title": "Probability",
       "location": "shelf:S1-B1",
+      "home": "S1-B1",
       "body": "book_prob",
       "color": [
         0.41,
@@ -1577,6 +1597,7 @@
     "optim": {
       "title": "Optimization",
       "location": "shelf:S1-B1",
+      "home": "S1-B1",
       "body": "book_optim",
       "color": [
         0.55,
@@ -1587,6 +1608,7 @@
     "numerics": {
       "title": "Numerical Methods",
       "location": "shelf:S1-B3",
+      "home": "S1-B3",
       "body": "book_numerics",
       "color": [
         0.92,
@@ -1597,6 +1619,7 @@
     "dsa": {
       "title": "Data Structures",
       "location": "shelf:S1-B3",
+      "home": "S1-B3",
       "body": "book_dsa",
       "color": [
         0.36,
@@ -1607,6 +1630,7 @@
     "kinematics": {
       "title": "Kinematics",
       "location": "shelf:S2-A1",
+      "home": "S2-A1",
       "body": "book_kinematics",
       "color": [
         0.8,
@@ -1617,6 +1641,7 @@
     "dynamics": {
       "title": "Dynamics",
       "location": "shelf:S2-A1",
+      "home": "S2-A1",
       "body": "book_dynamics",
       "color": [
         0.57,
@@ -1627,6 +1652,7 @@
     "mechatronics": {
       "title": "Mechatronics",
       "location": "shelf:S2-A4",
+      "home": "S2-A4",
       "body": "book_mechatronics",
       "color": [
         0.28,
@@ -1637,6 +1663,7 @@
     "embedded": {
       "title": "Embedded Systems",
       "location": "shelf:S2-B2",
+      "home": "S2-B2",
       "body": "book_embedded",
       "color": [
         0.62,
@@ -1647,6 +1674,7 @@
     "digital": {
       "title": "Digital Electronics",
       "location": "shelf:S2-B2",
+      "home": "S2-B2",
       "body": "book_digital",
       "color": [
         0.34,
@@ -1657,6 +1685,7 @@
     "power": {
       "title": "Power Electronics",
       "location": "shelf:S2-B4",
+      "home": "S2-B4",
       "body": "book_power",
       "color": [
         0.82,
@@ -1667,6 +1696,7 @@
     "cv": {
       "title": "Computer Vision",
       "location": "shelf:S3-A1",
+      "home": "S3-A1",
       "body": "book_cv",
       "color": [
         0.86,
@@ -1677,6 +1707,7 @@
     "nlp": {
       "title": "Natural Language Processing",
       "location": "shelf:S3-A1",
+      "home": "S3-A1",
       "body": "book_nlp",
       "color": [
         0.51,
@@ -1687,6 +1718,7 @@
     "rl": {
       "title": "Reinforcement Learning",
       "location": "shelf:S3-A1",
+      "home": "S3-A1",
       "body": "book_rl",
       "color": [
         0.8,
@@ -1697,6 +1729,7 @@
     "ai": {
       "title": "Artificial Intelligence",
       "location": "shelf:S3-A3",
+      "home": "S3-A3",
       "body": "book_ai",
       "color": [
         0.22,
@@ -1707,6 +1740,7 @@
     "infotheory": {
       "title": "Information Theory",
       "location": "shelf:S3-B1",
+      "home": "S3-B1",
       "body": "book_infotheory",
       "color": [
         0.53,
@@ -1717,6 +1751,7 @@
     "crypto": {
       "title": "Cryptography",
       "location": "shelf:S3-B1",
+      "home": "S3-B1",
       "body": "book_crypto",
       "color": [
         0.62,
@@ -1727,6 +1762,7 @@
     "quantum": {
       "title": "Quantum Computing",
       "location": "shelf:S3-B2",
+      "home": "S3-B2",
       "body": "book_quantum",
       "color": [
         0.15,
@@ -1737,6 +1773,7 @@
     "fluids": {
       "title": "Fluid Mechanics",
       "location": "shelf:S3-B4",
+      "home": "S3-B4",
       "body": "book_fluids",
       "color": [
         0.62,
@@ -1747,6 +1784,7 @@
     "heat": {
       "title": "Heat Transfer",
       "location": "shelf:S3-B4",
+      "home": "S3-B4",
       "body": "book_heat",
       "color": [
         0.71,
@@ -1757,6 +1795,7 @@
     "materials": {
       "title": "Materials Science",
       "location": "shelf:S3-B4",
+      "home": "S3-B4",
       "body": "book_materials",
       "color": [
         0.23,

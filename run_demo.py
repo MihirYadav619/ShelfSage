@@ -7,8 +7,13 @@ executed by the robot in the MuJoCo viewer, with optional failure injection and 
     python run_demo.py --task X01 --speed 3
     python run_demo.py "Where is Statistics?" --headless
     python run_demo.py                               # interactive: type commands one after another
+    python run_demo.py "Pick up the Algorithms book and place it in the shelf"   # searches for it
 
-The robot pose comes from MCL (LiDAR + odometry); book poses from simulator ground truth
+The robot does not know where loose books lie: FIND_BOOK drives to the tables and looks with the
+wrist camera + detector until it sees the book (search mode; --known: book locations known in
+advance, the benchmark setting, also the default for --task). Where each book belongs is in the
+catalog (Book_Catalog.pdf), so "put it back in the shelf" means its home compartment.
+The robot pose comes from MCL (LiDAR + odometry); grasp poses from simulator ground truth
 (--perception: from the wrist camera + detector). The viewer shows the command, the plan, the
 current step, injected failures and replans (top left). The LLM needs GEMINI_API_KEY (or
 ANTHROPIC_API_KEY) in the environment or a git-ignored .env file (see README, Phase 8).
@@ -31,6 +36,8 @@ def main():
     ap.add_argument("--headless", action="store_true")
     ap.add_argument("--perception", action="store_true")
     ap.add_argument("--replans", type=int, default=2)
+    ap.add_argument("--known", action="store_true", help="book locations known in advance (no search)")
+    ap.add_argument("--search", action="store_true", help="search with the camera also for --task")
     a = ap.parse_args()
 
     task = None
@@ -45,7 +52,10 @@ def main():
     from planner import world as W
     from planner.replan import run_with_replanning
     from sim.run_command import make_robot
-    robot = make_robot(truth=False, perception=a.perception)
+    # search mode (books found with the camera) by default; benchmark tasks assume known book
+    # locations ("the book on Table D"), so --task runs without search unless --search is given
+    search = a.search or not (a.known or a.task)
+    robot = make_robot(truth=False, perception=a.perception, search=search)
     inj = None
     if task and task.get("inject"):
         from sim.failures import Injector
@@ -78,7 +88,7 @@ def main():
             lines["step"] = ("SUCCESS" if rec.success else "FAILED") + f" - {rec.message}"
             print(f"\n{lines['step']}")
             return rec
-        w = W.snapshot(robot)
+        w = W.snapshot(robot, truth=True)
         verdict = "SUCCESS" if rec.success else "FAILED"
         if task and task.get("goal"):
             ok, why = goal_holds(task["goal"], w)

@@ -8,7 +8,9 @@ Usage (project root, venv active):
     python sim/run_command.py "Where is Statistics?" --plan-only           # parse + validate only
     python sim/run_command.py "Put away Linear Algebra" --planner llm      # Claude plans (Phase 8)
 
-The robot pose comes from MCL (--truth: ground truth). The log goes to
+The robot finds books with its wrist camera (search mode, skills/search.py; --known: book
+locations known in advance, as in the benchmark). The robot pose comes from MCL (--truth: ground
+truth). The log goes to
 sim/output/phase7/logs/<time>_<command>.json.
 """
 import argparse
@@ -29,13 +31,18 @@ from sim.robot import Robot  # noqa: E402
 LOG_DIR = ROOT / "sim/output/phase7/logs"
 
 
-def make_robot(truth=False, perception=False):
+def make_robot(truth=False, perception=False, search=False):
+    """search: the robot does not know where loose books lie and finds them with the camera
+    (skills/search.py); otherwise book locations are known (the benchmark setting)."""
     model = mujoco.MjModel.from_xml_path(str(ROOT / "scene/library.xml"))
     data = mujoco.MjData(model)
     robot = Robot(model, data, pose_source="true" if truth else "mcl")
     if perception:
         from skills.perception import Perception
         robot.perception = Perception(say=lambda s: None)
+    if search:
+        from skills import search as S
+        S.enable(robot)
     return robot
 
 
@@ -92,8 +99,10 @@ def main():
     ap.add_argument("--perception", action="store_true", help="book poses from the wrist camera")
     ap.add_argument("--plan-only", action="store_true")
     ap.add_argument("--planner", default="baseline", choices=["baseline", "llm"])
+    ap.add_argument("--known", action="store_true",
+                    help="book locations known in advance (default: the robot searches with its camera)")
     a = ap.parse_args()
-    robot = make_robot(a.truth, a.perception)
+    robot = make_robot(a.truth, a.perception, search=not a.known)
     if not a.viewer:
         res = run(a.command, robot, say=lambda s: print("  " + s) if s.startswith("[") else None,
                   plan_only=a.plan_only, planner=a.planner)

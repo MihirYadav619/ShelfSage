@@ -15,13 +15,15 @@ Templates (case does not matter, a trailing '.', '!' or '?' is ignored, 'please'
              a table           "Table B", "table b"
              a shelf           "shelf S2", "S2": its first compartment (A1..A4, then B1..B4)
                                with a free slot
-             any shelf         "the shelf", "a shelf", "the shelves", "shelf": the compartment
+             any shelf         "the shelf", "a shelf", "the shelves", "shelf": the book's home
+                               compartment (catalog) if it has a free slot, else the compartment
                                with a free slot whose parking pose is nearest the book's
 
 A move becomes, per book:
     FIND_BOOK(book) -> NAVIGATE(where it is) -> GRASP(book) -> NAVIGATE(target)
     -> PLACE(book, target) -> VERIFY(book, target)
-(only VERIFY if the book is already there). Anything else is rejected with the reason; e.g.
+(only VERIFY if the book is already there). In search mode an unknown book gets
+FIND_BOOK(book) -> GRASP(book): the search leaves the robot at the book. Anything else is rejected with the reason; e.g.
 "Take the book closest to Table D and place it in the empty shelf nearest to the window" has no
 template. That brittleness is the point of the baseline (README 3.1).
 """
@@ -132,6 +134,9 @@ def resolve_target(text, book, w):
         free = [comp for comp, c in w["compartments"].items() if c["free_slots"] > 0]
         if not free:
             return None, "every shelf compartment is full"
+        home = W.META["books"][book]["home"]
+        if home in free:                                     # the catalog's place for it
+            return home, None
         if src.startswith(("Table", "S")):
             return min(free, key=lambda comp: (W.distance(w, src, comp), comp)), None
         return free[0], None
@@ -153,7 +158,9 @@ def move(books, target_text, world):
             steps = [P.Action("VERIFY", [title, target])]
         else:
             steps = [P.Action("FIND_BOOK", [title])]
-            if s["kind"] != "held":
+            if s["kind"] == "unknown" and w.get("search"):
+                steps += [P.Action("GRASP", [title])]           # FIND_BOOK leaves it at the book
+            elif s["kind"] != "held":
                 steps += [P.Action("NAVIGATE", [s["at"]]), P.Action("GRASP", [title])]
             steps += [P.Action("NAVIGATE", [target]), P.Action("PLACE", [title, target]),
                       P.Action("VERIFY", [title, target])]

@@ -189,7 +189,7 @@ def run_exec(task, planner, perception, truth):
         out["executed"] = False
         return out
     res = Executor(robot).run(plan, command=task["command"], planner=planner)
-    w1 = W.snapshot(robot)
+    w1 = W.snapshot(robot, truth=True)
     out.update(executed=True, steps=[{"step": f"{s.action}({', '.join(s.args)})", "ok": s.success, "msg": s.message,
                                      "sim_time": s.sim_time} for s in res.steps],
                sim_time=res.sim_time, wall_time=res.wall_time, exec_message=res.message)
@@ -228,7 +228,7 @@ def run_failure(task, planner, perception=False, truth=False, max_replans=2):
     except Exception as e:                       # e.g. the free tier's daily quota: not run
         return {"plan": [], "success": None, "executed": False, "injected": inj.done,
                 "reason": f"not run: {type(e).__name__}: {e}"}
-    w1 = W.snapshot(robot)
+    w1 = W.snapshot(robot, truth=True)
     ok, why = goal_holds(task["goal"], w1)
     w0x = {**w0, "books": {b: s for b, s in w0["books"].items() if b not in inj.moved_by_failure}}
     w1x = {**w1, "books": {b: s for b, s in w1["books"].items() if b not in inj.moved_by_failure}}

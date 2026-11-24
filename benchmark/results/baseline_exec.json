@@ -5,9 +5,9 @@
  "effort": null,
  "perception": false,
  "robot_pose": "mcl",
- "date": "2026-11-22 04:20",
+ "date": "2026-11-24 17:47",
  "tasks_version": 1,
- "wall_time": 673.0,
+ "wall_time": 512.3,
  "results": [
   {
    "id": "S01",
@@ -26,7 +26,7 @@
    "validation": [],
    "success": true,
    "reason": "goal holds",
-   "plan_time": 0.0011,
+   "plan_time": 0.002,
    "executed": true,
    "steps": [
     {
@@ -67,7 +67,7 @@
     }
    ],
    "sim_time": 83.1,
-   "wall_time": 133.72,
+   "wall_time": 63.07,
    "exec_message": "all steps succeeded"
   },
   {
@@ -87,7 +87,7 @@
    "validation": [],
    "success": true,
    "reason": "goal holds",
-   "plan_time": 0.001,
+   "plan_time": 0.004,
    "executed": true,
    "steps": [
     {
@@ -128,7 +128,7 @@
     }
    ],
    "sim_time": 93.0,
-   "wall_time": 157.54,
+   "wall_time": 73.1,
    "exec_message": "all steps succeeded"
   },
   {
@@ -148,7 +148,7 @@
    "validation": [],
    "success": true,
    "reason": "goal holds",
-   "plan_time": 0.0031,
+   "plan_time": 0.004,
    "executed": true,
    "steps": [
     {
@@ -189,7 +189,7 @@
     }
    ],
    "sim_time": 121.36,
-   "wall_time": 201.34,
+   "wall_time": 92.09,
    "exec_message": "all steps succeeded"
   },
   {
@@ -209,7 +209,7 @@
    "validation": [],
    "success": true,
    "reason": "goal holds",
-   "plan_time": 0.0,
+   "plan_time": 0.002,
    "executed": true,
    "steps": [
     {
@@ -250,7 +250,7 @@
     }
    ],
    "sim_time": 78.46,
-   "wall_time": 132.31,
+   "wall_time": 62.96,
    "exec_message": "all steps succeeded"
   },
   {
@@ -270,7 +270,7 @@
    "validation": [],
    "success": true,
    "reason": "goal holds",
-   "plan_time": 0.004,
+   "plan_time": 0.0016,
    "executed": true,
    "steps": [
     {
@@ -311,7 +311,7 @@
     }
    ],
    "sim_time": 121.26,
-   "wall_time": 139.33,
+   "wall_time": 93.77,
    "exec_message": "all steps succeeded"
   },
   {
@@ -331,7 +331,7 @@
    "validation": [],
    "success": true,
    "reason": "goal holds",
-   "plan_time": 0.004,
+   "plan_time": 0.0,
    "executed": true,
    "steps": [
     {
@@ -372,7 +372,7 @@
     }
    ],
    "sim_time": 92.72,
-   "wall_time": 127.01,
+   "wall_time": 72.44,
    "exec_message": "all steps succeeded"
   },
   {
@@ -383,16 +383,16 @@
     "FIND_BOOK(Linear Algebra)",
     "NAVIGATE(Table A)",
     "GRASP(Linear Algebra)",
-    "NAVIGATE(S1-A3)",
-    "PLACE(Linear Algebra, S1-A3)",
-    "VERIFY(Linear Algebra, S1-A3)"
+    "NAVIGATE(S1-B1)",
+    "PLACE(Linear Algebra, S1-B1)",
+    "VERIFY(Linear Algebra, S1-B1)"
    ],
-   "planner_message": "'the shelf' -> S1-A3 for Linear Algebra",
+   "planner_message": "'the shelf' -> S1-B1 for Linear Algebra",
    "valid": true,
    "validation": [],
    "success": true,
    "reason": "goal holds",
-   "plan_time": 0.0045,
+   "plan_time": 0.002,
    "executed": true,
    "steps": [
     {
@@ -414,26 +414,26 @@
      "sim_time": 34.22
     },
     {
-     "step": "NAVIGATE(S1-A3)",
+     "step": "NAVIGATE(S1-B1)",
      "ok": true,
-     "msg": "at S1-A3",
-     "sim_time": 18.18
+     "msg": "at S1-B1",
+     "sim_time": 19.82
     },
     {
-     "step": "PLACE(Linear Algebra, S1-A3)",
+     "step": "PLACE(Linear Algebra, S1-B1)",
      "ok": true,
-     "msg": "placed in S1-A3, slot 1",
-     "sim_time": 25.28
+     "msg": "placed in S1-B1, slot 3",
+     "sim_time": 20.28
     },
     {
-     "step": "VERIFY(Linear Algebra, S1-A3)",
+     "step": "VERIFY(Linear Algebra, S1-B1)",
      "ok": true,
-     "msg": "Linear Algebra stands in S1-A3",
+     "msg": "Linear Algebra stands in S1-B1",
      "sim_time": 0.0
     }
    ],
-   "sim_time": 87.1,
-   "wall_time": 105.81,
+   "sim_time": 83.74,
+   "wall_time": 65.04,
    "exec_message": "all steps succeeded"
   },
   {
@@ -453,7 +453,7 @@
    "validation": [],
    "success": true,
    "reason": "goal holds",
-   "plan_time": 0.004,
+   "plan_time": 0.003,
    "executed": true,
    "steps": [
     {
@@ -494,7 +494,7 @@
     }
    ],
    "sim_time": 151.88,
-   "wall_time": 97.26,
+   "wall_time": 119.33,
    "exec_message": "all steps succeeded"
   },
   {
@@ -520,7 +520,7 @@
    "validation": [],
    "success": true,
    "reason": "goal holds",
-   "plan_time": 0.002,
+   "plan_time": 0.008,
    "executed": true,
    "steps": [
     {
@@ -597,7 +597,7 @@
     }
    ],
    "sim_time": 174.86,
-   "wall_time": 71.19,
+   "wall_time": 137.08,
    "exec_message": "all steps succeeded"
   },
   {
@@ -633,7 +633,7 @@
    "valid": false,
    "success": false,
    "reason": "no plan: no template matches this command",
-   "plan_time": 0.0,
+   "plan_time": 0.001,
    "executed": false
   },
   {
@@ -669,7 +669,7 @@
    "valid": false,
    "success": false,
    "reason": "no plan: no template matches this command",
-   "plan_time": 0.0,
+   "plan_time": 0.002,
    "executed": false
   },
   {
@@ -960,7 +960,7 @@
    ],
    "success": true,
    "reason": "validator rejected it",
-   "plan_time": 0.002,
+   "plan_time": 0.0,
    "executed": false
   },
   {

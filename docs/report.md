@@ -81,14 +81,24 @@ The 10 unsuccessful LLM runs out of 126:
 
 So with the LLM, **the planner is no longer the bottleneck: the skills are.** Fixing the fourth-slot placement, for example by sliding the base along the shelf before inserting, would remove half of the remaining misses.
 
-## 6. Development notes and honest caveats
+## 6. After the evaluation: searching with the camera, and the two skill fixes
+
+The numbers above were measured before the following changes; the LLM benchmark has not been re-run since.
+
+**Finding books with the camera.** In the evaluated system the planner knew where every book lay (simulator ground truth), so the robot drove straight to it. In search mode, now the default of the demo, the robot knows the map, the shelf inventory and a catalog with each book's home compartment (`Book_Catalog.pdf`), but not where loose books lie. FIND_BOOK drives to the tables nearest first and looks with the wrist camera until the detector sees the book, then stays parked there; a GRASP must follow it directly. For *"pick up the algorithms book and place it in shelf"* the LLM planned FIND_BOOK -> GRASP -> NAVIGATE(S1-B3) -> PLACE -> VERIFY; the robot looked at three tables, found the book on the fourth, and put it into its home compartment (191 s simulated). Tables and shelves now carry name signs. The detector, which had taken the new compartment plates for book spines, was retrained with them in the scene (val mask mAP50 0.986; no false detection on the scene). The benchmark stays in known mode, since many of its tasks refer to books by where they lie.
+
+**The 4th-slot placement** (half of the LLM's misses) was a joint limit: at slot 4 of the bottom row joint 5 reached -2.897 rad and the set-down stopped short of the board. PLACE now slides the base along the shelf so the slot lies left of the base centre, which leaves 0.14 rad to the limit.
+
+**The lost book of F02** came from the abort of that placement: the arm left the shelf on another IK branch and its swing hit the board above with the book, turning it 35 deg in the fingers; the next PLACE pushed it in tilted (82 N), let go, and reported success for a book that had fallen. An abort now retraces the way in, PLACE refuses to insert a tilted book, and it checks after letting go that the book stands in the compartment.
+
+## 7. Development notes and honest caveats
 
 - **Prompt versions.** v1 answered a yes/no question with FIND_BOOK because of a contradictory example; v2 fixed that example; v3 added a section on replanning ("never leave a book in the gripper after a failure"). v2 and v3 were changed after seeing results, so all versions' numbers are kept in `benchmark/results/` and in the README. The final evaluation above uses v3 throughout.
 - **Variance.** The same command can get different answers across runs (e.g. "Put away Linear Algebra"). With 3 runs per task the pooled rates have the intervals shown; more runs would narrow them, within the free-tier limits.
 - **Simplifications.** Book poses for planning come from simulator ground truth (the detector is used inside the skills and was validated separately: 32/32 books found). The start pose is known (no global localization). Failures are injected by teleporting objects, not by simulating their physical cause.
 - **Bugs found by the tests along the way:** a guarded set-down pressing 11-14 N instead of 2.5 N; the shelf swing knocking a book out of the row above; a base back-off hitting chairs; PLACE reporting success after a failed set-down. Each is described in the README with the fix and the re-run tests.
 
-## 7. Reproducing
+## 8. Reproducing
 
 ```
 python benchmark/run_eval.py --level exec                          # baseline, all 42 tasks
@@ -97,6 +107,7 @@ python benchmark/run_eval.py --planner llm --level exec --repeat 1 # LLM, execut
 python benchmark/analyze.py                                        # tables, statistics, plots
 python run_demo.py --task X01                                      # watch one task in the viewer
 python run_demo.py --task F03                                      # a failure and the replan
+python run_demo.py "Pick up the Algorithms book and place it in the shelf"   # searches with the camera
 ```
 
 The phase tests (`sim/test_robot.py`, `sim/test_phase4.py` ... `sim/test_phase9.py`) check each layer. The README's progress tracker documents every design decision and result.

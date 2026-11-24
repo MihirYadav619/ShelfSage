@@ -327,7 +327,10 @@ def build_books(layout, tables_meta, comps):
         parts += ["  " + g for g in book_geoms(name, b["color"], cover_file(b["id"]) is not None)]
         parts.append("</body>")
         xml.append("\n".join(parts))
-        meta[b["id"]] = {"title": b["title"], "location": b["location"], "body": name,
+        home = b.get("home")
+        if home not in comps:
+            raise ValueError(f"Book {b['id']}: home {home!r} is not a shelf compartment")
+        meta[b["id"]] = {"title": b["title"], "location": b["location"], "home": home, "body": name,
                          "color": b["color"]}
     return xml, meta
 
@@ -422,7 +425,8 @@ def build_test_obstacles(obstacles):
 
 
 def build_zones(zones, zc):
-    """Floor markings: translucent red fill, red tape border, KEEP CLEAR plate near the outer edge.
+    """Floor markings: translucent red fill, red tape border, a plate near the outer edge with the
+    table / shelf name and KEEP CLEAR - ROBOT WORK ZONE (one texture per zone).
     Purely visual (no collisions, not in the LiDAR map)."""
     nc = 'contype="0" conaffinity="0"'
     tape = zc["tape"]
@@ -440,8 +444,46 @@ def build_zones(zones, zc):
             out.append(f'<geom name="zone_{n}_tape_{side}" type="box" pos="{vec((px, py, 0.0012))}" '
                        f'size="{vec((sx, sy, 0.0005))}" rgba="{red} 1" {nc}/>')
         out.append(f'<geom name="zone_{n}_label" type="box" pos="{vec((cx, y0 + tape + 0.04 + lh / 2, 0.0014))}" '
-                   f'size="{vec((lw / 2, lh / 2, 0.0005))}" material="zone_label_mat" {nc}/>')
+                   f'size="{vec((lw / 2, lh / 2, 0.0005))}" material="zone_{n}_label_mat" {nc}/>')
     return out
+
+
+def build_signs(layout, tables_meta, shelves_meta):
+    """Name signs, purely visual (no collisions, not in the LiDAR map):
+    - a "TABLE A" plate under the robot-side edge of each table top (below the overhanging books,
+      above the LiDAR plane; a sign hanging above the table hid the shelves behind it),
+    - a "SHELF S1" header standing on top of each bookcase, at its front,
+    - a small brass "S2-A3" plate on the front edge of the board under each compartment (navy
+      with white text, the detector took it for the dark Algorithms spine).
+    Text faces the room (-y). Returns (geoms, assets); the textures are written to textures/."""
+    import make_textures
+    nc = 'contype="0" conaffinity="0"'
+    geoms, assets = [], []
+
+    def plate(name, text, pos, half, subtext=None, border=True, **colours):
+        f = f"sign_{name}.png"
+        make_textures.make_sign(f, text, (2 * half[0], 2 * half[2]), subtext=subtext, border=border, **colours)
+        assets.append(f'<texture name="sign_{name}_tex" type="2d" file="{f}"/>')
+        assets.append(f'<material name="sign_{name}_mat" texture="sign_{name}_tex" specular="0.1" shininess="0.1"/>')
+        geoms.append(f'<geom name="sign_{name}" type="box" pos="{vec(pos)}" size="{vec(half)}" '
+                     f'material="sign_{name}_mat" {nc}/>')
+
+    for t, info in tables_meta.items():
+        x, y = info["pos"]
+        edge = y - info["half_size"][1]
+        plate(f"table_{t}", f"TABLE {t}", (x, edge - 0.004, TABLE_TOP_Z - TABLE_TOP_THICK - 0.08),
+              (0.30, 0.003, 0.08))
+    s = layout["shelf_design"]
+    for sname, sh in shelves_meta.items():
+        cx, cy = sh["pos"]
+        front = cy - s["depth"] / 2
+        plate(f"shelf_{sname}", f"SHELF {sname}", (cx, front + 0.006, s["top_z"] + BOARD_T + 0.12),
+              (0.45, 0.005, 0.12))
+        for comp, c in sh["compartments"].items():
+            plate(f"comp_{comp}", comp, (c["surface"][0], front - 0.0009, c["surface"][2] - 0.018),
+                  (0.06, 0.0008, 0.017), border=False,
+                  bg=make_textures.SIGN_BRASS, ink=make_textures.SIGN_ENGRAVED)
+    return geoms, assets
 
 
 # -------------------------------------------------------------------------- generate
@@ -474,7 +516,17 @@ def generate():
     zones = parking_and_zones(layout, tables_meta, shelves_meta)
     zc = layout["robot_zones"]
     import make_textures
-    make_textures.make_floor_label("zone_label.png", zc["text"], zc["subtext"], zc["label_size"])
+    zone_assets = []
+    for z in zones:
+        kind, name = z["name"].split("_", 1)
+        f = f"zone_{z['name']}_label.png"
+        make_textures.make_floor_label(f, f"{kind.upper()} {name}", f"{zc['text']} - {zc['subtext']}",
+                                       zc["label_size"])
+        zone_assets += [f'<texture name="zone_{z["name"]}_label_tex" type="2d" file="{f}"/>',
+                        f'<material name="zone_{z["name"]}_label_mat" texture="zone_{z["name"]}_label_tex" '
+                        f'specular="0.1" shininess="0.1"/>']
+    sign_xml, sign_assets = build_signs(layout, tables_meta, shelves_meta)
+    extra_assets = "\n    ".join(zone_assets + sign_assets)
     spine_assets = "\n    ".join(book_assets(layout))
     win = layout["window"]
 
@@ -484,6 +536,7 @@ def generate():
     body += build_window(win)
     body += table_xml
     body += shelf_geoms
+    body += sign_xml
     body += book_xml
     body += build_test_obstacles(layout.get("test_obstacles", []))
     robot_cfg, start = layout["robot"], layout["robot_start"]
@@ -525,8 +578,7 @@ def generate():
     <material name="shelf_mat" texture="shelf_tex" texuniform="true" texrepeat="1 1" specular="0.25" shininess="0.30"/>
     <material name="plaster_mat" texture="plaster_tex" texuniform="true" texrepeat="0.5 0.5" specular="0.05" shininess="0.05"/>
     {spine_assets}
-    <texture name="zone_label_tex" type="2d" file="zone_label.png"/>
-    <material name="zone_label_mat" texture="zone_label_tex" specular="0.1" shininess="0.1"/>
+    {extra_assets}
   </asset>
   <worldbody>
 {lamps}

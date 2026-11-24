@@ -37,7 +37,7 @@ COMMANDS = [
     "Put Deep Learning and Robotics into S2-A3",   # two books, one after the other
     "Bring Databases to Table D",                  # table -> table
     "Put Thermodynamics on shelf S1",              # a shelf: its first compartment with room
-    "Return Linear Algebra to the shelf",          # any shelf: the nearest compartment with room
+    "Return Linear Algebra to the shelf",          # any shelf: its home compartment (catalog)
     "Where is Statistics?",                        # lookup
     "Check that Physics is in S2-A1",              # check
 ]
@@ -66,7 +66,7 @@ def planner_checks(world):
     parsed("Put Signals and Systems in S2-A3", contains="GRASP(Signals and Systems)")
     parsed("Put Deep Learning and Robotics into S2-A3", contains="PLACE(Robotics, S2-A3)")
     parsed("Put Thermodynamics on shelf S1", contains="PLACE(Thermodynamics, S1-A1)")
-    parsed("Return Linear Algebra to the shelf", contains="PLACE(Linear Algebra, S1-A3)")
+    parsed("Return Linear Algebra to the shelf", contains="PLACE(Linear Algebra, S1-B1)")   # its home
     parsed("Put Physics back on the shelf", "VERIFY(Physics, S2-A1)")
     parsed("Where is Statistics?", "FIND_BOOK(Statistics)")
     parsed("Check that Physics is in S2-A1", "VERIFY(Physics, S2-A1)")
@@ -98,9 +98,37 @@ def planner_checks(world):
                                           A("VERIFY", ["Machine Learning", "S2-A3"])], "VERIFY would fail")
     v = P.validate([A("VERIFY", ["Machine Learning", "S2-A3"])], world)
     checks.append(("validator allows a question whose answer is no: VERIFY(Machine Learning, S2-A3)", v.ok))
+    # search mode: loose books are unknown until the camera has seen them
+    sw = search_world(world)
+    pr = B.parse("Put Algorithms in S2-A3", sw)
+    want = ("FIND_BOOK(Algorithms) -> GRASP(Algorithms) -> NAVIGATE(S2-A3) -> PLACE(Algorithms, S2-A3) -> "
+            "VERIFY(Algorithms, S2-A3)")
+    checks.append((f"search mode: parse 'Put Algorithms in S2-A3' -> {P.to_text(pr.plan) if pr.ok else pr.reason}",
+                   pr.ok and P.to_text(pr.plan) == want and P.validate(pr.plan, sw).ok))
+    v = P.validate([A("NAVIGATE", ["Table E"]), A("GRASP", ["Algorithms"])], sw)
+    checks.append((f"search mode: validator rejects GRASP of a book not found yet: {v}",
+                   not v.ok and "FIND_BOOK(Algorithms) first" in str(v)))
+    v = P.validate([A("FIND_BOOK", ["Algorithms"]), A("NAVIGATE", ["S2-A3"]), A("GRASP", ["Algorithms"])], sw)
+    checks.append((f"search mode: validator rejects a NAVIGATE between FIND_BOOK and GRASP: {v}", not v.ok))
+    v = P.validate([A("FIND_BOOK", ["Physics"]), A("GRASP", ["Physics"])], sw)
+    checks.append(("search mode: a shelf book (inventory) needs no search: FIND_BOOK(Physics) -> GRASP(Physics)", v.ok))
     js = P.from_json('{"plan": [{"action": "navigate", "args": ["Table B"]}]}')
     checks.append(("plan JSON round trip", P.from_json(P.to_json(js)) == js and js[0].name == "NAVIGATE"))
     return checks
+
+
+def search_world(world):
+    """The world as the robot sees it in search mode at the start: shelf books known (inventory),
+    table books unknown (skills/search.py)."""
+    import copy
+    from planner import world as W
+    books = copy.deepcopy(world["books"])
+    for s in books.values():
+        if s["kind"] == "table":
+            s.update(kind="unknown", where=None, at="unknown", pos=None)
+    w = W.build(books, world["robot"]["pose"], world["robot"]["holding"])
+    w["search"] = True
+    return w
 
 
 # ---------------------------------------------------------------------------- 2. end to end

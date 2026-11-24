@@ -48,17 +48,25 @@ def parking_of(target):
     return tuple(META["shelves"][shelf]["parking"][target.split("-")[1][1:]])
 
 
-def snapshot(robot):
-    """The current world state from the simulator."""
+def snapshot(robot, truth=False):
+    """The current world state from the simulator. In search mode (skills/search.py) the books
+    are where the robot believes they are (its memory; a book it has not seen yet is "unknown"),
+    unless truth=True (for scoring a run)."""
     from skills import manipulation as mp
+    memory = None if truth else getattr(robot, "memory", None)
     books = {}
     for bid, info in META["books"].items():
         kind, where = mp.locate_book(robot, bid)
-        p = robot.d.body(f"book_{bid}").xpos
+        p = [round(float(v), 3) for v in robot.d.body(f"book_{bid}").xpos]
+        if memory is not None and kind != "held":
+            m = memory.get(bid)
+            kind, where, p = (m["kind"], m["where"], m["pos"]) if m else ("unknown", None, None)
         books[bid] = {"title": info["title"], "kind": kind, "where": where,
-                      "at": target_name(kind, where), "pos": [round(float(v), 3) for v in p]}
+                      "at": target_name(kind, where), "pos": p, "home": info["home"]}
     x, y, yaw = robot.get_pose()
-    return build(books, (x, y, yaw), robot.holding)
+    w = build(books, (x, y, yaw), robot.holding)
+    w["search"] = memory is not None
+    return w
 
 
 def build(books, pose, holding):
@@ -158,16 +166,21 @@ def llm_view(world):
                          "compartments": sorted(c for c in comps if c.startswith(name + "-"))}
     book_list = {}
     for b, s in sorted(books.items(), key=lambda kv: kv[1]["title"]):
-        e = {"id": b, "at": s["at"]}
+        e = {"id": b, "at": s["at"], "home": META["books"][b]["home"]}
+        if s["kind"] == "unknown":
+            e["at"] = "unknown (not seen yet)" if world.get("search") else "unknown"
+            book_list[s["title"]] = e
+            continue
         if s["kind"] == "shelf":
             row = comps[s["where"]]["books_left_to_right"]
             i = row.index(s["title"])
             e["left_neighbour"] = row[i - 1] if i > 0 else None
             e["right_neighbour"] = row[i + 1] if i + 1 < len(row) else None
-        e["distance_to_tables_m"] = {t: d(s["pos"], world["tables"][t]["pos"]) for t in sorted(world["tables"])}
+        if s["pos"] is not None:
+            e["distance_to_tables_m"] = {t: d(s["pos"], world["tables"][t]["pos"]) for t in sorted(world["tables"])}
         book_list[s["title"]] = e
     r = world["robot"]
-    return {
+    view = {
         "layout": "Room 8 x 8 m. Three bookshelves on the north wall: S1 (west), S2 (middle), S3 (east); "
                   "each has row A (bottom) and row B (top), columns 1-4 from west to east; compartment "
                   "names are <shelf>-<row><column>, e.g. S2-A3. Six tables: front row A, B, C (west to "
@@ -175,3 +188,10 @@ def llm_view(world):
         "robot": {"at": r["at"] or "start position (not at a table or shelf)",
                   "holding": books[r["holding"]]["title"] if r["holding"] else None},
         "shelves": shelves, "compartments": comps, "tables": tables, "books": book_list}
+    if world.get("search"):
+        view["search_mode"] = ("The robot knows the shelf inventory but not where loose books lie: a book "
+                               "whose 'at' is unknown is somewhere on a table (or misplaced), and the "
+                               "tables' book lists only show books the camera has already seen. "
+                               "FIND_BOOK searches for it with the camera and leaves the robot parked "
+                               "at it.")
+    return view

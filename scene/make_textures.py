@@ -104,6 +104,38 @@ def make_floor_label(name, text, subtext, size=(0.90, 0.22)):
     img.save(OUT / name)
 
 
+SIGN_BG, SIGN_INK = (0.11, 0.15, 0.23), (0.97, 0.94, 0.86)     # navy, warm white
+
+
+SIGN_BRASS, SIGN_ENGRAVED = (0.80, 0.66, 0.38), (0.13, 0.10, 0.07)   # compartment plates
+
+
+def make_sign(name, text, size, subtext=None, px_per_m=1500, border=True, bg=SIGN_BG, ink=SIGN_INK):
+    """Sign plate (table / shelf / compartment names): warm white Bebas Neue on navy, the text
+    filling most of the plate (or other colours: bg, ink). size = (width, height) in metres."""
+    from PIL import Image, ImageDraw, ImageFont
+
+    W, H = max(64, int(size[0] * px_per_m)), max(32, int(size[1] * px_per_m))
+    img = Image.new("RGB", (W, H), tuple(int(c * 255) for c in bg))
+    d = ImageDraw.Draw(img)
+    ink = tuple(int(c * 255) for c in ink)
+    if border:
+        w = max(2, H // 30)
+        d.rectangle([2 * w, 2 * w, W - 1 - 2 * w, H - 1 - 2 * w], outline=ink, width=w)
+    main_h = 0.62 if subtext else 0.80
+    size_px = int(H * main_h)
+    font = ImageFont.truetype(str(SPINE_FONT), size_px)
+    while d.textlength(text, font=font) > 0.86 * W and size_px > 8:
+        size_px -= 2
+        font = ImageFont.truetype(str(SPINE_FONT), size_px)
+    d.text((W / 2, H * (0.42 if subtext else 0.53)), text, font=font, fill=ink, anchor="mm")
+    if subtext:
+        small = ImageFont.truetype(str(SPINE_FONT), int(H * 0.20))
+        d.text((W / 2, H * 0.82), subtext, font=small, fill=ink, anchor="mm")
+    OUT.mkdir(exist_ok=True)
+    img.save(OUT / name)
+
+
 def main():
     make_plaster("plaster.png")
 

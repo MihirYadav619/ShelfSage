@@ -6,5 +6,6 @@ sim/output/
 MUJOCO_LOG.TXT
 perception/data/
 perception/runs/
+perception/data_before_labels/
 *.pt
 .env
