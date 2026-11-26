@@ -9,3 +9,4 @@ pillow==13.0.0
 PyOpenGL==3.1.10
 scipy==1.17.1
 websockets==17.4
+imageio-ffmpeg==0.8.1

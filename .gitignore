@@ -9,3 +9,8 @@ perception/runs/
 perception/data_before_labels/
 *.pt
 .env
+
+# raw demo recordings (too big for GitHub) and scratch decks
+presentation/videos/
+presentation/_tpl_check.pptx
+PPTDESIGN.pptx
