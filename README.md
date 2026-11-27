@@ -3,12 +3,57 @@
 **LLM-Guided Autonomous Mobile Librarian Robot**
 *Language-guided mobile manipulation in a simulated library (MuJoCo + Franka Panda)*
 
+![The simulated library: three shelves, six tables and the Franka Panda on its mobile base](docs/images/hero.jpg)
+
 - **Course:** Robot Manipulators (IIT Mandi), course project
 - **Team:** Chirag, Mihir
 - **Status:** all 10 phases complete. Executed in the simulator on a 42-task benchmark fixed before the LLM was written: LLM planner (free Gemini API) 92 % of 126 runs, rule-based baseline 40 % (McNemar p = 5e-7); the LLM recovers from 4 of 5 injected failure types. Final report: [docs/report.md](docs/report.md); slides: `presentation/ShelfSage_Final.pptx`; 2.5 min showcase video: `presentation/ShelfSage_Showcase.mp4` (built by `python presentation\make_showcase.py` from the demo recordings in `presentation/videos/`, which are not in git because of their size); demo: `python run_demo.py --task X01`. After the evaluation (see [After Phase 10](#after-phase-10-camera-search-catalog-labels-fixes)): the robot finds loose books with its wrist camera instead of knowing where they lie (`python run_demo.py "Pick up the Algorithms book and place it in the shelf"`), every book has a home compartment ([Book_Catalog.pdf](Book_Catalog.pdf)), tables and shelves carry name signs, and the 4th-slot placement and the F02 lost book are fixed.
 - **Note:** This is the *initial* idea. It can be simplified later if parts become too hard (see [Fallbacks](#9-risks-and-fallbacks)).
 
 > This README is written so that the whole project can be resumed from scratch, for example in a new chat with an AI assistant. See [How to resume](#12-how-to-resume-in-a-new-chat).
+
+---
+
+## At a glance
+
+You type one sentence. A Gemini LLM turns it into a plan of robot skills, and conventional, verifiable controllers carry it out: A* navigation on an MCL pose estimate, a YOLOv8-seg detector on the wrist camera, IK / Jacobian arm control and a friction grasp. Everything below runs in MuJoCo; the clips are sped up.
+
+**Watch the 2.5 min showcase:** [presentation/ShelfSage_Showcase.mp4](presentation/ShelfSage_Showcase.mp4)
+
+| | |
+|:---:|:---:|
+| ![Full task](docs/images/full_task.gif) | ![Camera search](docs/images/camera_search.gif) |
+| **The complete task.** *"Pick up the Robotics book and place it in the shelf"*: LLM plan, then FIND_BOOK, GRASP, NAVIGATE, PLACE, VERIFY | **Searching with the wrist camera.** The robot is not told where the book is; the detector names every book it sees until it finds Algorithms |
+| ![Navigation](docs/images/navigation.gif) | ![Drag then grasp](docs/images/drag_grasp.gif) |
+| **Navigation around obstacles.** A* on the known map, MCL localization from the LiDAR (red rays), unseen obstacles detected and avoided | **Drag to the edge, then grasp.** The book lies 40 cm inside the table: the fingertips press on it and the base pulls it to the edge |
+| ![Clear the lane](docs/images/clear_lane.gif) | ![Results](docs/images/results.jpg) |
+| **Clear the lane first.** Another book blocks the way, so it is pushed aside, then the target is dragged and grasped | **Results.** 42-task benchmark executed in the simulator: LLM planner 92 %, rule-based baseline 40 % (McNemar p = 5e-7) |
+
+### How it works
+
+![Architecture: instruction, LLM planner, validator, skills, MuJoCo robot, with a replanning loop on failure](docs/images/architecture.jpg)
+
+The LLM only plans. It never touches the joints, and the rule-based baseline calls the very same skills, so the comparison isolates the planner. Details in [3. Approach](#3-approach).
+
+### Results
+
+| Task category | Baseline | LLM planner |
+|---|:---:|:---:|
+| Single step | 100 % | 100 % |
+| Multi-step | 17 % | 78 % |
+| New phrasings | 0 % | 92 % |
+| Spatial relations | 0 % | 88 % |
+| Queries | 50 % | 100 % |
+| Infeasible (must refuse) | 100 % | 100 % |
+| Injected failures | 60 % | 93 % |
+| **All 42 tasks** | **40 %** | **92 %** (126 runs) |
+
+<p>
+<img src="benchmark/results/plots/success_by_category.png" width="49%" alt="Task success by category">
+<img src="benchmark/results/plots/failure_recovery.png" width="49%" alt="Recovery from injected failures">
+</p>
+
+Full write-up: [docs/report.md](docs/report.md). The README pictures are made by `python docs\make_readme_media.py` from the demo recordings.
 
 ---
 
